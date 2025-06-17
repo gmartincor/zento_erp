@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "user": 2,
-      "businessline": 4
+      "businessline": 2
     }
   },
   {
@@ -12,7 +12,7 @@
     "pk": 2,
     "fields": {
       "user": 3,
-      "businessline": 4
+      "businessline": 2
     }
   }
 ]

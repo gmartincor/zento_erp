@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "client": 1,
-      "business_line": 2,
+      "business_line": 6,
       "category": "WHITE",
       "price": "150.00",
       "payment_method": "CARD",
@@ -21,7 +21,7 @@
     "pk": 2,
     "fields": {
       "client": 2,
-      "business_line": 3,
+      "business_line": 7,
       "category": "BLACK",
       "price": "200.00",
       "payment_method": "TRANSFER",
@@ -40,7 +40,7 @@
     "pk": 3,
     "fields": {
       "client": 3,
-      "business_line": 5,
+      "business_line": 9,
       "category": "WHITE",
       "price": "120.00",
       "payment_method": "CASH",
@@ -57,7 +57,7 @@
     "pk": 4,
     "fields": {
       "client": 4,
-      "business_line": 6,
+      "business_line": 8,
       "category": "BLACK",
       "price": "180.00",
       "payment_method": "BIZUM",
@@ -76,7 +76,7 @@
     "pk": 5,
     "fields": {
       "client": 5,
-      "business_line": 5,
+      "business_line": 9,
       "category": "WHITE",
       "price": "90.00",
       "payment_method": "CARD",
@@ -93,7 +93,7 @@
     "pk": 6,
     "fields": {
       "client": 6,
-      "business_line": 2,
+      "business_line": 6,
       "category": "BLACK",
       "price": "160.00",
       "payment_method": "TRANSFER",
@@ -112,7 +112,7 @@
     "pk": 7,
     "fields": {
       "client": 7,
-      "business_line": 3,
+      "business_line": 7,
       "category": "WHITE",
       "price": "220.00",
       "payment_method": "CARD",
@@ -129,7 +129,7 @@
     "pk": 8,
     "fields": {
       "client": 8,
-      "business_line": 6,
+      "business_line": 8,
       "category": "BLACK",
       "price": "250.00",
       "payment_method": "TRANSFER",
@@ -148,7 +148,7 @@
     "pk": 9,
     "fields": {
       "client": 9,
-      "business_line": 5,
+      "business_line": 9,
       "category": "BLACK",
       "price": "140.00",
       "payment_method": "BIZUM",
@@ -167,7 +167,7 @@
     "pk": 10,
     "fields": {
       "client": 10,
-      "business_line": 2,
+      "business_line": 6,
       "category": "WHITE",
       "price": "130.00",
       "payment_method": "CASH",
@@ -184,7 +184,7 @@
     "pk": 11,
     "fields": {
       "client": 1,
-      "business_line": 5,
+      "business_line": 9,
       "category": "BLACK",
       "price": "170.00",
       "payment_method": "CARD",
@@ -203,7 +203,7 @@
     "pk": 12,
     "fields": {
       "client": 3,
-      "business_line": 6,
+      "business_line": 8,
       "category": "WHITE",
       "price": "110.00",
       "payment_method": "TRANSFER",
@@ -213,6 +213,40 @@
       "is_active": true,
       "created": "2025-04-10T14:30:00Z",
       "modified": "2025-04-10T14:30:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 13,
+    "fields": {
+      "client": 4,
+      "business_line": 11,
+      "category": "WHITE",
+      "price": "95.00",
+      "payment_method": "CASH",
+      "start_date": "2025-04-15",
+      "renewal_date": "2025-07-15",
+      "remanentes": {},
+      "is_active": true,
+      "created": "2025-04-15T11:20:00Z",
+      "modified": "2025-04-15T11:20:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 14,
+    "fields": {
+      "client": 5,
+      "business_line": 12,
+      "category": "WHITE",
+      "price": "85.00",
+      "payment_method": "CARD",
+      "start_date": "2025-04-20",
+      "renewal_date": "2025-07-20",
+      "remanentes": {},
+      "is_active": true,
+      "created": "2025-04-20T09:45:00Z",
+      "modified": "2025-04-20T09:45:00Z"
     }
   }
 ]
