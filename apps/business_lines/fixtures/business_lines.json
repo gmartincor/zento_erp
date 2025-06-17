@@ -1,0 +1,194 @@
+[
+  {
+    "model": "business_lines.businessline",
+    "pk": 1,
+    "fields": {
+      "name": "Jaen",
+      "slug": "jaen",
+      "parent": null,
+      "level": 1,
+      "has_remanente": false,
+      "remanente_field": null,
+      "is_active": true,
+      "order": 1,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 2,
+    "fields": {
+      "name": "Glow",
+      "slug": "glow",
+      "parent": null,
+      "level": 1,
+      "has_remanente": false,
+      "remanente_field": null,
+      "is_active": true,
+      "order": 2,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 3,
+    "fields": {
+      "name": "Rubi",
+      "slug": "rubi",
+      "parent": null,
+      "level": 1,
+      "has_remanente": false,
+      "remanente_field": null,
+      "is_active": true,
+      "order": 3,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 4,
+    "fields": {
+      "name": "NPV",
+      "slug": "npv",
+      "parent": 1,
+      "level": 2,
+      "has_remanente": false,
+      "remanente_field": null,
+      "is_active": true,
+      "order": 1,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 5,
+    "fields": {
+      "name": "PEPE",
+      "slug": "pepe",
+      "parent": 1,
+      "level": 2,
+      "has_remanente": false,
+      "remanente_field": null,
+      "is_active": true,
+      "order": 2,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 6,
+    "fields": {
+      "name": "PEPE-normal",
+      "slug": "pepe-normal",
+      "parent": 5,
+      "level": 3,
+      "has_remanente": true,
+      "remanente_field": "remanente_pepe",
+      "is_active": true,
+      "order": 1,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 7,
+    "fields": {
+      "name": "PEPE-videoCall",
+      "slug": "pepe-videocall",
+      "parent": 5,
+      "level": 3,
+      "has_remanente": true,
+      "remanente_field": "remanente_pepe_video",
+      "is_active": true,
+      "order": 2,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 8,
+    "fields": {
+      "name": "Dani-Rubi",
+      "slug": "dani-rubi",
+      "parent": 2,
+      "level": 2,
+      "has_remanente": true,
+      "remanente_field": "remanente_dani",
+      "is_active": true,
+      "order": 1,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 9,
+    "fields": {
+      "name": "Dani",
+      "slug": "dani",
+      "parent": 2,
+      "level": 2,
+      "has_remanente": true,
+      "remanente_field": "remanente_aven",
+      "is_active": true,
+      "order": 2,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 10,
+    "fields": {
+      "name": "Rubi",
+      "slug": "rubi-glow",
+      "parent": 2,
+      "level": 2,
+      "has_remanente": false,
+      "remanente_field": null,
+      "is_active": true,
+      "order": 3,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 11,
+    "fields": {
+      "name": "Presencial",
+      "slug": "presencial",
+      "parent": 3,
+      "level": 2,
+      "has_remanente": false,
+      "remanente_field": null,
+      "is_active": true,
+      "order": 1,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 12,
+    "fields": {
+      "name": "Online",
+      "slug": "online",
+      "parent": 3,
+      "level": 2,
+      "has_remanente": false,
+      "remanente_field": null,
+      "is_active": true,
+      "order": 2,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  }
+]

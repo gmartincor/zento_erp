@@ -1,0 +1,146 @@
+[
+  {
+    "model": "expenses.expensecategory",
+    "pk": 1,
+    "fields": {
+      "name": "Alquiler",
+      "slug": "alquiler",
+      "category_type": "FIXED",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 2,
+    "fields": {
+      "name": "Luz",
+      "slug": "luz",
+      "category_type": "FIXED",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 3,
+    "fields": {
+      "name": "Agua",
+      "slug": "agua",
+      "category_type": "FIXED",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 4,
+    "fields": {
+      "name": "Internet",
+      "slug": "internet",
+      "category_type": "FIXED",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 5,
+    "fields": {
+      "name": "Gestor",
+      "slug": "gestor",
+      "category_type": "FIXED",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 6,
+    "fields": {
+      "name": "Datáfono",
+      "slug": "datafono",
+      "category_type": "FIXED",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 7,
+    "fields": {
+      "name": "Codinan",
+      "slug": "codinan",
+      "category_type": "VARIABLE",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 8,
+    "fields": {
+      "name": "Cetelem",
+      "slug": "cetelem",
+      "category_type": "VARIABLE",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 9,
+    "fields": {
+      "name": "Facturas",
+      "slug": "facturas",
+      "category_type": "VARIABLE",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 10,
+    "fields": {
+      "name": "IVA",
+      "slug": "iva",
+      "category_type": "TAX",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 11,
+    "fields": {
+      "name": "IRPF",
+      "slug": "irpf",
+      "category_type": "TAX",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 12,
+    "fields": {
+      "name": "Gastos puntuales",
+      "slug": "gastos-puntuales",
+      "category_type": "OCCASIONAL",
+      "is_active": true,
+      "created": "2025-06-17T10:00:00.000Z",
+      "modified": "2025-06-17T10:00:00.000Z"
+    }
+  }
+]
