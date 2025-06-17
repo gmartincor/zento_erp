@@ -10,7 +10,6 @@ class User(AbstractUser):
     class RoleChoices(models.TextChoices):
         ADMIN = 'ADMIN', 'Administrador'
         GLOW_VIEWER = 'GLOW_VIEWER', 'Visualizador Glow'
-        ACCOUNTANT = 'ACCOUNTANT', 'Contable'
     
     role = models.CharField(
         max_length=20,

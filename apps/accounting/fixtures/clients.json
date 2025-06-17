@@ -1,0 +1,172 @@
+[
+  {
+    "model": "accounting.client",
+    "pk": 1,
+    "fields": {
+      "full_name": "Ana María García López",
+      "dni": "12345678A",
+      "gender": "F",
+      "email": "ana.garcia@email.com",
+      "phone": "+34 666 123 456",
+      "notes": "Cliente muy motivada, busca perder peso para evento especial en septiembre",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-01-15T09:30:00Z",
+      "modified": "2025-01-15T09:30:00Z"
+    }
+  },
+  {
+    "model": "accounting.client",
+    "pk": 2,
+    "fields": {
+      "full_name": "Carlos Rodríguez Martín",
+      "dni": "87654321B",
+      "gender": "M",
+      "email": "carlos.rodriguez@gmail.com",
+      "phone": "+34 677 987 654",
+      "notes": "Deportista amateur, necesita plan nutricional para mejorar rendimiento en ciclismo",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-01-20T14:15:00Z",
+      "modified": "2025-01-20T14:15:00Z"
+    }
+  },
+  {
+    "model": "accounting.client",
+    "pk": 3,
+    "fields": {
+      "full_name": "María del Carmen Jiménez",
+      "dni": "45612378C",
+      "gender": "F",
+      "email": "maricarmen.jimenez@outlook.com",
+      "phone": "+34 688 111 222",
+      "notes": "Problemas de diabetes tipo 2, derivada por médico de cabecera",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-02-01T10:45:00Z",
+      "modified": "2025-02-01T10:45:00Z"
+    }
+  },
+  {
+    "model": "accounting.client",
+    "pk": 4,
+    "fields": {
+      "full_name": "José Antonio Morales",
+      "dni": "78912345D",
+      "gender": "M",
+      "email": "jose.morales@empresa.com",
+      "phone": "+34 699 333 444",
+      "notes": "Ejecutivo con horarios irregulares, necesita plan flexible",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-02-05T16:20:00Z",
+      "modified": "2025-02-05T16:20:00Z"
+    }
+  },
+  {
+    "model": "accounting.client",
+    "pk": 5,
+    "fields": {
+      "full_name": "Laura Sánchez Ruiz",
+      "dni": "36925814E",
+      "gender": "F",
+      "email": "laura.sanchez@universitario.es",
+      "phone": "+34 644 555 666",
+      "notes": "Estudiante universitaria, busca mejorar hábitos alimentarios con presupuesto ajustado",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-02-10T11:30:00Z",
+      "modified": "2025-02-10T11:30:00Z"
+    }
+  },
+  {
+    "model": "accounting.client",
+    "pk": 6,
+    "fields": {
+      "full_name": "Pedro González Fernández",
+      "dni": "15975324F",
+      "gender": "M",
+      "email": "pedro.gonzalez@correo.es",
+      "phone": "+34 655 777 888",
+      "notes": "Persona mayor, necesita plan nutricional adaptado a sus limitaciones físicas",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-02-15T09:00:00Z",
+      "modified": "2025-02-15T09:00:00Z"
+    }
+  },
+  {
+    "model": "accounting.client",
+    "pk": 7,
+    "fields": {
+      "full_name": "Isabella Rossi",
+      "dni": "X9876543G",
+      "gender": "F",
+      "email": "isabella.rossi@italiano.it",
+      "phone": "+34 611 999 000",
+      "notes": "Cliente internacional, sesiones en inglés, plan mediterráneo adaptado",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-02-20T13:45:00Z",
+      "modified": "2025-02-20T13:45:00Z"
+    }
+  },
+  {
+    "model": "accounting.client",
+    "pk": 8,
+    "fields": {
+      "full_name": "Miguel Ángel Torres",
+      "dni": "75315946H",
+      "gender": "M",
+      "email": "miguel.torres@chef.com",
+      "phone": "+34 622 444 555",
+      "notes": "Chef profesional, interesado en nutrición deportiva y gastronómica",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-03-01T15:30:00Z",
+      "modified": "2025-03-01T15:30:00Z"
+    }
+  },
+  {
+    "model": "accounting.client",
+    "pk": 9,
+    "fields": {
+      "full_name": "Carmen Esperanza Vega",
+      "dni": "95175324I",
+      "gender": "F",
+      "email": "carmen.vega@salud.com",
+      "phone": "+34 633 666 777",
+      "notes": "Enfermera, busca plan nutricional para turnos de noche",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-03-05T08:15:00Z",
+      "modified": "2025-03-05T08:15:00Z"
+    }
+  },
+  {
+    "model": "accounting.client",
+    "pk": 10,
+    "fields": {
+      "full_name": "Francisco Javier Herrera",
+      "dni": "85274196J",
+      "gender": "M",
+      "email": "fj.herrera@constructora.es",
+      "phone": "+34 644 888 999",
+      "notes": "Trabajador de construcción, necesita plan con alta demanda calórica",
+      "is_active": true,
+      "is_deleted": false,
+      "deleted_at": null,
+      "created": "2025-03-10T12:00:00Z",
+      "modified": "2025-03-10T12:00:00Z"
+    }
+  }
+]

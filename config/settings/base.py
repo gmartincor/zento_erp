@@ -35,6 +35,7 @@ LOCAL_APPS = [
     'apps.business_lines',
     'apps.accounting',
     'apps.expenses',
+    'apps.dashboard',
 ]
 
 THIRD_PARTY_APPS = [

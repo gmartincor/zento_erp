@@ -1,0 +1,98 @@
+[
+  {
+    "model": "business_lines.businessline",
+    "pk": 1,
+    "fields": {
+      "name": "Jaén",
+      "slug": "jaen",
+      "level": 1,
+      "parent": null,
+      "has_remanente": true,
+      "remanente_field": "remanente_pepe",
+      "is_active": true,
+      "order": 1,
+      "created": "2025-01-01T09:00:00Z",
+      "modified": "2025-01-01T09:00:00Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 2,
+    "fields": {
+      "name": "Pepe Normal",
+      "slug": "pepe-normal",
+      "level": 2,
+      "parent": 1,
+      "has_remanente": true,
+      "remanente_field": "remanente_pepe",
+      "is_active": true,
+      "order": 1,
+      "created": "2025-01-01T09:15:00Z",
+      "modified": "2025-01-01T09:15:00Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 3,
+    "fields": {
+      "name": "Pepe VideoCall",
+      "slug": "pepe-videocall",
+      "level": 2,
+      "parent": 1,
+      "has_remanente": true,
+      "remanente_field": "remanente_pepe_video",
+      "is_active": true,
+      "order": 2,
+      "created": "2025-01-01T09:30:00Z",
+      "modified": "2025-01-01T09:30:00Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 4,
+    "fields": {
+      "name": "Glow",
+      "slug": "glow",
+      "level": 1,
+      "parent": null,
+      "has_remanente": true,
+      "remanente_field": "remanente_dani",
+      "is_active": true,
+      "order": 2,
+      "created": "2025-01-01T10:00:00Z",
+      "modified": "2025-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 5,
+    "fields": {
+      "name": "Dani",
+      "slug": "dani",
+      "level": 2,
+      "parent": 4,
+      "has_remanente": true,
+      "remanente_field": "remanente_aven",
+      "is_active": true,
+      "order": 1,
+      "created": "2025-01-01T10:15:00Z",
+      "modified": "2025-01-01T10:15:00Z"
+    }
+  },
+  {
+    "model": "business_lines.businessline",
+    "pk": 6,
+    "fields": {
+      "name": "Dani Rubi",
+      "slug": "dani-rubi",
+      "level": 2,
+      "parent": 4,
+      "has_remanente": true,
+      "remanente_field": "remanente_dani",
+      "is_active": true,
+      "order": 2,
+      "created": "2025-01-01T10:30:00Z",
+      "modified": "2025-01-01T10:30:00Z"
+    }
+  }
+]

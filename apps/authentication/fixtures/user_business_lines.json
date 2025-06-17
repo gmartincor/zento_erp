@@ -1,0 +1,18 @@
+[
+  {
+    "model": "authentication.user_business_lines",
+    "pk": 1,
+    "fields": {
+      "user": 2,
+      "businessline": 4
+    }
+  },
+  {
+    "model": "authentication.user_business_lines",
+    "pk": 2,
+    "fields": {
+      "user": 3,
+      "businessline": 4
+    }
+  }
+]

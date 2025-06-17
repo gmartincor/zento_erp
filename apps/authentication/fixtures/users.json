@@ -1,0 +1,53 @@
+[
+  {
+    "model": "authentication.user",
+    "pk": 1,
+    "fields": {
+      "username": "admin",
+      "email": "admin@nutricionpro.com",
+      "first_name": "Admin",
+      "last_name": "Principal",
+      "role": "ADMIN",
+      "is_active": true,
+      "is_staff": true,
+      "is_superuser": true,
+      "password": "pbkdf2_sha256$600000$placeholder$hash",
+      "date_joined": "2025-01-01T08:00:00Z",
+      "last_login": null
+    }
+  },
+  {
+    "model": "authentication.user",
+    "pk": 2,
+    "fields": {
+      "username": "maria.glow",
+      "email": "maria.glow@nutricionpro.com",
+      "first_name": "María",
+      "last_name": "García",
+      "role": "GLOW_VIEWER",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$600000$placeholder$hash",
+      "date_joined": "2025-01-01T09:00:00Z",
+      "last_login": null
+    }
+  },
+  {
+    "model": "authentication.user",
+    "pk": 3,
+    "fields": {
+      "username": "carlos.glow",
+      "email": "carlos.glow@nutricionpro.com",
+      "first_name": "Carlos",
+      "last_name": "Martín",
+      "role": "GLOW_VIEWER",
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "password": "pbkdf2_sha256$600000$placeholder$hash",
+      "date_joined": "2025-01-01T10:00:00Z",
+      "last_login": null
+    }
+  }
+]

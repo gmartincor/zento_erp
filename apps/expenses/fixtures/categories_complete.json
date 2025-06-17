@@ -1,0 +1,74 @@
+[
+  {
+    "model": "expenses.expensecategory",
+    "pk": 1,
+    "fields": {
+      "name": "Alquiler Oficina",
+      "slug": "alquiler-oficina",
+      "category_type": "FIXED",
+      "is_active": true,
+      "created": "2025-01-01T08:00:00Z",
+      "modified": "2025-01-01T08:00:00Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 2,
+    "fields": {
+      "name": "Suministros",
+      "slug": "suministros",
+      "category_type": "FIXED",
+      "is_active": true,
+      "created": "2025-01-01T08:15:00Z",
+      "modified": "2025-01-01T08:15:00Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 3,
+    "fields": {
+      "name": "Material Consulta",
+      "slug": "material-consulta",
+      "category_type": "VARIABLE",
+      "is_active": true,
+      "created": "2025-01-01T08:30:00Z",
+      "modified": "2025-01-01T08:30:00Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 4,
+    "fields": {
+      "name": "Marketing Digital",
+      "slug": "marketing-digital",
+      "category_type": "VARIABLE",
+      "is_active": true,
+      "created": "2025-01-01T08:45:00Z",
+      "modified": "2025-01-01T08:45:00Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 5,
+    "fields": {
+      "name": "IVA Trimestral",
+      "slug": "iva-trimestral",
+      "category_type": "TAX",
+      "is_active": true,
+      "created": "2025-01-01T09:00:00Z",
+      "modified": "2025-01-01T09:00:00Z"
+    }
+  },
+  {
+    "model": "expenses.expensecategory",
+    "pk": 6,
+    "fields": {
+      "name": "Formación Profesional",
+      "slug": "formacion-profesional",
+      "category_type": "OCCASIONAL",
+      "is_active": true,
+      "created": "2025-01-01T09:15:00Z",
+      "modified": "2025-01-01T09:15:00Z"
+    }
+  }
+]

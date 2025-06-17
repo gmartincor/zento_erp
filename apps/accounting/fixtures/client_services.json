@@ -1,0 +1,218 @@
+[
+  {
+    "model": "accounting.clientservice",
+    "pk": 1,
+    "fields": {
+      "client": 1,
+      "business_line": 2,
+      "category": "WHITE",
+      "price": "150.00",
+      "payment_method": "CARD",
+      "start_date": "2025-01-15",
+      "renewal_date": "2025-04-15",
+      "remanentes": {},
+      "is_active": true,
+      "created": "2025-01-15T09:30:00Z",
+      "modified": "2025-01-15T09:30:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 2,
+    "fields": {
+      "client": 2,
+      "business_line": 3,
+      "category": "BLACK",
+      "price": "200.00",
+      "payment_method": "TRANSFER",
+      "start_date": "2025-01-20",
+      "renewal_date": "2025-04-20",
+      "remanentes": {
+        "remanente_pepe_video": "50.00"
+      },
+      "is_active": true,
+      "created": "2025-01-20T14:15:00Z",
+      "modified": "2025-01-20T14:15:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 3,
+    "fields": {
+      "client": 3,
+      "business_line": 5,
+      "category": "WHITE",
+      "price": "120.00",
+      "payment_method": "CASH",
+      "start_date": "2025-02-01",
+      "renewal_date": "2025-05-01",
+      "remanentes": {},
+      "is_active": true,
+      "created": "2025-02-01T10:45:00Z",
+      "modified": "2025-02-01T10:45:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 4,
+    "fields": {
+      "client": 4,
+      "business_line": 6,
+      "category": "BLACK",
+      "price": "180.00",
+      "payment_method": "BIZUM",
+      "start_date": "2025-02-05",
+      "renewal_date": "2025-05-05",
+      "remanentes": {
+        "remanente_dani": "40.00"
+      },
+      "is_active": true,
+      "created": "2025-02-05T16:20:00Z",
+      "modified": "2025-02-05T16:20:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 5,
+    "fields": {
+      "client": 5,
+      "business_line": 5,
+      "category": "WHITE",
+      "price": "90.00",
+      "payment_method": "CARD",
+      "start_date": "2025-02-10",
+      "renewal_date": "2025-05-10",
+      "remanentes": {},
+      "is_active": true,
+      "created": "2025-02-10T11:30:00Z",
+      "modified": "2025-02-10T11:30:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 6,
+    "fields": {
+      "client": 6,
+      "business_line": 2,
+      "category": "BLACK",
+      "price": "160.00",
+      "payment_method": "TRANSFER",
+      "start_date": "2025-02-15",
+      "renewal_date": "2025-05-15",
+      "remanentes": {
+        "remanente_pepe": "35.00"
+      },
+      "is_active": true,
+      "created": "2025-02-15T09:00:00Z",
+      "modified": "2025-02-15T09:00:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 7,
+    "fields": {
+      "client": 7,
+      "business_line": 3,
+      "category": "WHITE",
+      "price": "220.00",
+      "payment_method": "CARD",
+      "start_date": "2025-02-20",
+      "renewal_date": "2025-05-20",
+      "remanentes": {},
+      "is_active": true,
+      "created": "2025-02-20T13:45:00Z",
+      "modified": "2025-02-20T13:45:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 8,
+    "fields": {
+      "client": 8,
+      "business_line": 6,
+      "category": "BLACK",
+      "price": "250.00",
+      "payment_method": "TRANSFER",
+      "start_date": "2025-03-01",
+      "renewal_date": "2025-06-01",
+      "remanentes": {
+        "remanente_dani": "60.00"
+      },
+      "is_active": true,
+      "created": "2025-03-01T15:30:00Z",
+      "modified": "2025-03-01T15:30:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 9,
+    "fields": {
+      "client": 9,
+      "business_line": 5,
+      "category": "BLACK",
+      "price": "140.00",
+      "payment_method": "BIZUM",
+      "start_date": "2025-03-05",
+      "renewal_date": "2025-06-05",
+      "remanentes": {
+        "remanente_aven": "30.00"
+      },
+      "is_active": true,
+      "created": "2025-03-05T08:15:00Z",
+      "modified": "2025-03-05T08:15:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 10,
+    "fields": {
+      "client": 10,
+      "business_line": 2,
+      "category": "WHITE",
+      "price": "130.00",
+      "payment_method": "CASH",
+      "start_date": "2025-03-10",
+      "renewal_date": "2025-06-10",
+      "remanentes": {},
+      "is_active": true,
+      "created": "2025-03-10T12:00:00Z",
+      "modified": "2025-03-10T12:00:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 11,
+    "fields": {
+      "client": 1,
+      "business_line": 5,
+      "category": "BLACK",
+      "price": "170.00",
+      "payment_method": "CARD",
+      "start_date": "2025-04-01",
+      "renewal_date": "2025-07-01",
+      "remanentes": {
+        "remanente_aven": "45.00"
+      },
+      "is_active": true,
+      "created": "2025-04-01T10:00:00Z",
+      "modified": "2025-04-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "accounting.clientservice",
+    "pk": 12,
+    "fields": {
+      "client": 3,
+      "business_line": 6,
+      "category": "WHITE",
+      "price": "110.00",
+      "payment_method": "TRANSFER",
+      "start_date": "2025-04-10",
+      "renewal_date": "2025-07-10",
+      "remanentes": {},
+      "is_active": true,
+      "created": "2025-04-10T14:30:00Z",
+      "modified": "2025-04-10T14:30:00Z"
+    }
+  }
+]
