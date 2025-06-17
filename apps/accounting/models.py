@@ -241,7 +241,14 @@ class ClientService(TimeStampedModel):
     def get_remanente_total(self):
         """
         Calculate total remanente amount for BLACK category.
+        Allows both positive and negative values.
         """
         if self.category == self.CategoryChoices.BLACK and self.remanentes:
-            return sum(float(value) for value in self.remanentes.values() if isinstance(value, (int, float, str)) and str(value).replace('.', '').isdigit())
+            total = 0
+            for value in self.remanentes.values():
+                try:
+                    total += float(value)
+                except (ValueError, TypeError):
+                    pass
+            return total
         return 0
