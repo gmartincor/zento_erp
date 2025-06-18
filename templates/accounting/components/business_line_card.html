@@ -1,0 +1,151 @@
+{%comment%}
+Component: Business Line Card
+Description: Card component for displaying business line information with navigation
+Usage: {% include 'accounting/components/business_line_card.html' with business_line=line stats=line_stats %}
+Parameters:
+- business_line: BusinessLine object with all necessary data
+- stats: Statistics dictionary for the business line
+- show_children: Whether to show child business lines count (default: True)
+- card_variant: Card layout variant ('default', 'compact', 'highlight')
+- show_categories: Whether to show WHITE/BLACK category buttons (default: auto-detect if leaf node)
+- current_user: User object for permission checks
+{%endcomment%}
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden 
+            hover:shadow-md transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600
+            {% if card_variant == 'highlight' %}ring-2 ring-primary-500 ring-opacity-20{% endif %}">
+    
+    <!-- Card Header -->
+    <div class="p-6 {% if card_variant == 'highlight' %}bg-primary-50 dark:bg-primary-900/10{% endif %}">
+        <div class="flex items-start justify-between">
+            <!-- Business Line Info -->
+            <div class="flex items-start space-x-4 flex-1">
+                <!-- Level Indicator & Icon -->
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-lg flex items-center justify-center
+                                {% if business_line.level == 1 %}bg-blue-100 dark:bg-blue-900/20
+                                {% elif business_line.level == 2 %}bg-green-100 dark:bg-green-900/20
+                                {% else %}bg-purple-100 dark:bg-purple-900/20{% endif %}">
+                        {% if business_line.level == 1 %}
+                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        {% elif business_line.level == 2 %}
+                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        {% else %}
+                        <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Business Line Details -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                            {{ business_line.name }}
+                        </h3>
+                        
+                        <!-- Level Badge -->
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                     {% if business_line.level == 1 %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                     {% elif business_line.level == 2 %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                     {% else %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% endif %}">
+                            Nivel {{ business_line.level }}
+                        </span>
+                    </div>
+
+                    {% if business_line.description and card_variant != 'compact' %}
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                        {{ business_line.description }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Business Line Meta Info -->
+                    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                        {% if business_line.slug %}
+                        <span class="flex items-center space-x-1">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                            </svg>
+                            <span class="font-mono">{{ business_line.slug }}</span>
+                        </span>
+                        {% endif %}
+
+                        {% if show_children and business_line.children.count > 0 %}
+                        <span class="flex items-center space-x-1">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            <span>{{ business_line.children.count }} sublínea{{ business_line.children.count|pluralize:"s" }}</span>
+                        </span>
+                        {% endif %}
+
+                        {% if business_line.has_remanente %}
+                        <span class="flex items-center space-x-1 text-amber-600 dark:text-amber-400">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span>Con remanentes</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Dropdown (for future use) -->
+            <div class="flex-shrink-0" x-data="{ open: false }">
+                <button @click="open = !open" 
+                        class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    {% if stats and card_variant != 'compact' %}
+    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+        {% include 'accounting/components/statistics_panel.html' with stats=stats title="" panel_variant="compact" %}
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex flex-wrap gap-2">
+            <!-- Navigate to Business Line Detail -->
+            <a href="{% url 'accounting:line-detail' line_path=business_line.slug %}"
+               class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Ver Detalle
+            </a>
+
+            <!-- Category Buttons (only for leaf nodes) -->
+            {% if show_categories|default:not_business_line.children.exists %}
+            <a href="{% url 'accounting:category-services' line_path=business_line.slug category='white' %}"
+               class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Servicios White
+            </a>
+
+            <a href="{% url 'accounting:category-services' line_path=business_line.slug category='black' %}"
+               class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gray-800 hover:bg-gray-900 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Servicios Black
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>

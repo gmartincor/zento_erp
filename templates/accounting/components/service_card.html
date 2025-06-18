@@ -1,0 +1,225 @@
+{%comment%}
+Component: Service Card
+Description: Reusable card component for displaying individual client services
+Usage: {% include 'accounting/components/service_card.html' with service=service show_remanentes=True %}
+Parameters:
+- service: ClientService object with related client data
+- show_remanentes: Whether to show remanentes section (for BLACK category)
+- card_variant: Card layout variant ('default', 'compact', 'detailed')
+{%endcomment%}
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 group">
+    <!-- Header con información del cliente -->
+    <div class="p-6 pb-4">
+        <div class="flex items-start justify-between">
+            <div class="flex items-center space-x-3">
+                <!-- Avatar del cliente -->
+                <div class="flex-shrink-0">
+                    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800 dark:to-primary-900 flex items-center justify-center">
+                        <span class="text-lg font-semibold text-primary-700 dark:text-primary-300">
+                            {{ service.client.full_name|first|upper }}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Información del cliente -->
+                <div class="min-w-0 flex-1">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                        {{ service.client.full_name }}
+                    </h3>
+                    <div class="flex items-center space-x-2 mt-1">
+                        {% if service.client.email %}
+                        <span class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                            {{ service.client.email }}
+                        </span>
+                        {% endif %}
+                        {% if service.client.phone %}
+                        <span class="text-gray-300 dark:text-gray-600">•</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ service.client.phone }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Badge de categoría -->
+            <span class="px-2 py-1 text-xs font-medium rounded-full {% if service.category == 'WHITE' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{% else %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% endif %}">
+                {{ service.category }}
+            </span>
+        </div>
+    </div>
+    
+    <!-- Información del servicio -->
+    <div class="px-6 pb-4">
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Precio -->
+            <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                    €{{ service.price|floatformat:2 }}
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Precio del Servicio
+                </div>
+            </div>
+            
+            <!-- Método de pago -->
+            <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ service.get_payment_method_display }}
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Método de Pago
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fechas del servicio -->
+        <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div class="flex items-center justify-between text-sm">
+                <div>
+                    <span class="text-gray-600 dark:text-gray-400">Inicio:</span>
+                    <span class="font-medium text-gray-900 dark:text-white ml-1">
+                        {{ service.start_date|date:"d M Y" }}
+                    </span>
+                </div>
+                {% if service.end_date %}
+                <div>
+                    <span class="text-gray-600 dark:text-gray-400">Fin:</span>
+                    <span class="font-medium text-gray-900 dark:text-white ml-1">
+                        {{ service.end_date|date:"d M Y" }}
+                    </span>
+                </div>
+                {% else %}
+                <div>
+                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
+                        Activo
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Información del cliente inline -->
+        <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div class="grid grid-cols-2 gap-3 text-sm">
+                {% if service.client.birth_date %}
+                <div>
+                    <span class="text-gray-600 dark:text-gray-400">Edad:</span>
+                    <span class="font-medium text-gray-900 dark:text-white ml-1">
+                        {{ service.client.birth_date|timesince|truncatewords:1 }}
+                    </span>
+                </div>
+                {% endif %}
+                {% if service.client.gender %}
+                <div>
+                    <span class="text-gray-600 dark:text-gray-400">Género:</span>
+                    <span class="font-medium text-gray-900 dark:text-white ml-1">
+                        {{ service.client.get_gender_display }}
+                    </span>
+                </div>
+                {% endif %}
+                {% if service.client.notes %}
+                <div class="col-span-2">
+                    <span class="text-gray-600 dark:text-gray-400">Notas:</span>
+                    <p class="text-gray-900 dark:text-white mt-1 text-xs">
+                        {{ service.client.notes|truncatewords:15 }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Remanentes (solo para categoría BLACK) -->
+        {% if show_remanentes and service.category == 'BLACK' %}
+        <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+            <div class="flex items-center justify-between mb-2">
+                <h4 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    Remanentes
+                </h4>
+                {% if service.remanentes %}
+                <span class="px-2 py-1 text-xs bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200 rounded-full">
+                    {{ service.remanentes|length }} item{{ service.remanentes|length|pluralize }}
+                </span>
+                {% endif %}
+            </div>
+            
+            {% if service.remanentes %}
+                <div class="space-y-2">
+                    {% for key, value in service.remanentes.items %}
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-yellow-700 dark:text-yellow-300 font-medium">
+                            {{ key|title }}:
+                        </span>
+                        <span class="text-yellow-900 dark:text-yellow-100 font-semibold">
+                            €{{ value|floatformat:2 }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Total de remanentes -->
+                {% if service.remanentes.items|length > 1 %}
+                <div class="mt-2 pt-2 border-t border-yellow-200 dark:border-yellow-700">
+                    <div class="flex justify-between items-center text-sm font-semibold">
+                        <span class="text-yellow-800 dark:text-yellow-200">Total:</span>
+                        <span class="text-yellow-900 dark:text-yellow-100">
+                            €{{ service.get_remanente_total|floatformat:2 }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <p class="text-sm text-yellow-700 dark:text-yellow-300 italic">
+                    Sin remanentes configurados
+                </p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Notas del servicio -->
+        {% if service.notes %}
+        <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                Notas del Servicio
+            </h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ service.notes|truncatewords:20 }}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Footer con acciones -->
+    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+        <div class="flex justify-between items-center">
+            <!-- Información de fechas -->
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+                <div>Creado: {{ service.created|date:"d M Y" }}</div>
+                {% if service.updated != service.created %}
+                <div>Actualizado: {{ service.updated|date:"d M Y" }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Acciones -->
+            <div class="flex space-x-2">
+                <a href="{% url 'accounting:service-edit' line_path=line_path category=service.category|lower service_id=service.id %}" 
+                   class="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-md transition-colors font-medium flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                    Editar
+                </a>
+                
+                <button type="button" 
+                        onclick="if(confirm('¿Estás seguro de que deseas eliminar este servicio para {{ service.client.full_name }}?')) { window.location.href = '#eliminar-service-{{ service.id }}'; }"
+                        class="px-3 py-1 text-sm bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-300 rounded-md transition-colors font-medium flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

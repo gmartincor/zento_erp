@@ -147,7 +147,12 @@
                         <div class="text-right">
                             <p class="text-sm font-medium text-gray-900 dark:text-white">€{{ categoria.total|floatformat:2 }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ categoria.total|div:total_gastos|mul:100|floatformat:1 }}%
+                                {% comment %}{{ categoria.total|div:total_gastos|mul:100|floatformat:1 }}%{% endcomment %}
+                                {% if total_gastos > 0 %}
+                                    {% widthratio categoria.total total_gastos 100 %}%
+                                {% else %}
+                                    0%
+                                {% endif %}
                             </p>
                         </div>
                     </div>

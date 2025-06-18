@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ business_line.name }} - Línea de Negocio - Nutrition Pro CRM{% endblock %}
+
+{% block breadcrumb %}
+{% include 'accounting/components/breadcrumb.html' with breadcrumb_path=breadcrumb_path %}
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex-1">
+                <div class="flex items-center space-x-4 mb-4">
+                    <!-- Level Icon -->
+                    <div class="w-16 h-16 rounded-xl flex items-center justify-center
+                                {% if business_line.level == 1 %}bg-blue-100 dark:bg-blue-900/20
+                                {% elif business_line.level == 2 %}bg-green-100 dark:bg-green-900/20
+                                {% else %}bg-purple-100 dark:bg-purple-900/20{% endif %}">
+                        {% if business_line.level == 1 %}
+                        <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        {% elif business_line.level == 2 %}
+                        <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        {% else %}
+                        <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex-1">
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                            {{ business_line.name }}
+                        </h1>
+                        <div class="flex flex-wrap items-center gap-3 mt-2">
+                            <!-- Level Badge -->
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                         {% if business_line.level == 1 %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                         {% elif business_line.level == 2 %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                         {% else %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% endif %}">
+                                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                </svg>
+                                Nivel {{ business_line.level }}
+                            </span>
+
+                            <!-- Slug Badge -->
+                            {% if business_line.slug %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                </svg>
+                                <span class="font-mono">{{ business_line.slug }}</span>
+                            </span>
+                            {% endif %}
+
+                            <!-- Remanente Badge -->
+                            {% if business_line.has_remanente %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Con Remanentes
+                                {% if business_line.remanente_field %}
+                                <span class="ml-1 font-mono text-xs">({{ business_line.get_remanente_field_display }})</span>
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        {% if business_line.description %}
+                        <p class="mt-3 text-sm text-gray-600 dark:text-gray-400 max-w-2xl">
+                            {{ business_line.description }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0">
+                {% if user.role == 'ADMIN' %}
+                <button type="button" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                        onclick="window.location.href='#'">
+                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar Línea
+                </button>
+                {% endif %}
+
+                <a href="{% url 'accounting:index' %}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5v6l3-3 3 3V5" />
+                    </svg>
+                    Ver Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Panel -->
+    {% if line_stats %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            {% include 'accounting/components/statistics_panel.html' with stats=line_stats title="Estadísticas de la Línea" panel_variant="default" %}
+        </div>
+        
+        <!-- Quick Info Panel -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                    Información Rápida
+                </h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Fecha de creación:</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">
+                        {{ business_line.created|date:"d/m/Y" }}
+                    </span>
+                </div>
+                
+                {% if business_line.parent %}
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Línea padre:</span>
+                    <a href="{% url 'accounting:line-detail' line_path=business_line.parent.slug %}" 
+                       class="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+                        {{ business_line.parent.name }}
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if children.exists %}
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Sub-líneas:</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">
+                        {{ children.count }}
+                    </span>
+                </div>
+                {% endif %}
+
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Estado:</span>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                 {% if business_line.is_active %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                 {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                        {% if business_line.is_active %}Activa{% else %}Inactiva{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Navigation Section -->
+    {% if children.exists %}
+    <!-- Sub-Lines Navigation -->
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                Sub-líneas de Negocio
+            </h2>
+            <span class="text-sm text-gray-500 dark:text-gray-400">
+                {{ children.count }} línea{{ children.count|pluralize:"s" }} disponible{{ children.count|pluralize:"s" }}
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {% for child in children %}
+            {% include 'accounting/components/business_line_card.html' with business_line=child card_variant="default" %}
+            {% endfor %}
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Category Services Navigation (Leaf Node) -->
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                Categorías de Servicios
+            </h2>
+            <span class="text-sm text-gray-500 dark:text-gray-400">
+                Selecciona una categoría para gestionar servicios
+            </span>
+        </div>
+
+        <!-- Category Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- WHITE Services Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 hover:border-green-300 dark:hover:border-green-600">
+                <div class="p-6">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Servicios White
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Servicios estándar sin remanentes
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if category_stats.WHITE %}
+                    <div class="space-y-3 mb-4">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Total servicios:</span>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                {{ category_stats.WHITE.total_services|default:0 }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Ingresos totales:</span>
+                            <span class="text-sm font-medium text-green-700 dark:text-green-300">
+                                €{{ category_stats.WHITE.total_revenue|default:0|floatformat:2 }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="flex space-x-3">
+                        <a href="{% url 'accounting:category-services' line_path=line_path category='white' %}"
+                           class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Ver Servicios
+                        </a>
+                        <a href="{% url 'accounting:service-create' line_path=line_path category='white' %}"
+                           class="inline-flex items-center px-3 py-2 border border-green-300 dark:border-green-600 shadow-sm text-sm font-medium rounded-md text-green-700 dark:text-green-300 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BLACK Services Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500">
+                <div class="p-6">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Servicios Black
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {% if business_line.has_remanente %}
+                                Servicios con gestión de remanentes
+                                {% else %}
+                                Servicios especiales
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if category_stats.BLACK %}
+                    <div class="space-y-3 mb-4">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Total servicios:</span>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                {{ category_stats.BLACK.total_services|default:0 }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Ingresos totales:</span>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                €{{ category_stats.BLACK.total_revenue|default:0|floatformat:2 }}
+                            </span>
+                        </div>
+                        {% if business_line.has_remanente and category_stats.BLACK.total_remanentes %}
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Total remanentes:</span>
+                            <span class="text-sm font-medium text-amber-700 dark:text-amber-300">
+                                €{{ category_stats.BLACK.total_remanentes|default:0|floatformat:2 }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="flex space-x-3">
+                        <a href="{% url 'accounting:category-services' line_path=line_path category='black' %}"
+                           class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-800 hover:bg-gray-900 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Ver Servicios
+                        </a>
+                        <a href="{% url 'accounting:service-create' line_path=line_path category='black' %}"
+                           class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Actions for Leaf Nodes -->
+        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Acciones Rápidas
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="{% url 'accounting:category-services' line_path=line_path category='white' %}"
+                   class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors">
+                    <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="text-sm font-medium">Reportes White</span>
+                </a>
+                <a href="{% url 'accounting:category-services' line_path=line_path category='black' %}"
+                   class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="text-sm font-medium">Reportes Black</span>
+                </a>
+                <button type="button" 
+                        class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span class="text-sm font-medium">Exportar Datos</span>
+                </button>
+                {% if user.role == 'ADMIN' %}
+                <button type="button" 
+                        class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors">
+                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" />
+                    </svg>
+                    <span class="text-sm font-medium">Configurar</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

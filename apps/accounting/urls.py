@@ -12,23 +12,22 @@ urlpatterns = [
     # Dashboard - Main entry point
     path('', views.AccountingDashboardView.as_view(), name='index'),
     
-    # Business line detail - Supports any level of hierarchy
-    # Examples: jaen/, jaen/pepe/, jaen/pepe/pepe-normal/
+    # Hierarchical navigation system
+    path('hierarchy/', views.BusinessLineHierarchyView.as_view(), name='hierarchy'),
     re_path(
-        r'^(?P<line_path>[\w-]+(?:/[\w-]+)*)/$',
-        views.BusinessLineDetailView.as_view(),
-        name='line-detail'
+        r'^hierarchy/(?P<line_path>[\w-]+(?:/[\w-]+)*)/$',
+        views.BusinessLineHierarchyView.as_view(),
+        name='hierarchy-path'
     ),
     
-    # Service category lists - WHITE/BLACK services
-    # Examples: jaen/pepe/pepe-normal/white/, jaen/pepe/pepe-normal/black/
-    re_path(
-        r'^(?P<line_path>[\w-]+(?:/[\w-]+)*)/(?P<category>white|black)/$',
-        views.ServiceCategoryListView.as_view(),
-        name='category-services'
-    ),
+    # Business lines overview - Lista consolidada de todas las líneas de negocio (legacy)
+    path('business-lines/', views.BusinessLineListView.as_view(), name='business-lines'),
     
-    # Service creation
+    # Revenue analysis views (legacy - to be contextual)
+    path('revenue/categories/', views.CategorySummaryView.as_view(), name='revenue-categories'),
+    path('revenue/clients/', views.ClientRevenueView.as_view(), name='revenue-clients'),
+    
+    # Service creation - Most specific, must come first
     # Examples: jaen/pepe/pepe-normal/white/create/, jaen/pepe/pepe-normal/black/create/
     re_path(
         r'^(?P<line_path>[\w-]+(?:/[\w-]+)*)/(?P<category>white|black)/create/$',
@@ -44,10 +43,20 @@ urlpatterns = [
         name='service-edit'
     ),
     
-    # Additional utility URLs for AJAX calls or future features
+    # Service category lists - WHITE/BLACK services
+    # Examples: jaen/pepe/pepe-normal/white/, jaen/pepe/pepe-normal/black/
     re_path(
-        r'^api/(?P<line_path>[\w-]+(?:/[\w-]+)*)/stats/$',
+        r'^(?P<line_path>[\w-]+(?:/[\w-]+)*)/(?P<category>white|black)/$',
+        views.ServiceCategoryListView.as_view(),
+        name='category-services'
+    ),
+    
+    # Business line detail - Supports any level of hierarchy
+    # Examples: jaen/, jaen/pepe/, jaen/pepe/pepe-normal/
+    # Must come AFTER category patterns to avoid conflicts
+    re_path(
+        r'^(?P<line_path>[\w-]+(?:/[\w-]+)*)/$',
         views.BusinessLineDetailView.as_view(),
-        name='line-stats-api'
+        name='line-detail'
     ),
 ]

@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"Líneas de Negocio" }} - Nutrition Pro CRM{% endblock %}
+
+{% block breadcrumb %}
+{{ block.super }}
+<li>
+    <div class="flex items-center">
+        <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">Líneas de Negocio</span>
+    </div>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                    {{ page_title|default:"Líneas de Negocio" }}
+                </h1>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    Vista consolidada de todas las líneas de negocio con estadísticas de ingresos
+                    {% if total_lines_count %}
+                        • {{ total_lines_count }} línea{{ total_lines_count|pluralize }} accesible{{ total_lines_count|pluralize }}
+                    {% endif %}
+                </p>
+            </div>
+            
+            <!-- Search and Actions -->
+            <div class="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3">
+                <!-- Search Box -->
+                <form method="get" class="flex">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               name="search" 
+                               value="{{ search_query }}"
+                               placeholder="Buscar líneas de negocio..."
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                    <button type="submit" 
+                            class="ml-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors font-medium text-sm">
+                        Buscar
+                    </button>
+                </form>
+                
+                {% if has_search %}
+                <a href="{% url 'accounting:business-lines' %}" 
+                   class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md transition-colors font-medium text-sm">
+                    Limpiar
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Statistics Cards -->
+    {% if global_stats %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Revenue -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-green-100 dark:bg-green-900">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos Totales</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ global_stats.total_revenue|floatformat:2|default:"0.00" }}</p>
+                    <p class="text-sm text-green-600 dark:text-green-400">{{ global_stats.total_services|default:0 }} servicio{{ global_stats.total_services|pluralize }} activo{{ global_stats.total_services|pluralize }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- WHITE Category Stats -->
+        {% with white_stats=category_stats.WHITE %}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-emerald-100 dark:bg-emerald-900">
+                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Servicios {{ white_stats.name }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ white_stats.total_revenue|floatformat:2|default:"0.00" }}</p>
+                    <p class="text-sm text-emerald-600 dark:text-emerald-400">{{ white_stats.total_services|default:0 }} servicio{{ white_stats.total_services|pluralize }}</p>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+
+        <!-- BLACK Category Stats -->
+        {% with black_stats=category_stats.BLACK %}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-purple-100 dark:bg-purple-900">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Servicios {{ black_stats.name }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ black_stats.total_revenue|floatformat:2|default:"0.00" }}</p>
+                    <p class="text-sm text-purple-600 dark:text-purple-400">{{ black_stats.total_services|default:0 }} servicio{{ black_stats.total_services|pluralize }}</p>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+
+        <!-- Business Lines Count -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-blue-100 dark:bg-blue-900">
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Líneas Activas</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_lines_count|default:0 }}</p>
+                    <p class="text-sm text-blue-600 dark:text-blue-400">En toda la jerarquía</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Business Lines List -->
+    {% if business_lines %}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                Líneas de Negocio Disponibles
+                {% if has_search %}
+                    - Resultados de búsqueda: "{{ search_query }}"
+                {% endif %}
+            </h3>
+        </div>
+        
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            {% for line in business_lines %}
+            <div class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- Hierarchy Indicator -->
+                        <div class="flex items-center space-x-2">
+                            {% if line.parent %}
+                                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                    <span>{{ line.parent.name }}</span>
+                                    <svg class="w-4 h-4 mx-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Line Icon -->
+                            <div class="p-2 rounded-lg {% if line.parent %}bg-blue-100 dark:bg-blue-900{% else %}bg-green-100 dark:bg-green-900{% endif %}">
+                                <svg class="w-5 h-5 {% if line.parent %}text-blue-600 dark:text-blue-300{% else %}text-green-600 dark:text-green-300{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    {% if line.parent %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-1.414.586H7a4 4 0 01-4-4V7a4 4 0 014-4z"></path>
+                                    {% else %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    {% endif %}
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <!-- Line Information -->
+                        <div class="min-w-0 flex-1">
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white">
+                                {{ line.name }}
+                            </h4>
+                            {% if line.description %}
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    {{ line.description }}
+                                </p>
+                            {% endif %}
+                            
+                            <!-- Statistics Bar -->
+                            <div class="mt-3 flex items-center space-x-6 text-sm">
+                                <div class="flex items-center space-x-1">
+                                    <span class="font-medium text-gray-700 dark:text-gray-300">Total:</span>
+                                    <span class="text-gray-900 dark:text-white font-semibold">{{ line.total_services|default:0 }} servicios</span>
+                                </div>
+                                {% if line.white_services %}
+                                <div class="flex items-center space-x-1">
+                                    <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                                    <span class="text-gray-600 dark:text-gray-400">{{ line.white_services }} WHITE</span>
+                                </div>
+                                {% endif %}
+                                {% if line.black_services %}
+                                <div class="flex items-center space-x-1">
+                                    <span class="w-2 h-2 bg-purple-500 rounded-full"></span>
+                                    <span class="text-gray-600 dark:text-gray-400">{{ line.black_services }} BLACK</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Revenue and Actions -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Revenue Display -->
+                        <div class="text-right">
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">
+                                €{{ line.total_revenue|floatformat:2|default:"0.00" }}
+                            </p>
+                            <div class="flex items-center space-x-3 mt-1 text-xs">
+                                {% if line.white_revenue %}
+                                <span class="text-emerald-600 dark:text-emerald-400">
+                                    €{{ line.white_revenue|floatformat:2 }} WHITE
+                                </span>
+                                {% endif %}
+                                {% if line.black_revenue %}
+                                <span class="text-purple-600 dark:text-purple-400">
+                                    €{{ line.black_revenue|floatformat:2 }} BLACK
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Action Button -->
+                        <a href="{% url 'accounting:line-detail' line_path=line.slug %}" 
+                           class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            Ver Detalle
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 sm:px-6 rounded-lg">
+        <div class="flex flex-1 justify-between sm:hidden">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Anterior
+                </a>
+            {% endif %}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Siguiente
+                </a>
+            {% endif %}
+        </div>
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700 dark:text-gray-300">
+                    Mostrando <span class="font-medium">{{ page_obj.start_index }}</span> a <span class="font-medium">{{ page_obj.end_index }}</span> de <span class="font-medium">{{ page_obj.paginator.count }}</span> resultados
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <span class="sr-only">Anterior</span>
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span aria-current="page" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-primary-50 dark:bg-primary-900 text-sm font-medium text-primary-600 dark:text-primary-300">
+                                {{ num }}
+                            </span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                {{ num }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <span class="sr-only">Siguiente</span>
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+            {% if has_search %}
+                No se encontraron líneas de negocio
+            {% else %}
+                No hay líneas de negocio disponibles
+            {% endif %}
+        </h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {% if has_search %}
+                Intenta con otros términos de búsqueda o 
+                <a href="{% url 'accounting:business-lines' %}" class="text-primary-600 hover:text-primary-500">ver todas las líneas</a>.
+            {% else %}
+                No tienes acceso a ninguna línea de negocio en este momento.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

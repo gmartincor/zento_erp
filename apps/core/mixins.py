@@ -376,9 +376,15 @@ class BusinessLineHierarchyMixin:
         if line_path:
             business_line = self.resolve_business_line_from_path(line_path)
             
-            # Check permissions
-            if hasattr(self, 'enforce_business_line_permission'):
-                self.enforce_business_line_permission(business_line)
+            # Check permissions (but don't enforce to avoid redirect)
+            if hasattr(self, 'check_business_line_permission'):
+                if not self.check_business_line_permission(business_line):
+                    # Return minimal context if no permissions
+                    return {
+                        'business_line': business_line,
+                        'line_path': line_path,
+                        'has_permission': False
+                    }
             
             context.update({
                 'business_line': business_line,
@@ -386,6 +392,7 @@ class BusinessLineHierarchyMixin:
                 'breadcrumb_path': self.get_breadcrumb_path(business_line, category),
                 'current_category': category,
                 'line_path': line_path,
+                'has_permission': True
             })
         
         return context
@@ -450,17 +457,22 @@ class ServiceCategoryMixin:
             total_revenue=Sum('price'),
             service_count=Count('id')
         )
-        
-        # Calculate remanente total for BLACK category
+         # Calculate remanente total for BLACK category
         remanente_total = 0
         if category == 'BLACK':
             for service in services:
                 remanente_total += service.get_remanente_total()
         
+        # Calculate average revenue per service
+        total_revenue = stats['total_revenue'] or 0
+        service_count = stats['service_count'] or 0
+        avg_revenue_per_service = total_revenue / service_count if service_count > 0 else 0
+
         return {
-            'total_revenue': stats['total_revenue'] or 0,
-            'service_count': stats['service_count'] or 0,
+            'total_revenue': total_revenue,
+            'service_count': service_count,
             'remanente_total': remanente_total,
+            'avg_revenue_per_service': avg_revenue_per_service,
         }
     
     def get_category_display_name(self, category):
@@ -514,4 +526,33 @@ class ServiceCategoryMixin:
             'category_stats': stats,
             'has_remanentes': category == 'BLACK' and business_line.has_remanente,
             'remanente_field': business_line.remanente_field if category == 'BLACK' else None,
+        }
+    
+    def get_category_counts(self, business_line):
+        """
+        Get service counts for both WHITE and BLACK categories.
+        
+        Args:
+            business_line (BusinessLine): Business line object
+            
+        Returns:
+            dict: Dictionary with white_count and black_count
+        """
+        from apps.accounting.models import ClientService
+        
+        base_queryset = ClientService.objects.filter(
+            business_line=business_line,
+            is_active=True
+        )
+        
+        # Apply permission filtering if available
+        if hasattr(self, 'filter_business_lines_by_permission'):
+            base_queryset = self.filter_business_lines_by_permission(base_queryset)
+        
+        white_count = base_queryset.filter(category='WHITE').count()
+        black_count = base_queryset.filter(category='BLACK').count()
+        
+        return {
+            'white_count': white_count,
+            'black_count': black_count,
         }
