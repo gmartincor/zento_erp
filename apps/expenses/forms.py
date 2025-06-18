@@ -64,15 +64,17 @@ class ExpenseForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
-        category_type = kwargs.pop('category_type', None)
+        category = kwargs.pop('category', None)
         super().__init__(*args, **kwargs)
         
-        # Filtrar categorías por tipo si se especifica
-        if category_type:
+        # Si se especifica una categoría, preseleccionarla y filtrar solo esa categoría
+        if category:
             self.fields['category'].queryset = ExpenseCategory.objects.filter(
-                category_type=category_type,
+                id=category.id,
                 is_active=True
-            ).order_by('name')
+            )
+            self.fields['category'].initial = category
+            self.fields['category'].widget.attrs['readonly'] = True
         else:
             self.fields['category'].queryset = ExpenseCategory.objects.filter(
                 is_active=True

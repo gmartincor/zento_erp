@@ -69,10 +69,10 @@
                 
                 <ul x-show="open" x-transition class="mt-2 ml-8 space-y-1">
                     <li><a href="{% url 'expenses:categories' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Todas las Categorías</a></li>
-                    <li><a href="{% url 'expenses:by-category' 'FIXED' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Fijos</a></li>
-                    <li><a href="{% url 'expenses:by-category' 'VARIABLE' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Variables</a></li>
-                    <li><a href="{% url 'expenses:by-category' 'TAX' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Impuestos</a></li>
-                    <li><a href="{% url 'expenses:by-category' 'OCCASIONAL' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Puntuales</a></li>
+                    <li><a href="{% url 'expenses:by-type' 'FIXED' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Fijos</a></li>
+                    <li><a href="{% url 'expenses:by-type' 'VARIABLE' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Variables</a></li>
+                    <li><a href="{% url 'expenses:by-type' 'TAX' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Impuestos</a></li>
+                    <li><a href="{% url 'expenses:by-type' 'OCCASIONAL' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Puntuales</a></li>
                 </ul>
             </li>
 

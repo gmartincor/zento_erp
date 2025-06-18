@@ -5,7 +5,8 @@ from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import datetime
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
+from django.http import Http404
 
 from apps.expenses.models import Expense, ExpenseCategory
 from apps.expenses.forms import ExpenseForm, ExpenseCategoryForm
@@ -86,23 +87,24 @@ class ExpenseCategoryView(LoginRequiredMixin, TemplateView):
 
 
 class ExpenseListView(LoginRequiredMixin, ListView):
-    """Lista de gastos filtrada por categoría."""
+    """Lista de gastos filtrada por categoría específica."""
     model = Expense
     template_name = 'expenses/expense_list.html'
     context_object_name = 'expenses'
     paginate_by = 25
     
     def get_queryset(self):
-        category_type = self.kwargs['category_type']
+        category_slug = self.kwargs['category_slug']
+        self.category = get_object_or_404(ExpenseCategory, slug=category_slug)
         
         # Filtros temporales de los parámetros GET
         current_year = timezone.now().year
         year = int(self.request.GET.get('year', current_year))
         month = self.request.GET.get('month')
         
-        # Construir queryset con filtros
+        # Construir queryset con filtros por categoría específica
         queryset = Expense.objects.filter(
-            category__category_type=category_type,
+            category=self.category,
             accounting_year=year
         )
         
@@ -113,7 +115,6 @@ class ExpenseListView(LoginRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        category_type = self.kwargs['category_type']
         
         # Filtros temporales
         current_year = timezone.now().year
@@ -121,11 +122,13 @@ class ExpenseListView(LoginRequiredMixin, ListView):
         month = self.request.GET.get('month')
         
         # Información de la categoría actual
-        context['category_type'] = category_type
-        context['category_display'] = dict(ExpenseCategory.CategoryTypeChoices.choices)[category_type]
+        context['category'] = self.category
+        context['category_slug'] = self.category.slug
+        context['category_display'] = self.category.name
+        context['category_type'] = self.category.category_type  # Para retrocompatibilidad en templates
         
         # Total de la categoría actual con filtros aplicados
-        context['category_total'] = self.get_queryset().aggregate(
+        context['total_amount'] = self.get_queryset().aggregate(
             total=Sum('amount')
         )['total'] or 0
         
@@ -159,20 +162,22 @@ class ExpenseCreateView(LoginRequiredMixin, CreateView):
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['category_type'] = self.kwargs['category_type']
+        category_slug = self.kwargs['category_slug']
+        self.category = get_object_or_404(ExpenseCategory, slug=category_slug)
+        kwargs['category'] = self.category
         return kwargs
     
     def get_success_url(self):
-        category_type = self.kwargs['category_type']
-        return reverse_lazy('expenses:by-category', kwargs={'category_type': category_type})
+        return reverse_lazy('expenses:by-category', kwargs={'category_slug': self.category.slug})
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        category_type = self.kwargs['category_type']
         
-        context['category_type'] = category_type
-        context['category_display'] = dict(ExpenseCategory.CategoryTypeChoices.choices)[category_type]
-        context['form_title'] = f'Nuevo Gasto {context["category_display"]}'
+        context['category'] = self.category
+        context['category_slug'] = self.category.slug
+        context['category_display'] = self.category.name
+        context['category_type'] = self.category.category_type  # Para retrocompatibilidad
+        context['form_title'] = f'Nuevo Gasto - {self.category.name}'
         
         return context
 
@@ -185,20 +190,22 @@ class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['category_type'] = self.kwargs['category_type']
+        category_slug = self.kwargs['category_slug']
+        self.category = get_object_or_404(ExpenseCategory, slug=category_slug)
+        kwargs['category'] = self.category
         return kwargs
     
     def get_success_url(self):
-        category_type = self.kwargs['category_type']
-        return reverse_lazy('expenses:by-category', kwargs={'category_type': category_type})
+        return reverse_lazy('expenses:by-category', kwargs={'category_slug': self.category.slug})
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        category_type = self.kwargs['category_type']
         
-        context['category_type'] = category_type
-        context['category_display'] = dict(ExpenseCategory.CategoryTypeChoices.choices)[category_type]
-        context['form_title'] = f'Editar Gasto {context["category_display"]}'
+        context['category'] = self.category
+        context['category_slug'] = self.category.slug
+        context['category_display'] = self.category.name
+        context['category_type'] = self.category.category_type  # Para retrocompatibilidad
+        context['form_title'] = f'Editar Gasto - {self.category.name}'
         
         return context
 
@@ -209,15 +216,18 @@ class ExpenseDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'expenses/expense_confirm_delete.html'
     
     def get_success_url(self):
-        category_type = self.kwargs['category_type']
-        return reverse_lazy('expenses:by-category', kwargs={'category_type': category_type})
+        category_slug = self.kwargs['category_slug']
+        return reverse_lazy('expenses:by-category', kwargs={'category_slug': category_slug})
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        category_type = self.kwargs['category_type']
+        category_slug = self.kwargs['category_slug']
+        category = get_object_or_404(ExpenseCategory, slug=category_slug)
         
-        context['category_type'] = category_type
-        context['category_display'] = dict(ExpenseCategory.CategoryTypeChoices.choices)[category_type]
+        context['category'] = category
+        context['category_slug'] = category.slug
+        context['category_display'] = category.name
+        context['category_type'] = category.category_type  # Para retrocompatibilidad
         
         return context
 
@@ -285,4 +295,75 @@ class ExpenseCategoryDeleteView(LoginRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['expense_count'] = self.object.expenses.count()
+        return context
+
+
+class ExpenseCategoryByTypeView(LoginRequiredMixin, TemplateView):
+    """Vista que muestra categorías filtradas por tipo específico."""
+    template_name = 'expenses/categories_by_type.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        category_type = self.kwargs['category_type']
+        
+        # Validar que el tipo de categoría sea válido
+        valid_types = dict(ExpenseCategory.CategoryTypeChoices.choices)
+        if category_type not in valid_types:
+            raise Http404("Tipo de categoría no válido")
+        
+        # Obtener filtros de fecha desde los parámetros GET
+        current_year = timezone.now().year
+        current_month = timezone.now().month
+        
+        year = int(self.request.GET.get('year', current_year))
+        month = self.request.GET.get('month')
+        
+        # Construir el queryset base con filtros temporales
+        expense_filter = {'accounting_year': year}
+        if month:
+            expense_filter['accounting_month'] = int(month)
+        
+        # Obtener categorías del tipo específico con sus estadísticas
+        base_filter = Q(expenses__accounting_year=year)
+        if month:
+            base_filter &= Q(expenses__accounting_month=int(month))
+        
+        categories = ExpenseCategory.objects.filter(
+            category_type=category_type,
+            is_active=True
+        ).annotate(
+            total_amount=Sum('expenses__amount', filter=base_filter),
+            expense_count=Count('expenses', filter=base_filter)
+        ).order_by('name')
+        
+        # Calcular total del tipo específico
+        total_amount = Expense.objects.filter(
+            category__category_type=category_type,
+            **expense_filter
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        # Crear diccionario de meses para fácil acceso en template
+        months_dict = dict([
+            (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'),
+            (5, 'Mayo'), (6, 'Junio'), (7, 'Julio'), (8, 'Agosto'),
+            (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')
+        ])
+        
+        context.update({
+            'category_type': category_type,
+            'category_type_display': valid_types[category_type],
+            'categories': categories,
+            'total_amount': total_amount,
+            'current_year': year,
+            'current_month': int(month) if month else None,
+            'current_month_name': months_dict.get(int(month)) if month else None,
+            'available_years': list(range(2024, current_year + 2)),
+            'available_months': [
+                (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'),
+                (5, 'Mayo'), (6, 'Junio'), (7, 'Julio'), (8, 'Agosto'),
+                (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')
+            ]
+        })
+        
         return context
