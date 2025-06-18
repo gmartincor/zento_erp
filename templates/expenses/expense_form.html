@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Crear{% endif %} Gasto - {{ category_display }} - Nutrition Pro CRM{% endblock %}
+
+{% block breadcrumb %}
+{{ block.super }}
+<li>
+    <div class="flex items-center">
+        <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <a href="{% url 'expenses:categories' %}" class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Gastos</a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <a href="{% url 'expenses:by-category' category_type %}" class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">{{ category_display }}</a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %}</span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_header %}
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            {% if form.instance.pk %}Editar Gasto{% else %}Nuevo Gasto{% endif %}
+        </h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">{{ category_display }}</p>
+    </div>
+    <a href="{% url 'expenses:by-category' category_type %}" 
+       class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg transition-colors font-medium">
+        Cancelar
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                {% if form.instance.pk %}Editar información del gasto{% else %}Información del nuevo gasto{% endif %}
+            </h3>
+        </div>
+        
+        <form method="post" class="p-6 space-y-6" x-data="{ loading: false }" @submit="loading = true">
+            {% csrf_token %}
+            
+            <!-- Description Field -->
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.description.label }}
+                    <span class="text-red-500">*</span>
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.description.errors.0 }}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Describe brevemente el gasto realizado</p>
+            </div>
+
+            <!-- Amount Field -->
+            <div>
+                <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.amount.label }}
+                    <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 dark:text-gray-400 sm:text-sm">€</span>
+                    </div>
+                    {{ form.amount }}
+                </div>
+                {% if form.amount.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.amount.errors.0 }}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Importe en euros (ej: 123.45)</p>
+            </div>
+
+            <!-- Date Field -->
+            <div>
+                <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.date.label }}
+                    <span class="text-red-500">*</span>
+                </label>
+                {{ form.date }}
+                {% if form.date.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.date.errors.0 }}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fecha en que se realizó el gasto</p>
+            </div>
+
+            <!-- Business Line Field -->
+            <div>
+                <label for="{{ form.business_line.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.business_line.label }}
+                    <span class="text-red-500">*</span>
+                </label>
+                {{ form.business_line }}
+                {% if form.business_line.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.business_line.errors.0 }}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Línea de negocio a la que se atribuye este gasto</p>
+            </div>
+
+            <!-- Notes Field -->
+            <div>
+                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.notes.label }}
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.notes.errors.0 }}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Información adicional opcional sobre el gasto</p>
+            </div>
+
+            <!-- Category Field (Hidden) -->
+            {{ form.category }}
+
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <a href="{% url 'expenses:category_detail' category_type %}" 
+                   class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    Cancelar
+                </a>
+                <button
+                    type="submit"
+                    :disabled="loading"
+                    :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
+                    class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors font-medium inline-flex items-center"
+                >
+                    <span x-show="!loading" class="flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        {% if form.instance.pk %}Actualizar Gasto{% else %}Crear Gasto{% endif %}
+                    </span>
+                    <span x-show="loading" class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {% if form.instance.pk %}Actualizando...{% else %}Creando...{% endif %}
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Form Styling -->
+<style>
+    /* Custom form field styling */
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+        @apply block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors;
+    }
+    
+    input[type="number"] {
+        @apply pl-8;
+    }
+    
+    textarea {
+        @apply resize-none;
+        rows: 3;
+    }
+    
+    select {
+        @apply cursor-pointer;
+    }
+</style>
+{% endblock %}

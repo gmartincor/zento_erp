@@ -7,6 +7,11 @@ urlpatterns = [
     # Vista principal de categorías con totales
     path('', views.ExpenseCategoryView.as_view(), name='categories'),
     
+    # CRUD para categorías de gastos
+    path('categories/create/', views.ExpenseCategoryCreateView.as_view(), name='category-create'),
+    path('categories/<int:pk>/edit/', views.ExpenseCategoryUpdateView.as_view(), name='category-edit'),
+    path('categories/<int:pk>/delete/', views.ExpenseCategoryDeleteView.as_view(), name='category-delete'),
+    
     # Lista de gastos filtrada por categoría
     path('category/<str:category_type>/', views.ExpenseListView.as_view(), name='by-category'),
     

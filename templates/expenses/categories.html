@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorías de Gastos - Nutrition Pro CRM{% endblock %}
+
+{% block breadcrumb %}
+{{ block.super }}
+<li>
+    <div class="flex items-center">
+        <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">Gastos</span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_header %}
+<div class="mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Categorías de Gastos</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">
+                Gestiona los gastos organizados por categorías
+                {% if current_month_name %}
+                    - {{ current_month_name }} {{ current_year }}
+                {% else %}
+                    - Año {{ current_year }}
+                {% endif %}
+            </p>
+        </div>
+        
+        <!-- Filtros temporales -->
+        <div class="mt-4 sm:mt-0">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <form method="get" class="flex flex-col sm:flex-row gap-3" x-data="{ year: {{ current_year }}, month: {{ current_month|default:'null' }} }">
+                    <select name="year" x-model="year" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        {% for year_option in available_years %}
+                            <option value="{{ year_option }}" {% if year_option == current_year %}selected{% endif %}>{{ year_option }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <select name="month" x-model="month" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">Todos los meses</option>
+                        {% for month_num, month_name in available_months %}
+                            <option value="{{ month_num }}" {% if month_num == current_month %}selected{% endif %}>{{ month_name }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <button type="submit" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium">
+                        Filtrar
+                    </button>
+                </form>
+                
+                <!-- Botón para crear nueva categoría -->
+                <a href="{% url 'expenses:category-create' %}" 
+                   class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Nueva Categoría
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total General -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-gray-100 dark:bg-gray-700">
+                <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total General</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ total_general|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gastos Fijos -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-red-100 dark:bg-red-900">
+                <svg class="w-6 h-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Gastos Fijos</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ category_totals.FIXED.total|default:0|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gastos Variables -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-yellow-100 dark:bg-yellow-900">
+                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Gastos Variables</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ category_totals.VARIABLE.total|default:0|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Impuestos y Otros -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-blue-100 dark:bg-blue-900">
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Impuestos y Otros</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ category_totals.TAX.total|default:0|add:category_totals.OCCASIONAL.total|default:0|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Categories Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for category in categories %}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
+        <div class="p-6">
+            <!-- Category Header -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 rounded-lg {% if category.category_type == 'FIXED' %}bg-red-100 dark:bg-red-900{% elif category.category_type == 'VARIABLE' %}bg-yellow-100 dark:bg-yellow-900{% elif category.category_type == 'TAX' %}bg-purple-100 dark:bg-purple-900{% else %}bg-blue-100 dark:bg-blue-900{% endif %}">
+                        <svg class="w-5 h-5 {% if category.category_type == 'FIXED' %}text-red-600 dark:text-red-300{% elif category.category_type == 'VARIABLE' %}text-yellow-600 dark:text-yellow-300{% elif category.category_type == 'TAX' %}text-purple-600 dark:text-purple-300{% else %}text-blue-600 dark:text-blue-300{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {% if category.category_type == 'FIXED' %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            {% elif category.category_type == 'VARIABLE' %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            {% elif category.category_type == 'TAX' %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m14 0a2 2 0 00-2-2H7a2 2 0 00-2 2m14 0H5m0 0v.01M19 7v.01"></path>
+                            {% else %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            {% endif %}
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ category.name }}</h3>
+                        <span class="text-xs px-2 py-1 rounded-full {% if category.category_type == 'FIXED' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% elif category.category_type == 'VARIABLE' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200{% elif category.category_type == 'TAX' %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% else %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200{% endif %}">
+                            {{ category.get_category_type_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            {% if category.description %}
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ category.description }}</p>
+            {% endif %}
+
+            <!-- Stats -->
+            <div class="space-y-3 mb-4">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Total gastado:</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">€{{ category.total_amount|default:0|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Número de gastos:</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ category.expense_count|default:0 }}</span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col space-y-2">
+                <div class="flex space-x-2">
+                    <a href="{% url 'expenses:by-category' category.category_type %}{% if current_year %}?year={{ current_year }}{% endif %}{% if current_month %}&month={{ current_month }}{% endif %}" 
+                       class="flex-1 bg-primary-600 hover:bg-primary-700 text-white text-center py-2 px-4 rounded-lg transition-colors text-sm font-medium">
+                        Ver Gastos
+                    </a>
+                    <a href="{% url 'expenses:create' category.category_type %}" 
+                       class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg transition-colors text-sm font-medium">
+                        Agregar
+                    </a>
+                </div>
+                
+                <!-- Botones de gestión de categoría -->
+                <div class="flex space-x-2">
+                    <a href="{% url 'expenses:category-edit' category.pk %}" 
+                       class="flex-1 bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 text-center py-2 px-3 rounded-lg transition-colors text-sm font-medium">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Editar
+                    </a>
+                    <a href="{% url 'expenses:category-delete' category.pk %}" 
+                       class="flex-1 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-300 text-center py-2 px-3 rounded-lg transition-colors text-sm font-medium">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Eliminar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No hay categorías</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comienza creando una nueva categoría de gastos.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Nutrition Pro CRM{% endblock %}
+
+{% block page_header %}
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+    <p class="mt-2 text-gray-600 dark:text-gray-400">Resumen de tu negocio de nutrición</p>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Main Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Ingresos -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-green-100 dark:bg-green-900">
+                <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Ingresos</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ total_ingresos|floatformat:2 }}</p>
+                <p class="text-sm text-green-600 dark:text-green-400">+€{{ ingresos_mes|floatformat:2 }} este mes</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Gastos -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-red-100 dark:bg-red-900">
+                <svg class="w-6 h-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Gastos</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ total_gastos|floatformat:2 }}</p>
+                <p class="text-sm text-red-600 dark:text-red-400">+€{{ gastos_mes|floatformat:2 }} este mes</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultado Total -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-lg {% if resultado_total >= 0 %}bg-blue-100 dark:bg-blue-900{% else %}bg-orange-100 dark:bg-orange-900{% endif %}">
+                <svg class="w-6 h-6 {% if resultado_total >= 0 %}text-blue-600 dark:text-blue-300{% else %}text-orange-600 dark:text-orange-300{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Resultado Total</p>
+                <p class="text-2xl font-bold {% if resultado_total >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                    {% if resultado_total >= 0 %}+{% endif %}€{{ resultado_total|floatformat:2 }}
+                </p>
+                <p class="text-sm {% if resultado_mes >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                    {% if resultado_mes >= 0 %}+{% endif %}€{{ resultado_mes|floatformat:2 }} este mes
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-purple-100 dark:bg-purple-900">
+                <svg class="w-6 h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Acciones Rápidas</p>
+                <div class="mt-2 space-y-1">
+                    <a href="{% url 'expenses:create' 'VARIABLE' %}" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 block">+ Nuevo Gasto</a>
+                    <a href="{% url 'expenses:categories' %}" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 block">Ver Gastos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Details -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Business Lines Performance -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Rendimiento por Línea de Negocio</h3>
+        </div>
+        <div class="p-6">
+            {% if lineas_negocio %}
+                <div class="space-y-4">
+                    {% for linea in lineas_negocio|slice:":5" %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ linea.name }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ linea.num_servicios }} servicios • {{ linea.num_gastos }} gastos
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-medium {% if linea.total_ingresos|add:linea.total_gastos|floatformat:'-2'|first != '-' %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                €{{ linea.total_ingresos|default:0|add:linea.total_gastos|default:0|floatformat:2 }}
+                            </p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                +€{{ linea.total_ingresos|default:0|floatformat:2 }} -€{{ linea.total_gastos|default:0|floatformat:2 }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-6">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No hay datos</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comienza registrando servicios y gastos.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Expense Categories -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Gastos por Categoría</h3>
+        </div>
+        <div class="p-6">
+            {% if gastos_por_categoria %}
+                <div class="space-y-4">
+                    {% for categoria in gastos_por_categoria %}
+                    {% if categoria.total %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 rounded-lg {% if categoria.category_type == 'FIXED' %}bg-red-100 dark:bg-red-900{% elif categoria.category_type == 'VARIABLE' %}bg-yellow-100 dark:bg-yellow-900{% else %}bg-blue-100 dark:bg-blue-900{% endif %}">
+                                <div class="w-3 h-3 {% if categoria.category_type == 'FIXED' %}bg-red-500{% elif categoria.category_type == 'VARIABLE' %}bg-yellow-500{% else %}bg-blue-500{% endif %} rounded-full"></div>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ categoria.name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ categoria.count }} gastos</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">€{{ categoria.total|floatformat:2 }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ categoria.total|div:total_gastos|mul:100|floatformat:1 }}%
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-6">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No hay gastos</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comienza registrando gastos para ver estadísticas.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Access Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Ingresos Module -->
+    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-green-900 dark:text-green-100">Ingresos</h3>
+                <p class="text-sm text-green-700 dark:text-green-300">Gestiona servicios y clientes</p>
+            </div>
+            <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+        </div>
+        <div class="mt-4">
+            <a href="#" class="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium">
+                Ver módulo →
+            </a>
+        </div>
+    </div>
+
+    <!-- Gastos Module -->
+    <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-xl p-6 border border-red-200 dark:border-red-800">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-red-900 dark:text-red-100">Gastos</h3>
+                <p class="text-sm text-red-700 dark:text-red-300">Controla todos tus gastos</p>
+            </div>
+            <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+        </div>
+        <div class="mt-4">
+            <a href="{% url 'expenses:categories' %}" class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm font-medium">
+                Ver módulo →
+            </a>
+        </div>
+    </div>
+
+    <!-- Resultados Module -->
+    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100">Resultados</h3>
+                <p class="text-sm text-blue-700 dark:text-blue-300">Analiza tu rendimiento</p>
+            </div>
+            <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+        </div>
+        <div class="mt-4">
+            <a href="#" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
+                Ver módulo →
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

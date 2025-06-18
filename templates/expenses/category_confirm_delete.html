@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Categoría - Nutrition Pro CRM{% endblock %}
+
+{% block breadcrumb %}
+{{ block.super }}
+<li>
+    <div class="flex items-center">
+        <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <a href="{% url 'expenses:categories' %}" class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Gastos</a>
+    </div>
+</li>
+<li>
+    <div class="flex items-center">
+        <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">Eliminar Categoría</span>
+    </div>
+</li>
+{% endblock %}
+
+{% block page_header %}
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Eliminar Categoría</h1>
+    <p class="mt-2 text-gray-600 dark:text-gray-400">Confirme la eliminación de la categoría</p>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-red-50 dark:bg-red-900/20">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.632 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <h3 class="ml-3 text-lg font-medium text-red-800 dark:text-red-200">¡Atención!</h3>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <div class="mb-6">
+                <p class="text-gray-900 dark:text-white text-lg mb-4">
+                    ¿Está seguro que desea eliminar la categoría 
+                    <strong>"{{ object.name }}"</strong>?
+                </p>
+                
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Nombre:</span>
+                            <span class="text-sm text-gray-900 dark:text-white">{{ object.name }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Tipo:</span>
+                            <span class="text-sm text-gray-900 dark:text-white">{{ object.get_category_type_display }}</span>
+                        </div>
+                        {% if object.description %}
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Descripción:</span>
+                            <span class="text-sm text-gray-900 dark:text-white">{{ object.description }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Gastos asociados:</span>
+                            <span class="text-sm text-gray-900 dark:text-white">{{ expense_count }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if expense_count > 0 %}
+                <div class="rounded-md bg-red-50 dark:bg-red-900/20 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+                                No se puede eliminar esta categoría
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                                <p>
+                                    Esta categoría tiene {{ expense_count }} gasto{{ expense_count|pluralize }} asociado{{ expense_count|pluralize }}.
+                                    Para eliminarla, primero debe reasignar o eliminar todos los gastos de esta categoría.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="rounded-md bg-yellow-50 dark:bg-yellow-900/20 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                                Esta acción no se puede deshacer
+                            </h3>
+                            <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                                <p>Una vez eliminada, la categoría no podrá ser recuperada.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'expenses:categories' %}" 
+                   class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg transition-colors font-medium">
+                    Cancelar
+                </a>
+                {% if expense_count == 0 %}
+                <form method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+                        Eliminar Categoría
+                    </button>
+                </form>
+                {% else %}
+                <a href="{% url 'expenses:by-category' object.category_type %}" 
+                   class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+                    Ver Gastos de esta Categoría
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

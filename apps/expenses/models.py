@@ -36,6 +36,12 @@ class ExpenseCategory(TimeStampedModel):
         verbose_name="Slug"
     )
     
+    description = models.TextField(
+        blank=True,
+        verbose_name="Descripción",
+        help_text="Descripción opcional de la categoría"
+    )
+    
     category_type = models.CharField(
         max_length=20,
         choices=CategoryTypeChoices.choices,
