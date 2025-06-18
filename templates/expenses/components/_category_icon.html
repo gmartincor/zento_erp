@@ -1,0 +1,20 @@
+{%comment%}
+Component: Category Icon
+Description: Reusable icon component for expense categories based on type
+Usage: {% include 'expenses/components/_category_icon.html' with category_type=category.category_type size='w-5 h-5' %}
+Parameters:
+- category_type: The category type ('FIXED', 'VARIABLE', 'TAX', 'OCCASIONAL')
+- size: Icon size classes (default: 'w-5 h-5')
+{%endcomment%}
+
+<svg class="{% if size %}{{ size }}{% else %}w-5 h-5{% endif %} {% if category_type == 'FIXED' %}text-red-600 dark:text-red-300{% elif category_type == 'VARIABLE' %}text-yellow-600 dark:text-yellow-300{% elif category_type == 'TAX' %}text-purple-600 dark:text-purple-300{% else %}text-blue-600 dark:text-blue-300{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    {% if category_type == 'FIXED' %}
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+    {% elif category_type == 'VARIABLE' %}
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+    {% elif category_type == 'TAX' %}
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m14 0a2 2 0 00-2-2H7a2 2 0 00-2 2m14 0H5m0 0v.01M19 7v.01"></path>
+    {% else %}
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+    {% endif %}
+</svg>
