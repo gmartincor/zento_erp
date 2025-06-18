@@ -5,17 +5,22 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth import views as auth_views
+from django.shortcuts import redirect
+
+def redirect_to_login(request):
+    return redirect('authentication:login')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     
+    # Root redirect to login
+    path('', redirect_to_login),
+    
     # Authentication URLs
-    path('login/', auth_views.LoginView.as_view(template_name='authentication/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('auth/', include('apps.authentication.urls')),
     
     # App URLs
-    path('', include('apps.dashboard.urls')),
+    path('dashboard/', include('apps.dashboard.urls')),
     path('accounting/', include('apps.accounting.urls')),
     path('expenses/', include('apps.expenses.urls')),
     path('business-lines/', include('apps.business_lines.urls')),
