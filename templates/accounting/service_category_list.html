@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load presentation_tags %}
 
 {% block title %}{{ category_display }} - {{ business_line.name }} - Nutrition Pro CRM{% endblock %}
 
@@ -12,9 +13,7 @@
         <div>
             <div class="flex items-center space-x-3 mb-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ category_display }}</h1>
-                <span class="px-3 py-1 text-sm font-medium rounded-full {% if current_category == 'WHITE' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{% else %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% endif %}">
-                    {{ current_category }}
-                </span>
+                {% category_badge current_category %}
                 {% if has_remanentes %}
                 <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">
                     Con Remanentes
@@ -23,9 +22,9 @@
             </div>
             <p class="text-gray-600 dark:text-gray-400">
                 <span class="font-medium">{{ business_line.name }}</span>
-                • {{ services|length }} servicio{{ services|length|pluralize }}
+                • {{ services|format_count:"servicio" }}
                 {% if category_stats.total_revenue %}
-                • €{{ category_stats.total_revenue|floatformat:2 }} total
+                • {{ category_stats.total_revenue|format_currency }} total
                 {% endif %}
             </p>
         </div>
@@ -187,7 +186,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                    €{{ service.price|floatformat:2 }}
+                                    {{ service.price|format_currency:"€" }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -205,7 +204,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 {% if service.remanentes %}
                                     {% for key, value in service.remanentes.items %}
-                                        <div class="text-xs">{{ key }}: €{{ value|floatformat:2 }}</div>
+                                        <div class="text-xs">{{ key }}: {{ value|format_currency:"€" }}</div>
                                     {% endfor %}
                                 {% else %}
                                     <span class="text-gray-400">Sin remanentes</span>

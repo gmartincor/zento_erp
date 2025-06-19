@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load presentation_tags %}
 
 {% block title %}{{ page_title|default:"Líneas de Negocio" }} - Nutrition Pro CRM{% endblock %}
 
@@ -27,7 +28,7 @@
                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Vista consolidada de todas las líneas de negocio con estadísticas de ingresos
                     {% if total_lines_count %}
-                        • {{ total_lines_count }} línea{{ total_lines_count|pluralize }} accesible{{ total_lines_count|pluralize }}
+                        • {{ total_lines_count|format_count:"línea" }} accesible{{ total_lines_count|pluralize }}
                     {% endif %}
                 </p>
             </div>
@@ -77,8 +78,8 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos Totales</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ global_stats.total_revenue|floatformat:2|default:"0.00" }}</p>
-                    <p class="text-sm text-green-600 dark:text-green-400">{{ global_stats.total_services|default:0 }} servicio{{ global_stats.total_services|pluralize }} activo{{ global_stats.total_services|pluralize }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ global_stats.total_revenue|format_currency }}</p>
+                    <p class="text-sm text-green-600 dark:text-green-400">{{ global_stats.total_services|format_count:"servicio" }} activo</p>
                 </div>
             </div>
         </div>
@@ -94,8 +95,8 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Servicios {{ white_stats.name }}</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ white_stats.total_revenue|floatformat:2|default:"0.00" }}</p>
-                    <p class="text-sm text-emerald-600 dark:text-emerald-400">{{ white_stats.total_services|default:0 }} servicio{{ white_stats.total_services|pluralize }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ white_stats.total_revenue|format_currency }}</p>
+                    <p class="text-sm text-emerald-600 dark:text-emerald-400">{{ white_stats.total_services|format_count:"servicio" }}</p>
                 </div>
             </div>
         </div>
@@ -112,8 +113,8 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Servicios {{ black_stats.name }}</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">€{{ black_stats.total_revenue|floatformat:2|default:"0.00" }}</p>
-                    <p class="text-sm text-purple-600 dark:text-purple-400">{{ black_stats.total_services|default:0 }} servicio{{ black_stats.total_services|pluralize }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ black_stats.total_revenue|format_currency }}</p>
+                    <p class="text-sm text-purple-600 dark:text-purple-400">{{ black_stats.total_services|format_count:"servicio" }}</p>
                 </div>
             </div>
         </div>
@@ -215,17 +216,17 @@
                         <!-- Revenue Display -->
                         <div class="text-right">
                             <p class="text-lg font-bold text-gray-900 dark:text-white">
-                                €{{ line.total_revenue|floatformat:2|default:"0.00" }}
+                                {{ line.total_revenue|format_currency }}
                             </p>
                             <div class="flex items-center space-x-3 mt-1 text-xs">
                                 {% if line.white_revenue %}
                                 <span class="text-emerald-600 dark:text-emerald-400">
-                                    €{{ line.white_revenue|floatformat:2 }} WHITE
+                                    {{ line.white_revenue|format_currency }} WHITE
                                 </span>
                                 {% endif %}
                                 {% if line.black_revenue %}
                                 <span class="text-purple-600 dark:text-purple-400">
-                                    €{{ line.black_revenue|floatformat:2 }} BLACK
+                                    {{ line.black_revenue|format_currency }} BLACK
                                 </span>
                                 {% endif %}
                             </div>

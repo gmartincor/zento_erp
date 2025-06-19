@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load presentation_tags %}
 
 {% block title %}{{ page_title }} - CRM Nutrición Pro{% endblock %}
 
@@ -63,7 +64,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos Totales</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ level_stats.total_revenue|floatformat:0|intcomma }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.total_revenue|format_currency:"$" }}</p>
                 </div>
             </div>
         </div>
@@ -91,7 +92,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Promedio por Línea</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ level_stats.avg_revenue_per_line|floatformat:0|intcomma }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.avg_revenue_per_line|format_currency:"$" }}</p>
                 </div>
             </div>
         </div>
@@ -127,7 +128,7 @@
                     <div class="flex justify-between">
                         <span class="text-sm text-gray-600 dark:text-gray-400">Ingresos:</span>
                         <span class="text-sm font-semibold text-gray-900 dark:text-white">
-                            ${{ line.total_revenue|floatformat:0|intcomma|default:"0" }}
+                            {{ line.total_revenue|default:"0"|format_currency:"$" }}
                         </span>
                     </div>
                     <div class="flex justify-between">
@@ -140,13 +141,13 @@
                     <div class="flex justify-between">
                         <span class="text-sm text-gray-600 dark:text-gray-400">WHITE:</span>
                         <span class="text-sm font-semibold text-green-600 dark:text-green-400">
-                            ${{ line.white_revenue|floatformat:0|intcomma|default:"0" }}
+                            {{ line.white_revenue|default:"0"|format_currency:"$" }}
                         </span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-sm text-gray-600 dark:text-gray-400">BLACK:</span>
                         <span class="text-sm font-semibold text-red-600 dark:text-red-400">
-                            ${{ line.black_revenue|floatformat:0|intcomma|default:"0" }}
+                            {{ line.black_revenue|default:"0"|format_currency:"$" }}
                         </span>
                     </div>
                     {% endif %}
@@ -172,8 +173,9 @@
         </div>
         {% endfor %}
     </div>
+    {% endif %}
 
-    {% elif view_type == 'categories' %}
+    {% if view_type == 'categories' %}
     <!-- Categories Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {% for category in items %}
@@ -193,7 +195,7 @@
                     <div class="flex justify-between">
                         <span class="text-sm text-gray-600 dark:text-gray-400">Ingresos:</span>
                         <span class="text-sm font-semibold text-gray-900 dark:text-white">
-                            ${{ category.total_revenue|floatformat:0|intcomma }}
+                            {{ category.total_revenue|format_currency:"$" }}
                         </span>
                     </div>
                     <div class="flex justify-between">
@@ -211,7 +213,7 @@
                     <div class="flex justify-between">
                         <span class="text-sm text-gray-600 dark:text-gray-400">Promedio:</span>
                         <span class="text-sm font-semibold text-gray-900 dark:text-white">
-                            ${{ category.avg_revenue|floatformat:0|intcomma }}
+                            {{ category.avg_revenue|format_currency:"$" }}
                         </span>
                     </div>
                 </div>
@@ -224,10 +226,33 @@
                 </div>
             </div>
         </div>
+        {% empty %}
+        <!-- No categories/services message -->
+        <div class="col-span-full">
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No hay servicios</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Esta línea de negocio no tiene servicios registrados aún.
+                </p>
+                <div class="mt-6">
+                    <a href="/accounting/services/create/?business_line={{ current_line.slug }}" 
+                       class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Crear primer servicio
+                    </a>
+                </div>
+            </div>
+        </div>
         {% endfor %}
     </div>
+    {% endif %}
 
-    {% elif view_type == 'clients' %}
+    {% if view_type == 'clients' %}
     <!-- Clients Table -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -271,7 +296,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-white font-semibold">
-                                ${{ service.price|floatformat:0|intcomma }}
+                                {{ service.price|format_currency:"$" }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
