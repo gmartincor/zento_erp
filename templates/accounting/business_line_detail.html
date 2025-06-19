@@ -5,7 +5,7 @@
 {% block title %}{{ business_line.name }} - Línea de Negocio - Nutrition Pro CRM{% endblock %}
 
 {% block breadcrumb %}
-{% include 'components/breadcrumb.html' with breadcrumb_path=breadcrumb_path %}
+{% include 'accounting/components/enhanced_breadcrumb.html' with breadcrumb_path=breadcrumb_path show_stats=True %}
 {% endblock %}
 
 {% block content %}
@@ -113,7 +113,7 @@
                 {% if business_line.parent %}
                 <div class="flex justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Línea padre:</span>
-                    <a href="{% url 'accounting:line-detail' line_path=business_line.parent.slug %}" 
+                    <a href="{% url 'accounting:business-lines-path' line_path=business_line.parent.slug %}" 
                        class="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
                         {{ business_line.parent.name }}
                     </a>

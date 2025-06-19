@@ -335,32 +335,14 @@ class BusinessLineHierarchyMixin:
         Returns:
             list: List of breadcrumb dictionaries with 'name' and 'url' keys
         """
-        breadcrumbs = [
-            {'name': 'Ingresos', 'url': 'accounting:index'}
-        ]
+        from apps.accounting.services.navigation_service import HierarchicalNavigationService
         
-        if not business_line:
-            return breadcrumbs
-        
-        hierarchy = self.get_hierarchy_path(business_line)
-        url_parts = []
-        
-        for line in hierarchy:
-            url_parts.append(line.slug)
-            breadcrumbs.append({
-                'name': line.name,
-                'url': f"accounting:line-detail",
-                'url_kwargs': {'line_path': '/'.join(url_parts)}
-            })
-        
-        if category:
-            category_name = 'Servicios White' if category == 'WHITE' else 'Servicios Black'
-            breadcrumbs.append({
-                'name': category_name,
-                'url': None  # Current page, no link
-            })
-        
-        return breadcrumbs
+        navigation_service = HierarchicalNavigationService()
+        return navigation_service.build_breadcrumb_path(
+            business_line=business_line,
+            category=category,
+            include_base=False
+        )
     
     def get_business_line_context(self, line_path=None, category=None):
         """

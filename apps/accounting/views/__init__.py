@@ -8,7 +8,6 @@ the separation of concerns principle.
 # Import views from reorganized modules
 from .base import AccountingDashboardView
 from .business_line import (
-    BusinessLineDetailView,
     BusinessLineListView,
     BusinessLineHierarchyView
 )

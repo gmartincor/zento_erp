@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from apps.business_lines.models import BusinessLine
 from apps.accounting.models import ClientService
+from apps.accounting.services.navigation_service import HierarchicalNavigationService
 from apps.core.constants import SERVICE_CATEGORIES
 
 
@@ -299,7 +300,7 @@ class TemplateDataService:
         self.category_service = CategoryStatsService()
         self.client_service = ClientStatsService()
         self.business_line_service = BusinessLineStatsService()
-        self.navigation_service = HierarchyNavigationService()
+        self.navigation_service = HierarchicalNavigationService()
     
     def prepare_business_line_list_context(self, business_lines: QuerySet, search_query: str = '') -> Dict[str, Any]:
         """

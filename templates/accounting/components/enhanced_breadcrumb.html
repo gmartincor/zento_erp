@@ -1,0 +1,159 @@
+{%comment%}
+Enhanced Hierarchical Breadcrumb Component
+=========================================
+
+Unified breadcrumb component that combines the best of both navigation systems:
+- Full hierarchical navigation from hierarchy_navigation.html
+- Modular, reusable structure
+- Consistent design across all accounting views
+
+Parameters:
+- breadcrumb_path: List of breadcrumb items (from BusinessLineHierarchyMixin.get_breadcrumb_path)
+- current_page_title: Optional custom title for current page
+- show_stats: Whether to show statistics in breadcrumbs (default: False)
+- compact_mode: Use compact layout for smaller screens (default: False)
+
+Usage:
+{% include 'accounting/components/enhanced_breadcrumb.html' with breadcrumb_path=breadcrumb_path %}
+{%endcomment%}
+
+<div class="breadcrumb-container mb-6">
+    <!-- Main Breadcrumb Navigation -->
+    <nav class="flex flex-wrap items-center space-x-1 text-sm mb-2" aria-label="Breadcrumb">
+        <ol class="flex flex-wrap items-center space-x-1">
+            <!-- Dashboard Home -->
+            <li>
+                <div class="flex items-center">
+                    <a href="{% url 'dashboard:home' %}" 
+                       class="text-gray-400 hover:text-primary-600 dark:text-gray-500 dark:hover:text-primary-400 transition-colors p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                       title="Dashboard Principal">
+                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 10v8a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H8a1 1 0 00-1 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-8a1 1 0 01.293-.707l7-7z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="sr-only">Dashboard</span>
+                    </a>
+                </div>
+            </li>
+
+            <!-- Accounting Section -->
+            <li>
+                <div class="flex items-center">
+                    <!-- Separator -->
+                    <svg class="h-4 w-4 text-gray-300 dark:text-gray-600 mx-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <a href="{% url 'accounting:index' %}" 
+                       class="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                       title="Gestión de Ingresos">
+                        Ingresos
+                    </a>
+                </div>
+            </li>
+
+            <!-- Hierarchical Path Items -->
+            {% for item in breadcrumb_path %}
+            <li>
+                <div class="flex items-center">
+                    <!-- Separator -->
+                    <svg class="h-4 w-4 text-gray-300 dark:text-gray-600 mx-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+
+                    <!-- Breadcrumb Link or Current Page -->
+                    {% if item.url and not forloop.last %}
+                    <a href="{{ item.url }}" 
+                       class="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 truncate max-w-xs font-medium"
+                       title="{{ item.name }}">
+                        {% if compact_mode and item.name|length > 15 %}
+                            {{ item.name|truncatechars:15 }}
+                        {% else %}
+                            {{ item.name }}
+                        {% endif %}
+                    </a>
+                    {% else %}
+                    <!-- Current page - no link -->
+                    <span class="text-gray-900 dark:text-white font-semibold px-2 py-1 truncate max-w-xs" 
+                          title="{{ item.name }}" 
+                          aria-current="page">
+                        {% if compact_mode and item.name|length > 20 %}
+                            {{ item.name|truncatechars:20 }}
+                        {% else %}
+                            {{ item.name }}
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+
+            <!-- Custom Current Page Title (if different from breadcrumb) -->
+            {% if current_page_title and current_page_title != breadcrumb_path.last.name %}
+            <li>
+                <div class="flex items-center">
+                    <svg class="h-4 w-4 text-gray-300 dark:text-gray-600 mx-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-gray-900 dark:text-white font-semibold px-2 py-1" aria-current="page">
+                        {{ current_page_title }}
+                    </span>
+                </div>
+            </li>
+            {% endif %}
+        </ol>
+    </nav>
+
+    <!-- Breadcrumb Statistics (optional) -->
+    {% if show_stats and breadcrumb_path %}
+    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 px-2">
+        <span class="inline-flex items-center space-x-4">
+            {% if business_line %}
+            <span>Nivel {{ business_line.level }}</span>
+            {% endif %}
+            {% if category_stats %}
+            <span>{{ category_stats.total_services }} servicio{{ category_stats.total_services|pluralize:"s" }}</span>
+            {% if category_stats.total_revenue %}
+            <span>{{ category_stats.total_revenue|floatformat:0 }}€ total</span>
+            {% endif %}
+            {% endif %}
+        </span>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Mobile Optimized Version -->
+<div class="sm:hidden" x-data="{ showFullPath: false }">
+    {% if breadcrumb_path|length > 2 %}
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 mb-4">
+        <button @click="showFullPath = !showFullPath" 
+                class="w-full text-left text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-between">
+            <span class="flex items-center space-x-2">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0l-4-4m4 4l-4 4" />
+                </svg>
+                <span x-text="showFullPath ? 'Ocultar navegación' : 'Ver navegación completa'"></span>
+            </span>
+            <svg class="h-4 w-4 transform transition-transform" :class="{ 'rotate-180': showFullPath }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+        
+        <div x-show="showFullPath" x-transition class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <!-- Show full breadcrumb path in compact mode when toggled -->
+            <nav class="flex flex-wrap items-center space-x-1 text-xs" aria-label="Full Breadcrumb">
+                <ol class="flex flex-wrap items-center space-x-1">
+                    {% for item in breadcrumb_path %}
+                    <li>
+                        {% if not forloop.first %}
+                        <svg class="h-3 w-3 text-gray-300 dark:text-gray-600 mx-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        {% endif %}
+                        <span class="text-gray-600 dark:text-gray-400 px-1">{{ item.name|truncatechars:10 }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>

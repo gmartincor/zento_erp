@@ -69,7 +69,7 @@ ACCOUNTING_ERROR_MESSAGES = {
 # URL pattern constants for accounting
 ACCOUNTING_URL_PATTERNS = {
     'INDEX': 'accounting:index',
-    'LINE_DETAIL': 'accounting:line-detail',
+    'LINE_DETAIL': 'accounting:business-lines-path',
     'WHITE_SERVICES': 'accounting:white-services',
     'BLACK_SERVICES': 'accounting:black-services',
     'SERVICE_CREATE': 'accounting:service-create',

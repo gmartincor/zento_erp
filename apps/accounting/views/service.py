@@ -84,7 +84,7 @@ class ServiceCategoryListView(
         context.update({
             'create_url': reverse('accounting:service-create', 
                                 kwargs={'line_path': line_path, 'category': category.lower()}),
-            'line_detail_url': reverse('accounting:line-detail', 
+            'line_detail_url': reverse('accounting:business-lines-path', 
                                      kwargs={'line_path': line_path}),
         })
         

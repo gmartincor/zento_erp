@@ -175,7 +175,7 @@ class BusinessLineHierarchyView(
                         'count': black_count,
                         'total_revenue': black_revenue,
                         'total_services': black_count,
-                        'url': f'/accounting/hierarchy/{line_path}/black/',
+                        'url': f'/accounting/business-lines/{line_path}/black/',
                         'description': f'{black_count} servicios BLACK'
                     })
                     
@@ -188,7 +188,7 @@ class BusinessLineHierarchyView(
                         'count': white_count,
                         'total_revenue': white_revenue,
                         'total_services': white_count,
-                        'url': f'/accounting/hierarchy/{line_path}/white/',
+                        'url': f'/accounting/business-lines/{line_path}/white/',
                         'description': f'{white_count} servicios WHITE'
                     })
                     
@@ -303,26 +303,18 @@ def build_business_line_breadcrumbs(business_line, view_name='accounting:busines
     
     Args:
         business_line: BusinessLine instance
-        view_name: URL name for business line detail view
+        view_name: URL name for business line detail view (unused - for compatibility)
         
     Returns:
         List of breadcrumb dictionaries with 'name' and 'url' keys
     """
-    breadcrumbs = []
-    hierarchy = get_business_line_path_hierarchy(business_line)
+    from apps.accounting.services.navigation_service import HierarchicalNavigationService
     
-    for i, line in enumerate(hierarchy):
-        # Build path for this level
-        path_segments = [ancestor.slug for ancestor in hierarchy[:i+1]]
-        line_path = '/'.join(path_segments)
-        
-        breadcrumbs.append({
-            'name': line.name,
-            'url': reverse(view_name, kwargs={'line_path': line_path}),
-            'is_current': line == business_line
-        })
-    
-    return breadcrumbs
+    navigation_service = HierarchicalNavigationService()
+    return navigation_service.build_breadcrumb_path(
+        business_line=business_line,
+        include_base=False  # Only business line hierarchy
+    )
 
 
 def calculate_business_line_metrics(business_line):

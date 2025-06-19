@@ -191,7 +191,7 @@ def breadcrumb_navigation(business_line, category=None):
         path = service.build_line_path(current)
         breadcrumbs.insert(0, {
             'name': current.name,
-            'url': reverse('accounting:line-detail', kwargs={'line_path': path}),
+            'url': reverse('accounting:business-lines-path', kwargs={'line_path': path}),
             'is_current': current == business_line
         })
         current = current.parent
