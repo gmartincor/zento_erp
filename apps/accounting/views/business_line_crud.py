@@ -14,9 +14,9 @@ from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404
 from django.http import Http404
-from django.http import Http404
 
 from apps.business_lines.models import BusinessLine
+from ..mixins import BusinessLinePathMixin, BusinessLineParentMixin
 
 
 class AdminRequiredMixin:
@@ -30,7 +30,13 @@ class AdminRequiredMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
-class BusinessLineCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class BusinessLineCreateView(
+    LoginRequiredMixin, 
+    AdminRequiredMixin, 
+    BusinessLineParentMixin,
+    BusinessLinePathMixin,
+    CreateView
+):
     """
     Create new business lines.
     
@@ -39,33 +45,6 @@ class BusinessLineCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView)
     model = BusinessLine
     template_name = 'business_lines/business_line_form.html'
     fields = ['name', 'parent']
-    success_url = reverse_lazy('accounting:business-lines')
-    
-    def get_parent_from_line_path(self):
-        """Get parent business line from line_path parameter."""
-        line_path = self.kwargs.get('line_path')
-        if not line_path:
-            return None
-        
-        # Split path and traverse hierarchy to find parent
-        path_parts = line_path.split('/')
-        current_line = None
-        
-        for slug in path_parts:
-            if current_line is None:
-                # Root level
-                try:
-                    current_line = BusinessLine.objects.get(slug=slug, parent=None)
-                except BusinessLine.DoesNotExist:
-                    return None
-            else:
-                # Child level
-                try:
-                    current_line = BusinessLine.objects.get(slug=slug, parent=current_line)
-                except BusinessLine.DoesNotExist:
-                    return None
-        
-        return current_line
     
     def get_initial(self):
         """Set parent if provided in URL."""
@@ -89,25 +68,7 @@ class BusinessLineCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView)
     
     def get_success_url(self):
         """Redirect to the newly created business line's detail page."""
-        if self.object.parent:
-            # For sublines, build hierarchical path
-            parent_path = self._build_line_path(self.object.parent)
-            child_path = f"{parent_path}/{self.object.slug}"
-            return reverse('accounting:business-lines-path', kwargs={'line_path': child_path})
-        else:
-            # For root lines, redirect to their detail page
-            return reverse('accounting:business-lines-path', kwargs={'line_path': self.object.slug})
-    
-    def _build_line_path(self, business_line):
-        """Build hierarchical path for a business line."""
-        path_parts = []
-        current = business_line
-        
-        while current:
-            path_parts.insert(0, current.slug)
-            current = current.parent
-        
-        return '/'.join(path_parts)
+        return self.get_business_line_url(self.object)
     
     def get_initial(self):
         """Set parent if provided in URL."""
@@ -131,7 +92,12 @@ class BusinessLineCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView)
         return response
 
 
-class BusinessLineUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class BusinessLineUpdateView(
+    LoginRequiredMixin, 
+    AdminRequiredMixin, 
+    BusinessLinePathMixin,
+    UpdateView
+):
     """
     Update existing business lines.
     
@@ -141,41 +107,9 @@ class BusinessLineUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView)
     template_name = 'business_lines/business_line_form.html'
     fields = ['name', 'parent']
     
-    def get_object(self):
-        """Get business line by path instead of pk."""
-        line_path = self.kwargs.get('line_path')
-        if not line_path:
-            raise Http404("No se proporcionó la ruta de la línea de negocio")
-        
-        # Split path and traverse hierarchy
-        path_parts = line_path.split('/')
-        current_line = None
-        
-        for slug in path_parts:
-            if current_line is None:
-                # Root level
-                current_line = get_object_or_404(BusinessLine, slug=slug, parent=None)
-            else:
-                # Child level
-                current_line = get_object_or_404(BusinessLine, slug=slug, parent=current_line)
-        
-        return current_line
-    
     def get_success_url(self):
         """Redirect back to the business line's detail page."""
-        line_path = self._build_line_path(self.object)
-        return reverse('accounting:business-lines-path', kwargs={'line_path': line_path})
-    
-    def _build_line_path(self, business_line):
-        """Build hierarchical path for a business line."""
-        path_parts = []
-        current = business_line
-        
-        while current:
-            path_parts.insert(0, current.slug)
-            current = current.parent
-        
-        return '/'.join(path_parts)
+        return self.get_business_line_url(self.object)
     
     def get_object(self):
         """Get business line by path instead of pk."""
@@ -207,7 +141,12 @@ class BusinessLineUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView)
         return response
 
 
-class BusinessLineDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class BusinessLineDeleteView(
+    LoginRequiredMixin, 
+    AdminRequiredMixin, 
+    BusinessLinePathMixin,
+    DeleteView
+):
     """
     Delete business lines with dependency checking using line path.
     
@@ -216,26 +155,6 @@ class BusinessLineDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView)
     model = BusinessLine
     template_name = 'business_lines/business_line_confirm_delete.html'
     success_url = reverse_lazy('accounting:business-lines')
-    
-    def get_object(self):
-        """Get business line by path instead of pk."""
-        line_path = self.kwargs.get('line_path')
-        if not line_path:
-            raise Http404("No se proporcionó la ruta de la línea de negocio")
-        
-        # Split path and traverse hierarchy
-        path_parts = line_path.split('/')
-        current_line = None
-        
-        for slug in path_parts:
-            if current_line is None:
-                # Root level
-                current_line = get_object_or_404(BusinessLine, slug=slug, parent=None)
-            else:
-                # Child level
-                current_line = get_object_or_404(BusinessLine, slug=slug, parent=current_line)
-        
-        return current_line
     
     def get_context_data(self, **kwargs):
         """
@@ -330,7 +249,12 @@ class BusinessLineDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView)
         return result
 
 
-class BusinessLineManagementDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class BusinessLineManagementDetailView(
+    LoginRequiredMixin, 
+    AdminRequiredMixin, 
+    BusinessLinePathMixin,
+    DetailView
+):
     """
     Administrative detail view for business lines using line path.
     
@@ -339,26 +263,6 @@ class BusinessLineManagementDetailView(LoginRequiredMixin, AdminRequiredMixin, D
     model = BusinessLine
     template_name = 'business_lines/business_line_detail.html'
     context_object_name = 'business_line'
-    
-    def get_object(self):
-        """Get business line by path instead of pk."""
-        line_path = self.kwargs.get('line_path')
-        if not line_path:
-            raise Http404("No se proporcionó la ruta de la línea de negocio")
-        
-        # Split path and traverse hierarchy
-        path_parts = line_path.split('/')
-        current_line = None
-        
-        for slug in path_parts:
-            if current_line is None:
-                # Root level
-                current_line = get_object_or_404(BusinessLine, slug=slug, parent=None)
-            else:
-                # Child level
-                current_line = get_object_or_404(BusinessLine, slug=slug, parent=current_line)
-        
-        return current_line
     
     def get_context_data(self, **kwargs):
         """Add management context."""
