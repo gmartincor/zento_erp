@@ -6,12 +6,14 @@ following separation of concerns and DRY principles.
 """
 
 from django.shortcuts import get_object_or_404
-from django.views.generic import ListView, DetailView, TemplateView
+from django.views.generic import ListView, DetailView, TemplateView, CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.http import Http404
 from django.db.models import Q
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 
 from apps.business_lines.models import BusinessLine
 from apps.accounting.models import ClientService
@@ -274,6 +276,48 @@ class BusinessLineHierarchyView(
             })
             
         return context
+
+
+class BusinessLineCreateView(LoginRequiredMixin, CreateView):
+    """
+    Create new business lines integrated in accounting module.
+    """
+    model = BusinessLine
+    template_name = 'business_lines/business_line_form.html'
+    fields = ['name', 'parent']
+    
+    def dispatch(self, request, *args, **kwargs):
+        """Check ADMIN role before allowing access."""
+        if getattr(request.user, 'role', None) != 'ADMIN':
+            raise PermissionDenied(
+                "Solo los administradores pueden gestionar líneas de negocio."
+            )
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_initial(self):
+        """Set parent if provided in URL."""
+        initial = super().get_initial()
+        parent_id = self.kwargs.get('parent')
+        if parent_id:
+            try:
+                parent = BusinessLine.objects.get(pk=parent_id)
+                initial['parent'] = parent
+            except BusinessLine.DoesNotExist:
+                pass
+        return initial
+    
+    def get_success_url(self):
+        """Redirect to accounting business lines."""
+        return reverse('accounting:business-lines')
+    
+    def form_valid(self, form):
+        """Handle successful form submission."""
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            f'Línea de negocio "{self.object.name}" creada exitosamente.'
+        )
+        return response
 
 
 # Utility functions for business line operations

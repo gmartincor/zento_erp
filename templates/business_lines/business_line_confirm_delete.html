@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - CRM Nutrición Pro{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Breadcrumb Navigation -->
+    {% if breadcrumb_path %}
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            {% for item in breadcrumb_path %}
+                <li class="inline-flex items-center">
+                    {% if not forloop.first %}
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    {% endif %}
+                    {% if item.url and not item.is_current %}
+                        <a href="{{ item.url }}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 md:ml-2">
+                            {{ item.name }}
+                        </a>
+                    {% else %}
+                        <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ml-2">
+                            {{ item.name }}
+                        </span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </nav>
+    {% endif %}
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ page_title }}</h1>
+        {% if page_subtitle %}
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{{ page_subtitle }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Deletion Status -->
+    {% if deletion_safe %}
+        <!-- Safe Deletion -->
+        <div class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-yellow-800 dark:text-yellow-200">
+                        ¿Estás seguro que quieres eliminar esta línea de negocio?
+                    </h3>
+                    <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                        <p>Esta acción no se puede deshacer. La línea de negocio será marcada como inactiva.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Blocked Deletion -->
+        <div class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-red-800 dark:text-red-200">
+                        No se puede eliminar esta línea de negocio
+                    </h3>
+                    <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                        <p>{{ dependency_info.blocking_reason }}</p>
+                        <p class="mt-2">Debes eliminar o desactivar las dependencias antes de continuar.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Business Line Information -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Información de la línea de negocio</h3>
+        </div>
+        <div class="px-6 py-4">
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Nombre</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ business_line.name }}</dd>
+                </div>
+                
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Nivel jerárquico</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ hierarchy_info.level }}</dd>
+                </div>
+                
+                {% if hierarchy_info.parent %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Línea padre</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ hierarchy_info.parent.name }}</dd>
+                </div>
+                {% endif %}
+                
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Ruta completa</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ hierarchy_info.full_path }}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Dependency Information -->
+    {% if dependency_info %}
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Análisis de dependencias</h3>
+        </div>
+        <div class="px-6 py-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <!-- Active Children -->
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="text-2xl font-bold {% if dependency_info.active_children > 0 %}text-red-600 dark:text-red-400{% else %}text-green-600 dark:text-green-400{% endif %}">
+                        {{ dependency_info.active_children }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Sublíneas activas</div>
+                </div>
+                
+                <!-- Active Services -->
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="text-2xl font-bold {% if dependency_info.active_services > 0 %}text-red-600 dark:text-red-400{% else %}text-green-600 dark:text-green-400{% endif %}">
+                        {{ dependency_info.active_services }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Servicios activos</div>
+                </div>
+                
+                <!-- Total Descendants -->
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="text-2xl font-bold {% if dependency_info.descendants_count > 0 %}text-yellow-600 dark:text-yellow-400{% else %}text-green-600 dark:text-green-400{% endif %}">
+                        {{ dependency_info.descendants_count }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Descendientes totales</div>
+                </div>
+            </div>
+            
+            {% if dependency_info.impact_summary %}
+            <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Resumen de impacto:</strong> {{ dependency_info.impact_summary }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="flex justify-end space-x-3">
+        <!-- Cancel Button -->
+        <a href="{{ cancel_url }}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Cancelar
+        </a>
+        
+        <!-- Delete Button -->
+        {% if deletion_safe %}
+            <form method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit"
+                        onclick="return confirm('¿Estás completamente seguro? Esta acción no se puede deshacer.')"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Sí, eliminar línea de negocio
+                </button>
+            </form>
+        {% else %}
+            <button type="button"
+                    disabled
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-400 bg-gray-200 dark:bg-gray-700 cursor-not-allowed">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
+                </svg>
+                No se puede eliminar
+            </button>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

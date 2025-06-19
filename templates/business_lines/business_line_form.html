@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - CRM Nutrición Pro{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Breadcrumb Navigation -->
+    {% if breadcrumb_path %}
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            {% for item in breadcrumb_path %}
+                <li class="inline-flex items-center">
+                    {% if not forloop.first %}
+                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    {% endif %}
+                    {% if item.url and not item.is_current %}
+                        <a href="{{ item.url }}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 md:ml-2">
+                            {{ item.name }}
+                        </a>
+                    {% else %}
+                        <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ml-2">
+                            {{ item.name }}
+                        </span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </nav>
+    {% endif %}
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ page_title }}</h1>
+                {% if page_subtitle %}
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{{ page_subtitle }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="mt-4 sm:mt-0 flex space-x-3">
+                {% if cancel_url %}
+                    <a href="{{ cancel_url }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Cancelar
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Hierarchy Information (for child creation and editing) -->
+    {% if show_hierarchy_info and parent_line %}
+    <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    Creando sublínea bajo: {{ parent_line.get_full_hierarchy }}
+                </h3>
+                <p class="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                    La nueva línea será de nivel {{ parent_line.level|add:1 }} en la jerarquía.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Impact Warning (for editing with dependencies) -->
+    {% if show_impact_warning and impact_info %}
+    <div class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    Cambios con impacto en la jerarquía
+                </h3>
+                <div class="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+                    <p>Esta línea tiene dependencias:</p>
+                    <ul class="mt-1 list-disc list-inside">
+                        {% if impact_info.descendants_count > 0 %}
+                            <li>{{ impact_info.descendants_count }} línea(s) descendiente(s)</li>
+                        {% endif %}
+                        {% if impact_info.services_count > 0 %}
+                            <li>{{ impact_info.services_count }} servicio(s) activo(s)</li>
+                        {% endif %}
+                    </ul>
+                    <p class="mt-2">Cambiar el padre actualizará automáticamente todos los descendientes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Form -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <form method="post" class="space-y-6 p-6">
+            {% csrf_token %}
+            
+            <!-- Form Errors -->
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+                                Errores en el formulario
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                                <ul class="list-disc list-inside space-y-1">
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Form Fields -->
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <!-- Name Field -->
+                <div class="lg:col-span-2">
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ form.name.label }}
+                        {% if form.name.field.required %}<span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.name }}
+                        {% if form.name.help_text %}
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ form.name.help_text }}</p>
+                        {% endif %}
+                    </div>
+                    {% if form.name.errors %}
+                        <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                            {% for error in form.name.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Parent Field -->
+                <div class="lg:col-span-2">
+                    <label for="{{ form.parent.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ form.parent.label }}
+                        {% if form.parent.field.required %}<span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.parent }}
+                        {% if form.parent.help_text %}
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ form.parent.help_text }}</p>
+                        {% endif %}
+                    </div>
+                    {% if form.parent.errors %}
+                        <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                            {% for error in form.parent.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Remanente Fields -->
+                <div>
+                    <div class="flex items-center">
+                        {{ form.has_remanente }}
+                        <label for="{{ form.has_remanente.id_for_label }}" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                            {{ form.has_remanente.label }}
+                        </label>
+                    </div>
+                    {% if form.has_remanente.help_text %}
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.has_remanente.help_text }}</p>
+                    {% endif %}
+                    {% if form.has_remanente.errors %}
+                        <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                            {% for error in form.has_remanente.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.remanente_field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ form.remanente_field.label }}
+                        {% if form.remanente_field.field.required %}<span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.remanente_field }}
+                        {% if form.remanente_field.help_text %}
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ form.remanente_field.help_text }}</p>
+                        {% endif %}
+                    </div>
+                    {% if form.remanente_field.errors %}
+                        <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                            {% for error in form.remanente_field.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Status and Order -->
+                <div>
+                    <div class="flex items-center">
+                        {{ form.is_active }}
+                        <label for="{{ form.is_active.id_for_label }}" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                            {{ form.is_active.label }}
+                        </label>
+                    </div>
+                    {% if form.is_active.help_text %}
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.is_active.help_text }}</p>
+                    {% endif %}
+                    {% if form.is_active.errors %}
+                        <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                            {% for error in form.is_active.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.order.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ form.order.label }}
+                        {% if form.order.field.required %}<span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.order }}
+                        {% if form.order.help_text %}
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ form.order.help_text }}</p>
+                        {% endif %}
+                    </div>
+                    {% if form.order.errors %}
+                        <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                            {% for error in form.order.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                {% if cancel_url %}
+                    <a href="{{ cancel_url }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        Cancelar
+                    </a>
+                {% endif %}
+                
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    {{ submit_text|default:"Guardar" }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript for dynamic form behavior -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle remanente field visibility
+    const hasRemanenteCheckbox = document.getElementById('{{ form.has_remanente.id_for_label }}');
+    const remanenteField = document.getElementById('{{ form.remanente_field.id_for_label }}');
+    const remanenteFieldContainer = remanenteField.closest('div');
+    
+    function toggleRemanenteField() {
+        if (hasRemanenteCheckbox.checked) {
+            remanenteFieldContainer.style.display = 'block';
+            remanenteField.required = true;
+        } else {
+            remanenteFieldContainer.style.display = 'none';
+            remanenteField.required = false;
+            remanenteField.value = '';
+        }
+    }
+    
+    // Initial state
+    toggleRemanenteField();
+    
+    // Listen for changes
+    hasRemanenteCheckbox.addEventListener('change', toggleRemanenteField);
+});
+</script>
+{% endblock %}

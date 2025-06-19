@@ -14,9 +14,6 @@ def redirect_to_login(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Root redirect - always go to login as entry point
-    path('', redirect_to_login),
-    
     # Authentication URLs
     path('auth/', include('apps.authentication.urls')),
     
@@ -24,7 +21,9 @@ urlpatterns = [
     path('dashboard/', include('apps.dashboard.urls')),
     path('accounting/', include('apps.accounting.urls')),
     path('expenses/', include('apps.expenses.urls')),
-    path('business-lines/', include('apps.business_lines.urls')),
+    
+    # Root redirect - always go to login as entry point (must be last)
+    path('', redirect_to_login),
 ]
 
 # Serve media files in development

@@ -12,6 +12,13 @@ urlpatterns = [
     # Dashboard - Main entry point
     path('', views.AccountingDashboardView.as_view(), name='index'),
     
+    # Business Line Creation (Admin only) - From accounting context
+    path('create/', views.BusinessLineCreateView.as_view(), name='create'),
+    path('create/<int:parent>/', views.BusinessLineCreateView.as_view(), name='create-child'),
+    path('business-lines/manage/<int:pk>/', views.BusinessLineManagementDetailView.as_view(), name='business-line-manage'),
+    path('business-lines/manage/<int:pk>/edit/', views.BusinessLineUpdateView.as_view(), name='business-line-edit'),
+    path('business-lines/manage/<int:pk>/delete/', views.BusinessLineDeleteView.as_view(), name='business-line-delete'),
+    
     # Revenue analysis views (legacy - to be contextual)
     path('revenue/categories/', views.CategorySummaryView.as_view(), name='revenue-categories'),
     path('revenue/clients/', views.ClientRevenueView.as_view(), name='revenue-clients'),
@@ -42,6 +49,23 @@ urlpatterns = [
     
     # Business lines navigation - ROOT LEVEL
     path('business-lines/', views.BusinessLineHierarchyView.as_view(), name='business-lines'),
+    
+    # Business Line Management (Admin only) - Within business-lines context  
+    re_path(
+        r'^business-lines/(?P<line_path>[\w-]+(?:/[\w-]+)*)/edit/$',
+        views.BusinessLineUpdateView.as_view(),
+        name='business-line-edit'
+    ),
+    re_path(
+        r'^business-lines/(?P<line_path>[\w-]+(?:/[\w-]+)*)/delete/$',
+        views.BusinessLineDeleteView.as_view(),
+        name='business-line-delete'
+    ),
+    re_path(
+        r'^business-lines/(?P<line_path>[\w-]+(?:/[\w-]+)*)/manage/$',
+        views.BusinessLineManagementDetailView.as_view(),
+        name='business-line-manage'
+    ),
     
     # Business lines navigation - WITH PATH (LEAST SPECIFIC, must come last)
     # Examples: business-lines/jaen/, business-lines/jaen/pepe/, business-lines/jaen/pepe/pepe-normal/
