@@ -275,18 +275,24 @@ class BusinessLineHierarchyMixin:
         path_parts = line_path.strip('/').split('/')
         
         if len(path_parts) == 1:
-            # Single level path
+            # Single level path - root business line
             try:
-                return BusinessLine.objects.select_related('parent').get(slug=path_parts[0])
+                return BusinessLine.objects.select_related('parent').get(
+                    slug=path_parts[0], 
+                    level=1
+                )
             except BusinessLine.DoesNotExist:
                 raise Http404(f"Línea de negocio '{path_parts[0]}' no encontrada.")
+            except BusinessLine.MultipleObjectsReturned:
+                # This should not happen with the new unique constraint, but handle gracefully
+                raise Http404(f"Múltiples líneas de negocio encontradas con slug '{path_parts[0]}'. Contacte al administrador.")
         
         # Multi-level path - navigate hierarchy
         current_line = None
         for i, slug in enumerate(path_parts):
             try:
                 if i == 0:
-                    # First level - no parent
+                    # First level - no parent, must be level 1
                     current_line = BusinessLine.objects.select_related('parent').get(
                         slug=slug, level=1
                     )
@@ -299,6 +305,9 @@ class BusinessLineHierarchyMixin:
                     )
             except BusinessLine.DoesNotExist:
                 raise Http404(f"Línea de negocio '{slug}' no encontrada en el nivel {i + 1}.")
+            except BusinessLine.MultipleObjectsReturned:
+                # This should not happen with the new unique constraint
+                raise Http404(f"Múltiples líneas de negocio encontradas con slug '{slug}' en el nivel {i + 1}. Contacte al administrador.")
         
         return current_line
     

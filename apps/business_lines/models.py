@@ -68,7 +68,7 @@ class BusinessLine(TimeStampedModel):
         db_table = 'business_lines'
         verbose_name = "Línea de negocio"
         verbose_name_plural = "Líneas de negocio"
-        unique_together = [['name', 'parent']]
+        unique_together = [['name', 'parent'], ['slug', 'parent']]
         ordering = ['level', 'order', 'name']
         indexes = [
             models.Index(fields=['parent', 'level']),
@@ -88,11 +88,11 @@ class BusinessLine(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         """
-        Auto-calculate level based on parent hierarchy and generate slug.
+        Auto-calculate level based on parent hierarchy and generate unique slug.
         """
         # Auto-generate slug if not provided
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = self._generate_unique_slug()
         
         # Auto-calculate level based on parent
         if self.parent is None:
@@ -105,6 +105,35 @@ class BusinessLine(TimeStampedModel):
             raise ValueError("El nivel máximo permitido es 3")
         
         super().save(*args, **kwargs)
+
+    def _generate_unique_slug(self):
+        """
+        Generate a unique slug for this business line considering its parent.
+        """
+        base_slug = slugify(self.name)
+        if not base_slug:
+            base_slug = 'business-line'
+        
+        # Check if the base slug is already taken at this level
+        queryset = BusinessLine.objects.filter(parent=self.parent, slug=base_slug)
+        if self.pk:
+            queryset = queryset.exclude(pk=self.pk)
+        
+        if not queryset.exists():
+            return base_slug
+        
+        # Generate a unique slug by appending a number
+        counter = 1
+        while True:
+            new_slug = f"{base_slug}-{counter}"
+            queryset = BusinessLine.objects.filter(parent=self.parent, slug=new_slug)
+            if self.pk:
+                queryset = queryset.exclude(pk=self.pk)
+            
+            if not queryset.exists():
+                return new_slug
+            
+            counter += 1
 
     def __str__(self):
         return f"{'  ' * (self.level - 1)}{self.name}"
