@@ -146,7 +146,7 @@
                 {% if business_line.parent %}
                 <div class="flex justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Línea padre:</span>
-                    <a href="{% url 'accounting:business-lines-path' line_path=business_line.parent.slug %}" 
+                    <a href="{% url 'accounting:business-lines-path' line_path=business_line.parent.get_url_path %}" 
                        class="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
                         {{ business_line.parent.name }}
                     </a>

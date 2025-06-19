@@ -133,3 +133,17 @@ class BusinessLine(TimeStampedModel):
         for child in self.children.select_related('parent').all():
             descendants.extend(child.get_descendants_ids())
         return descendants
+
+    def get_url_path(self):
+        """
+        Returns the hierarchical URL path for this business line.
+        Example: 'jaen/pepe/pepe-normal'
+        """
+        path_parts = []
+        current = self
+        
+        while current:
+            path_parts.insert(0, current.slug)
+            current = current.parent
+        
+        return '/'.join(path_parts)
