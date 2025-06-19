@@ -7,8 +7,9 @@ from django.urls import reverse
 
 def login_view(request):
     """Vista de login personalizada"""
-    if request.user.is_authenticated:
-        return redirect('dashboard:home')
+    # Comentamos la redirección automática para permitir acceso al formulario de login
+    # if request.user.is_authenticated:
+    #     return redirect('dashboard:home')
     
     if request.method == 'POST':
         username = request.POST.get('username')

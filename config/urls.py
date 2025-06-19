@@ -8,12 +8,13 @@ from django.conf.urls.static import static
 from django.shortcuts import redirect
 
 def redirect_to_login(request):
+    """Always redirect to login page as the entry point"""
     return redirect('authentication:login')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Root redirect to login
+    # Root redirect - always go to login as entry point
     path('', redirect_to_login),
     
     # Authentication URLs

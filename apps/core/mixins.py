@@ -182,11 +182,11 @@ class BusinessLinePermissionMixin:
         
         # Admin users can access all business lines
         if user.role == 'ADMIN':
-            return BusinessLine.objects.all()
+            return BusinessLine.objects.select_related('parent').all()
         
         # GLOW_VIEWER users can only access their assigned business lines
         elif user.role == 'GLOW_VIEWER':
-            return user.business_lines.all()
+            return user.business_lines.select_related('parent').all()
         
         # Other roles have no access by default
         return BusinessLine.objects.none()
@@ -277,7 +277,7 @@ class BusinessLineHierarchyMixin:
         if len(path_parts) == 1:
             # Single level path
             try:
-                return BusinessLine.objects.get(slug=path_parts[0])
+                return BusinessLine.objects.select_related('parent').get(slug=path_parts[0])
             except BusinessLine.DoesNotExist:
                 raise Http404(f"Línea de negocio '{path_parts[0]}' no encontrada.")
         
@@ -287,10 +287,12 @@ class BusinessLineHierarchyMixin:
             try:
                 if i == 0:
                     # First level - no parent
-                    current_line = BusinessLine.objects.get(slug=slug, level=1)
+                    current_line = BusinessLine.objects.select_related('parent').get(
+                        slug=slug, level=1
+                    )
                 else:
                     # Subsequent levels - must have correct parent
-                    current_line = BusinessLine.objects.get(
+                    current_line = BusinessLine.objects.select_related('parent').get(
                         slug=slug, 
                         parent=current_line,
                         level=i + 1

@@ -20,12 +20,12 @@ def dashboard_home(request):
     
     # Métricas de ingresos
     total_ingresos = ClientService.objects.aggregate(
-        total=Sum('amount')
+        total=Sum('price')
     )['total'] or 0
     
     ingresos_mes = ClientService.objects.filter(
-        date__gte=start_of_month
-    ).aggregate(total=Sum('amount'))['total'] or 0
+        start_date__gte=start_of_month
+    ).aggregate(total=Sum('price'))['total'] or 0
     
     # Métricas de gastos
     total_gastos = Expense.objects.aggregate(
@@ -44,7 +44,7 @@ def dashboard_home(request):
     lineas_negocio = BusinessLine.objects.filter(
         parent__isnull=False  # Solo líneas de negocio de nivel 2/3
     ).annotate(
-        total_ingresos=Sum('clientservice__amount'),
+        total_ingresos=Sum('clientservice__price'),
         total_gastos=Sum('expense__amount'),
         num_servicios=Count('clientservice'),
         num_gastos=Count('expense')

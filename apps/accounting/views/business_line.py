@@ -82,7 +82,7 @@ class BusinessLineListView(
     
     def get_queryset(self):
         """Get business lines filtered by user permissions."""
-        base_queryset = BusinessLine.objects.filter(is_active=True)
+        base_queryset = BusinessLine.objects.select_related('parent').filter(is_active=True)
         filtered_queryset = self.filter_by_business_line_access(base_queryset)
         
         # Apply search if provided

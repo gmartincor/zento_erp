@@ -37,10 +37,10 @@ class BusinessLineService:
             QuerySet of accessible business lines
         """
         if user.role == 'ADMIN':
-            return BusinessLine.objects.filter(is_active=True)
+            return BusinessLine.objects.select_related('parent').filter(is_active=True)
         elif user.role == 'GLOW_VIEWER':
             # Get lines assigned to user
-            return user.business_lines.filter(is_active=True)
+            return user.business_lines.select_related('parent').filter(is_active=True)
         else:
             return BusinessLine.objects.none()
     
@@ -77,7 +77,7 @@ class BusinessLineService:
         
         # Single level (root)
         if len(path_parts) == 1:
-            return BusinessLine.objects.get(
+            return BusinessLine.objects.select_related('parent').get(
                 slug=path_parts[0], 
                 level=1, 
                 is_active=True
@@ -87,13 +87,13 @@ class BusinessLineService:
         current_line = None
         for i, slug in enumerate(path_parts):
             if i == 0:
-                current_line = BusinessLine.objects.get(
+                current_line = BusinessLine.objects.select_related('parent').get(
                     slug=slug, 
                     level=1, 
                     is_active=True
                 )
             else:
-                current_line = BusinessLine.objects.get(
+                current_line = BusinessLine.objects.select_related('parent').get(
                     slug=slug,
                     parent=current_line,
                     level=i + 1,
@@ -165,7 +165,7 @@ class BusinessLineService:
         Returns:
             QuerySet of child business lines with annotations
         """
-        children = business_line.children.filter(is_active=True)
+        children = business_line.children.select_related('parent').filter(is_active=True)
         
         if user_permissions is not None:
             children = children.filter(id__in=user_permissions.values_list('id', flat=True))
@@ -215,9 +215,11 @@ class BusinessLineService:
         
         # Include children if requested
         if include_children:
-            child_lines = business_line.get_descendants(include_self=True)
+            child_lines = business_line.get_descendants()
+            # Add self to the list
+            child_line_ids = list(child_lines.values_list('id', flat=True)) + [business_line.id]
             services_query = ClientService.objects.filter(
-                business_line__in=child_lines,
+                business_line__id__in=child_line_ids,
                 is_active=True
             )
         

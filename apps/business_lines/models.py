@@ -121,7 +121,7 @@ class BusinessLine(TimeStampedModel):
         """
         Returns all descendants of this business line.
         """
-        return BusinessLine.objects.filter(
+        return BusinessLine.objects.select_related('parent').filter(
             parent__in=self.get_descendants_ids()
         )
 
@@ -130,6 +130,6 @@ class BusinessLine(TimeStampedModel):
         Returns a list of all descendant IDs.
         """
         descendants = list(self.children.values_list('id', flat=True))
-        for child in self.children.all():
+        for child in self.children.select_related('parent').all():
             descendants.extend(child.get_descendants_ids())
         return descendants

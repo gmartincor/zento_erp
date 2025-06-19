@@ -31,7 +31,7 @@ class CategoryStatsService:
             Dictionary with category summary data
         """
         category_data = services.values('category').annotate(
-            total_amount=Sum('amount'),
+            total_amount=Sum('price'),
             service_count=Count('id')
         ).order_by('-total_amount')
         
@@ -84,7 +84,7 @@ class CategoryStatsService:
         for category_code, category_name in SERVICE_CATEGORIES.items():
             category_services = all_services.filter(category=category_code)
             category_stats = category_services.aggregate(
-                total_revenue=Sum('amount'),
+                total_revenue=Sum('price'),
                 total_services=Count('id')
             )
             
@@ -115,7 +115,7 @@ class ClientStatsService:
             'client__name',
             'client__email'
         ).annotate(
-            total_amount=Sum('amount'),
+            total_amount=Sum('price'),
             service_count=Count('id')
         ).order_by('-total_amount')
         
@@ -166,7 +166,7 @@ class BusinessLineStatsService:
         )
         
         global_stats = all_services.aggregate(
-            total_revenue=Sum('amount'),
+            total_revenue=Sum('price'),
             total_services=Count('id')
         )
         
@@ -195,9 +195,9 @@ class BusinessLineStatsService:
         
         # Basic metrics
         basic_stats = services.aggregate(
-            total_revenue=Sum('amount'),
+            total_revenue=Sum('price'),
             total_services=Count('id'),
-            avg_service_value=Avg('amount')
+            avg_service_value=Avg('price')
         )
         
         # Category distribution
@@ -210,7 +210,7 @@ class BusinessLineStatsService:
         recent_cutoff = timezone.now() - timezone.timedelta(days=30)
         recent_services = services.filter(created_at__gte=recent_cutoff)
         recent_stats = recent_services.aggregate(
-            recent_revenue=Sum('amount'),
+            recent_revenue=Sum('price'),
             recent_services=Count('id')
         )
         
