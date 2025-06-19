@@ -208,29 +208,6 @@ class UIPermissionService:
     def can_view_advanced_stats(user) -> bool:
         """Check if user can view advanced statistics."""
         return user.role in ['ADMIN', 'MANAGER']
-    
-    @staticmethod
-    def get_user_actions(user, business_line) -> List[Dict[str, Any]]:
-        """Get available actions for user on business line."""
-        actions = []
-        
-        if UIPermissionService.can_edit_business_line(user, business_line):
-            actions.append({
-                'text': 'Editar',
-                'url': f'/admin/business_lines/businessline/{business_line.id}/change/',
-                'class': 'btn-primary',
-                'icon': 'edit'
-            })
-        
-        if not business_line.children.exists():
-            actions.append({
-                'text': 'Ver Servicios',
-                'url': f'/accounting/business-lines/{business_line.slug}/services/',
-                'class': 'btn-secondary',
-                'icon': 'list'
-            })
-        
-        return actions
 
 
 class PresentationService:

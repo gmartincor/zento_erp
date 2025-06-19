@@ -125,6 +125,13 @@ class BusinessLineHierarchyView(
     permission_required = 'accounting.view_businessline'
     template_name = 'accounting/hierarchy_navigation.html'
     
+    def get_template_names(self):
+        """Return template based on whether we have a specific line_path."""
+        line_path = self.kwargs.get('line_path')
+        if line_path:
+            return ['accounting/business_line_detail.html']
+        return ['accounting/hierarchy_navigation.html']
+    
     def get_context_data(self, **kwargs):
         """Enhanced context with hierarchical navigation data."""
         context = super().get_context_data(**kwargs)

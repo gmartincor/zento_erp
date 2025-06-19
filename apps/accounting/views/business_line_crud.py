@@ -134,53 +134,96 @@ class BusinessLineDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView)
         return current_line
     
     def get_context_data(self, **kwargs):
-        """Add dependency information to context."""
+        """
+        Add dependency information to context.
+        Siguiendo el patrón DRY de ExpenseCategoryDeleteView.
+        """
         context = super().get_context_data(**kwargs)
         
-        # Simple dependency check
+        # Dependency analysis (siguiendo patrón de expenses)
         business_line = self.object
         children_count = business_line.children.count()
         services_count = business_line.client_services.count()
         
+        # Calcular impact total recursivo
+        total_descendants = self._count_total_descendants(business_line)
+        total_services = self._count_total_services(business_line)
+        
         context.update({
             'children_count': children_count,
             'services_count': services_count,
-            'can_delete': children_count == 0 and services_count == 0,
-            'blocking_reason': self._get_blocking_reason(children_count, services_count)
+            'total_descendants': total_descendants,
+            'total_services': total_services,
+            'can_delete': True,  # Siempre se puede eliminar con cascada
+            'deletion_safe': True,  # Variable que espera el template
+            'blocking_reason': None,  # No hay bloqueo, solo advertencia
+            'cascade_warning': self._get_cascade_warning(children_count, total_descendants, total_services)
         })
         
         return context
     
-    def _get_blocking_reason(self, children, services):
-        """Generate human-readable blocking reason."""
-        reasons = []
-        if children > 0:
-            reasons.append(f"{children} sublínea(s)")
-        if services > 0:
-            reasons.append(f"{services} servicio(s)")
+    def _count_total_descendants(self, business_line):
+        """Cuenta todos los descendientes recursivamente."""
+        count = business_line.children.count()
+        for child in business_line.children.all():
+            count += self._count_total_descendants(child)
+        return count
+    
+    def _count_total_services(self, business_line):
+        """Cuenta todos los servicios incluyendo descendientes."""
+        count = business_line.client_services.count()
+        for child in business_line.children.all():
+            count += self._count_total_services(child)
+        return count
+    
+    def _get_cascade_warning(self, children, total_descendants, total_services):
+        """Generate cascading deletion warning."""
+        if children == 0 and total_services == 0:
+            return None
         
-        if reasons:
-            return f"No se puede eliminar porque tiene {' y '.join(reasons)} asociados."
-        return None
+        warnings = []
+        if total_descendants > 0:
+            warnings.append(f"{total_descendants} sublínea(s)")
+        if total_services > 0:
+            warnings.append(f"{total_services} servicio(s)")
+        
+        return f"Se eliminarán también: {' y '.join(warnings)}"
     
     def delete(self, request, *args, **kwargs):
-        """Override delete to add dependency checking."""
+        """
+        Override delete to add dependency checking and cascade deletion.
+        Siguiendo el patrón de ExpenseCategoryDeleteView.
+        """
         business_line = self.get_object()
+        business_line_name = business_line.name
         
-        # Check for dependencies
-        if business_line.children.exists() or business_line.client_services.exists():
-            messages.error(
+        # Verificar dependencias (siguiendo patrón DRY de expenses)
+        children_count = business_line.children.count()
+        services_count = business_line.client_services.count()
+        
+        if children_count > 0:
+            # Informar sobre eliminación cascada
+            messages.warning(
                 request,
-                f'No se puede eliminar "{business_line.name}" porque tiene dependencias asociadas.'
+                f'Al eliminar "{business_line_name}" se eliminarán también sus {children_count} sublínea(s) y todos sus servicios asociados. Esta acción no se puede deshacer.'
             )
-            return self.get(request, *args, **kwargs)
+            
+            # Eliminación cascada de sublíneas (Django se encarga con on_delete=CASCADE)
+            result = super().delete(request, *args, **kwargs)
+            
+            messages.success(
+                request,
+                f'Línea de negocio "{business_line_name}" y sus {children_count} sublínea(s) eliminadas exitosamente.'
+            )
+        else:
+            # Eliminación simple
+            result = super().delete(request, *args, **kwargs)
+            messages.success(
+                request,
+                f'Línea de negocio "{business_line_name}" eliminada exitosamente.'
+            )
         
-        # Safe to delete
-        messages.success(
-            request,
-            f'Línea de negocio "{business_line.name}" eliminada exitosamente.'
-        )
-        return super().delete(request, *args, **kwargs)
+        return result
 
 
 class BusinessLineManagementDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):

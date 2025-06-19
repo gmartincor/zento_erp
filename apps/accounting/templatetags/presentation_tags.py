@@ -179,3 +179,16 @@ def level_icon(business_line, size='w-8 h-8'):
         'css_class': styling['text_class'],
         'size': size
     }
+
+
+@register.inclusion_tag('accounting/components/admin_actions.html')
+def admin_action_buttons(user, business_line, line_path):
+    """
+    Render admin action buttons for business line management.
+    Usage: {% admin_action_buttons user business_line line_path %}
+    """
+    return {
+        'user': user,
+        'business_line': business_line,
+        'line_path': line_path
+    }
