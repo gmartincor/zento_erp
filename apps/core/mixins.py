@@ -193,13 +193,8 @@ class BusinessLineHierarchyMixin:
 
 class ServiceCategoryMixin:
     def get_services_by_category(self, business_line, category):
-        """
-        Obtiene todos los servicios de una categoría para una línea de negocio
-        incluyendo TODOS sus descendientes recursivamente.
-        """
         from apps.accounting.models import ClientService
         
-        # Siempre usar agregación con descendientes (incluye la línea actual)
         queryset = ClientService.objects.get_services_by_category_including_descendants(
             business_line, category
         )
@@ -210,14 +205,9 @@ class ServiceCategoryMixin:
         return queryset
     
     def get_category_stats(self, business_line, category):
-        """
-        Obtiene estadísticas de una categoría para una línea de negocio
-        incluyendo TODOS sus descendientes recursivamente.
-        """
         from django.db.models import Sum, Count
         from apps.accounting.models import ClientService
         
-        # Siempre usar agregación con descendientes (incluye la línea actual)
         stats_data = ClientService.objects.get_service_statistics_including_descendants(
             business_line, category
         )
@@ -263,13 +253,8 @@ class ServiceCategoryMixin:
         }
     
     def get_category_counts(self, business_line):
-        """
-        Obtiene conteos de servicios por categoría para una línea de negocio
-        incluyendo TODOS sus descendientes recursivamente.
-        """
         from apps.accounting.models import ClientService
         
-        # Siempre usar agregación con descendientes (incluye la línea actual)
         descendant_ids = business_line.get_descendant_ids()
         base_queryset = ClientService.objects.filter(
             business_line__id__in=descendant_ids,
