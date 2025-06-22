@@ -127,9 +127,9 @@ class BusinessLineStatsService:
         }
     
     def calculate_business_line_metrics(self, business_line: BusinessLine) -> Dict[str, Any]:
-        descendant_lines = business_line.get_descendants(include_self=True)
+        descendant_ids = business_line.get_descendant_ids()
         services = ClientService.objects.filter(
-            business_line__in=descendant_lines,
+            business_line__id__in=descendant_ids,
             is_active=True
         )
         

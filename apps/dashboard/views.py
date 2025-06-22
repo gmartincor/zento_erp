@@ -38,9 +38,9 @@ def dashboard_home(request):
     lineas_negocio = BusinessLine.objects.filter(
         parent__isnull=False
     ).annotate(
-        total_ingresos=Sum('clientservice__price'),
+        total_ingresos=Sum('client_services__price'),
         total_gastos=Sum('expense__amount'),
-        num_servicios=Count('clientservice'),
+        num_servicios=Count('client_services'),
         num_gastos=Count('expense')
     ).order_by('-total_ingresos')
     

@@ -102,11 +102,6 @@ class BusinessLineManager(models.Manager):
             current = current.parent
         return path
     
-    def get_descendants(self, business_line) -> QuerySet:
-        descendant_ids = set()
-        self._collect_descendant_ids(business_line, descendant_ids)
-        return self.active().filter(id__in=descendant_ids)
-    
     def get_business_lines_with_services(
         self,
         accessible_lines: QuerySet
@@ -132,12 +127,13 @@ class BusinessLineManager(models.Manager):
         include_descendants: bool = True
     ) -> Dict[str, Any]:
         from apps.accounting.models import ClientService
+        
         if include_descendants:
-            descendant_ids = {business_line.id}
-            self._collect_descendant_ids(business_line, descendant_ids)
+            descendant_ids = business_line.get_descendant_ids()
             services_filter = Q(business_line_id__in=descendant_ids, is_active=True)
         else:
             services_filter = Q(business_line=business_line, is_active=True)
+        
         stats = ClientService.objects.filter(services_filter).aggregate(
             total_services=Count('id'),
             total_revenue=Sum('price'),
@@ -147,6 +143,7 @@ class BusinessLineManager(models.Manager):
             white_revenue=Sum('price', filter=Q(category='WHITE')),
             black_revenue=Sum('price', filter=Q(category='BLACK'))
         )
+        
         return {
             'business_line': business_line,
             'total_services': stats['total_services'] or 0,
@@ -158,16 +155,3 @@ class BusinessLineManager(models.Manager):
             'black_revenue': stats['black_revenue'] or 0,
             'include_descendants': include_descendants
         }
-    
-    def _collect_descendant_ids(
-        self,
-        business_line,
-        id_set: set
-    ) -> None:
-        children = self.get_queryset().filter(
-            parent=business_line,
-            is_active=True
-        )
-        for child in children:
-            id_set.add(child.id)
-            self._collect_descendant_ids(child, id_set)

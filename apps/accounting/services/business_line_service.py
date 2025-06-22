@@ -98,10 +98,9 @@ class BusinessLineService:
         )
         
         if include_children:
-            child_lines = business_line.get_descendants()
-            child_line_ids = list(child_lines.values_list('id', flat=True)) + [business_line.id]
+            descendant_ids = business_line.get_descendant_ids()
             services_query = ClientService.objects.filter(
-                business_line__id__in=child_line_ids,
+                business_line__id__in=descendant_ids,
                 is_active=True
             )
         

@@ -49,7 +49,24 @@ class ClientServiceManager(models.Manager):
         queryset = self.get_queryset().by_business_line(business_line).by_category(category)
         if active_only:
             queryset = queryset.active()
-        return queryset.with_client_data().order_by('-created_at')
+        return queryset.with_client_data().order_by('-created')
+    
+    def get_services_by_category_including_descendants(
+        self,
+        business_line,
+        category: str,
+        active_only: bool = True
+    ) -> QuerySet:
+        descendant_ids = business_line.get_descendant_ids()
+        
+        queryset = self.get_queryset().filter(
+            business_line__id__in=descendant_ids
+        ).by_category(category)
+        
+        if active_only:
+            queryset = queryset.active()
+        
+        return queryset.with_client_data().order_by('-created')
     
     def get_service_statistics(
         self,
@@ -75,6 +92,46 @@ class ClientServiceManager(models.Manager):
                 revenue=Sum('price')
             )
         }
+        return {
+            'total_services': stats['total_services'] or 0,
+            'total_revenue': stats['total_revenue'] or Decimal('0'),
+            'avg_price': stats['avg_price'] or Decimal('0'),
+            'unique_clients': stats['unique_clients'] or 0,
+            'category_breakdown': category_stats
+        }
+    
+    def get_service_statistics_including_descendants(
+        self,
+        business_line,
+        category: Optional[str] = None
+    ) -> Dict[str, Any]:
+        descendant_ids = business_line.get_descendant_ids()
+        
+        queryset = self.get_queryset().filter(
+            business_line__id__in=descendant_ids
+        ).active()
+        
+        if category:
+            queryset = queryset.by_category(category)
+            
+        stats = queryset.aggregate(
+            total_services=Count('id'),
+            total_revenue=Sum('price'),
+            avg_price=Avg('price'),
+            unique_clients=Count('client', distinct=True)
+        )
+        
+        category_stats = {
+            'WHITE': queryset.filter(category='WHITE').aggregate(
+                count=Count('id'),
+                revenue=Sum('price')
+            ),
+            'BLACK': queryset.filter(category='BLACK').aggregate(
+                count=Count('id'),
+                revenue=Sum('price')
+            )
+        }
+        
         return {
             'total_services': stats['total_services'] or 0,
             'total_revenue': stats['total_revenue'] or Decimal('0'),

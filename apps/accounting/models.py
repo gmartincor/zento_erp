@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from apps.core.models import TimeStampedModel, SoftDeleteModel
 from apps.business_lines.models import BusinessLine
+from .managers.client_service_manager import ClientServiceManager
 
 
 class Client(TimeStampedModel, SoftDeleteModel):
@@ -131,6 +132,8 @@ class ClientService(TimeStampedModel):
         verbose_name="Activo",
         db_index=True
     )
+
+    objects = ClientServiceManager()
 
     class Meta:
         db_table = 'client_services'

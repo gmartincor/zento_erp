@@ -193,15 +193,16 @@ class BusinessLineHierarchyMixin:
 
 class ServiceCategoryMixin:
     def get_services_by_category(self, business_line, category):
+        """
+        Obtiene todos los servicios de una categoría para una línea de negocio
+        incluyendo TODOS sus descendientes recursivamente.
+        """
         from apps.accounting.models import ClientService
         
-        queryset = ClientService.objects.select_related(
-            'client', 'business_line'
-        ).filter(
-            business_line=business_line,
-            category=category,
-            is_active=True
-        ).order_by('-created', 'client__full_name')
+        # Siempre usar agregación con descendientes (incluye la línea actual)
+        queryset = ClientService.objects.get_services_by_category_including_descendants(
+            business_line, category
+        )
         
         if hasattr(self, 'filter_business_lines_by_permission'):
             queryset = self.filter_business_lines_by_permission(queryset)
@@ -209,28 +210,31 @@ class ServiceCategoryMixin:
         return queryset
     
     def get_category_stats(self, business_line, category):
+        """
+        Obtiene estadísticas de una categoría para una línea de negocio
+        incluyendo TODOS sus descendientes recursivamente.
+        """
         from django.db.models import Sum, Count
+        from apps.accounting.models import ClientService
         
-        services = self.get_services_by_category(business_line, category)
-        
-        stats = services.aggregate(
-            total_revenue=Sum('price'),
-            service_count=Count('id')
+        # Siempre usar agregación con descendientes (incluye la línea actual)
+        stats_data = ClientService.objects.get_service_statistics_including_descendants(
+            business_line, category
         )
+        services = ClientService.objects.get_services_by_category_including_descendants(
+            business_line, category
+        )
+        
         remanente_total = 0
         if category == 'BLACK':
             for service in services:
                 remanente_total += service.get_remanente_total()
-        
-        total_revenue = stats['total_revenue'] or 0
-        service_count = stats['service_count'] or 0
-        avg_revenue_per_service = total_revenue / service_count if service_count > 0 else 0
 
         return {
-            'total_revenue': total_revenue,
-            'service_count': service_count,
+            'total_revenue': stats_data['total_revenue'],
+            'service_count': stats_data['total_services'],
             'remanente_total': remanente_total,
-            'avg_revenue_per_service': avg_revenue_per_service,
+            'avg_revenue_per_service': stats_data['avg_price'],
         }
     
     def get_category_display_name(self, category):
@@ -259,10 +263,16 @@ class ServiceCategoryMixin:
         }
     
     def get_category_counts(self, business_line):
+        """
+        Obtiene conteos de servicios por categoría para una línea de negocio
+        incluyendo TODOS sus descendientes recursivamente.
+        """
         from apps.accounting.models import ClientService
         
+        # Siempre usar agregación con descendientes (incluye la línea actual)
+        descendant_ids = business_line.get_descendant_ids()
         base_queryset = ClientService.objects.filter(
-            business_line=business_line,
+            business_line__id__in=descendant_ids,
             is_active=True
         )
         

@@ -129,17 +129,6 @@ class BusinessLine(TimeStampedModel):
             return f"{self.parent.get_full_hierarchy()} > {self.name}"
         return self.name
 
-    def get_descendants(self):
-        return BusinessLine.objects.select_related('parent').filter(
-            parent__in=self.get_descendants_ids()
-        )
-
-    def get_descendants_ids(self):
-        descendants = list(self.children.values_list('id', flat=True))
-        for child in self.children.select_related('parent').all():
-            descendants.extend(child.get_descendants_ids())
-        return descendants
-
     def get_url_path(self):
         path_parts = []
         current = self
@@ -149,3 +138,14 @@ class BusinessLine(TimeStampedModel):
             current = current.parent
         
         return '/'.join(path_parts)
+    
+    def get_descendant_ids(self):
+        descendant_ids = {self.id}
+        self._collect_descendant_ids(descendant_ids)
+        return descendant_ids
+    
+    def _collect_descendant_ids(self, id_set):
+        children = BusinessLine.objects.filter(parent=self, is_active=True)
+        for child in children:
+            id_set.add(child.id)
+            child._collect_descendant_ids(id_set)

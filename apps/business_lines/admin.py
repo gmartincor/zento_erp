@@ -93,7 +93,7 @@ class BusinessLineAdmin(admin.ModelAdmin):
         # Limit parent choices to avoid circular references
         if obj:
             # Exclude self and descendants from parent choices
-            excluded_ids = [obj.id] + obj.get_descendants_ids()
+            excluded_ids = list(obj.get_descendant_ids())
             form.base_fields['parent'].queryset = BusinessLine.objects.exclude(
                 id__in=excluded_ids
             ).filter(level__lt=3)  # Can't be parent if already at level 3
