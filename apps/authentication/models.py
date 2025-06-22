@@ -4,25 +4,17 @@ from django.db import models
 
 class User(AbstractUser):
     """
-    Custom User model with role-based access and business line relationships.
+    Custom User model with role-based access.
     """
     
     class RoleChoices(models.TextChoices):
-        ADMIN = 'ADMIN', 'Administrador'
-        GLOW_VIEWER = 'GLOW_VIEWER', 'Visualizador Glow'
+        AUTONOMO = 'AUTONOMO', 'Autónomo'
     
     role = models.CharField(
         max_length=20,
         choices=RoleChoices.choices,
-        default=RoleChoices.GLOW_VIEWER,
+        default=RoleChoices.AUTONOMO,
         verbose_name="Rol"
-    )
-    
-    business_lines = models.ManyToManyField(
-        'business_lines.BusinessLine',
-        blank=True,
-        verbose_name="Líneas de negocio",
-        related_name="users"
     )
 
     class Meta:

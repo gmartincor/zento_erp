@@ -54,34 +54,11 @@ class BusinessLineManager(models.Manager):
     def roots(self):
         return self.get_queryset().roots()
     
-    def get_accessible_lines_for_user(self, user: User) -> QuerySet:
-        if user.role == 'ADMIN':
-            return self.active()
-        elif user.role == 'GLOW_VIEWER':
-            assigned_lines = user.business_lines.filter(is_active=True)
-            accessible_ids = set()
-            for line in assigned_lines:
-                accessible_ids.add(line.id)
-                self._collect_descendant_ids(line, accessible_ids)
-            return self.active().filter(id__in=accessible_ids)
-        else:
-            return self.none()
+    def get_accessible_lines_for_user(self, user):
+        return self.active()
     
-    def get_root_lines_for_user(self, user: User) -> QuerySet:
-        if user.role == 'ADMIN':
-            root_lines = self.roots().active()
-        elif user.role == 'GLOW_VIEWER':
-            assigned_lines = user.business_lines.all()
-            root_ids = set()
-            for line in assigned_lines:
-                current = line
-                while current.parent:
-                    current = current.parent
-                root_ids.add(current.id)
-            root_lines = self.roots().active().filter(id__in=root_ids)
-        else:
-            root_lines = self.none()
-        return root_lines.with_service_counts().order_by('name')
+    def get_root_lines_for_user(self, user):
+        return self.roots().active().with_service_counts().order_by('name')
     
     def get_line_by_path(self, line_path: str):
         if not line_path:

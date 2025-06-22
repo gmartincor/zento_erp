@@ -92,37 +92,16 @@ class CategoryContextMixin:
 class BusinessLinePermissionMixin:
     def get_allowed_business_lines(self):
         from apps.business_lines.models import BusinessLine
-        
-        user = self.request.user
-        
-        if user.role == 'ADMIN':
-            return BusinessLine.objects.select_related('parent').all()
-        
-        elif user.role == 'GLOW_VIEWER':
-            return user.business_lines.select_related('parent').all()
-        
-        return BusinessLine.objects.none()
+        return BusinessLine.objects.select_related('parent').all()
     
     def filter_business_lines_by_permission(self, queryset):
-        allowed_lines = self.get_allowed_business_lines()
-        
-        if not allowed_lines.exists():
-            return queryset.none()
-        
-        return queryset.filter(business_line__in=allowed_lines)
+        return queryset
     
     def check_business_line_permission(self, business_line):
-        if isinstance(business_line, int):
-            business_line_id = business_line
-        else:
-            business_line_id = business_line.id
-        
-        allowed_lines = self.get_allowed_business_lines()
-        return allowed_lines.filter(id=business_line_id).exists()
+        return True
     
     def enforce_business_line_permission(self, business_line):
-        if not self.check_business_line_permission(business_line):
-            raise PermissionDenied("No tienes permisos para acceder a esta línea de negocio.")
+        pass
 
 class BusinessLineHierarchyMixin:
     def resolve_business_line_from_path(self, line_path):

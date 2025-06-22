@@ -46,30 +46,22 @@ class Command(BaseCommand):
         try:
             admin_user = User.objects.get(username='admin')
             admin_user.set_password('admin123')
+            admin_user.role = 'AUTONOMO'
             admin_user.save()
             
             maria_user = User.objects.get(username='maria.glow')
             maria_user.set_password('maria123')
+            maria_user.role = 'AUTONOMO'
             maria_user.save()
             
             carlos_user = User.objects.get(username='carlos.glow')
             carlos_user.set_password('carlos123')
+            carlos_user.role = 'AUTONOMO'
             carlos_user.save()
             
             self.stdout.write(self.style.SUCCESS('✓ User passwords set'))
         except User.DoesNotExist as e:
             self.stdout.write(self.style.ERROR(f'✗ Error setting passwords: {str(e)}'))
-
-        try:
-            from apps.business_lines.models import BusinessLine
-            glow_business_line = BusinessLine.objects.get(slug='glow')
-            
-            maria_user.business_lines.add(glow_business_line)
-            carlos_user.business_lines.add(glow_business_line)
-            
-            self.stdout.write(self.style.SUCCESS('✓ Business lines assigned to users'))
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f'✗ Error assigning business lines: {str(e)}'))
 
         self.stdout.write(self.style.SUCCESS('\n=== FIXTURE LOADING COMPLETE ==='))
         

@@ -17,7 +17,7 @@ class Command(BaseCommand):
             first_name='Admin',
             last_name='Principal',
             password='admin123',
-            role='ADMIN'
+            role='AUTONOMO'
         )
         admin.is_staff = True
         admin.is_superuser = True
@@ -30,7 +30,7 @@ class Command(BaseCommand):
             first_name='María',
             last_name='García',
             password='maria123',
-            role='GLOW_VIEWER'
+            role='AUTONOMO'
         )
         
         # Create carlos.glow user
@@ -40,7 +40,7 @@ class Command(BaseCommand):
             first_name='Carlos',
             last_name='Martín',
             password='carlos123',
-            role='GLOW_VIEWER'
+            role='AUTONOMO'
         )
         
         self.stdout.write(

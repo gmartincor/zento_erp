@@ -10,12 +10,7 @@ User = get_user_model()
 
 class BusinessLineService:
     def get_accessible_lines(self, user):
-        if user.role == 'ADMIN':
-            return BusinessLine.objects.select_related('parent').filter(is_active=True)
-        elif user.role == 'GLOW_VIEWER':
-            return user.business_lines.select_related('parent').filter(is_active=True)
-        else:
-            return BusinessLine.objects.none()
+        return BusinessLine.objects.select_related('parent').filter(is_active=True)
     
     def get_root_lines_for_user(self, user):
         return self.get_accessible_lines(user).filter(level=1)

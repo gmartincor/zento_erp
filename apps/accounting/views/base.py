@@ -81,29 +81,23 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
     def _prepare_user_context(self):
         user = self.request.user
         return {
-            'is_admin': user.role == 'ADMIN',
-            'is_glow_viewer': user.role == 'GLOW_VIEWER',
-            'can_create_lines': user.role == 'ADMIN',
+            'is_autonomo': user.role == 'AUTONOMO',
+            'can_create_lines': True,
             'welcome_message': self._get_welcome_message(user),
             'available_actions': self._get_available_actions(user)
         }
     
     def _get_welcome_message(self, user):
-        messages = {
-            'ADMIN': 'Administra todos los ingresos y servicios del sistema',
-            'GLOW_VIEWER': 'Gestiona los ingresos de tus líneas de negocio asignadas',
-        }
-        return messages.get(user.role, 'Panel de ingresos y servicios')
+        return 'Gestiona tus ingresos y servicios'
     
     def _get_available_actions(self, user):
         actions = []
-        if user.role == 'ADMIN':
-            actions.append({
-                'label': 'Nueva Línea',
-                'url': '#',
-                'icon': 'plus',
-                'style': 'secondary'
-            })
+        actions.append({
+            'label': 'Nueva Línea',
+            'url': '#',
+            'icon': 'plus',
+            'style': 'secondary'
+        })
         actions.append({
             'label': 'Ver Reportes',
             'url': '#',
