@@ -15,19 +15,16 @@ from apps.core.constants import SUCCESS_MESSAGES, ERROR_MESSAGES
 
 
 class ExpenseCategoryView(LoginRequiredMixin, TemporalFilterMixin, TemplateView):
-    """Vista principal que muestra categorías de gastos con totales."""
     template_name = 'expenses/categories.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Obtener filtros temporales usando el mixin
         filters = self.get_temporal_filters()
         expense_filter = filters['expense_filter']
         year = filters['year']
         month = filters['month']
         
-        # Calcular totales por tipo de categoría
         category_totals = {}
         total_general = 0
         
@@ -47,7 +44,6 @@ class ExpenseCategoryView(LoginRequiredMixin, TemporalFilterMixin, TemplateView)
             }
             total_general += total
         
-        # Obtener categorías individuales con sus estadísticas
         base_filter = Q(expenses__accounting_year=year)
         if month:
             base_filter &= Q(expenses__accounting_month=month)
@@ -67,7 +63,6 @@ class ExpenseCategoryView(LoginRequiredMixin, TemporalFilterMixin, TemplateView)
 
 
 class ExpenseListView(LoginRequiredMixin, TemporalFilterMixin, CategoryContextMixin, ListView):
-    """Lista de gastos filtrada por categoría específica."""
     model = Expense
     template_name = 'expenses/expense_list.html'
     context_object_name = 'expenses'
@@ -77,11 +72,9 @@ class ExpenseListView(LoginRequiredMixin, TemporalFilterMixin, CategoryContextMi
         category_slug = self.kwargs['category_slug']
         self.category = get_object_or_404(ExpenseCategory, slug=category_slug)
         
-        # Obtener filtros temporales usando el mixin
         filters = self.get_temporal_filters()
         expense_filter = filters['expense_filter']
         
-        # Construir queryset con filtros por categoría específica
         queryset = Expense.objects.filter(
             category=self.category,
             **expense_filter
@@ -92,7 +85,6 @@ class ExpenseListView(LoginRequiredMixin, TemporalFilterMixin, CategoryContextMi
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Total de la categoría actual con filtros aplicados
         context['total_amount'] = self.get_queryset().aggregate(
             total=Sum('amount')
         )['total'] or 0
@@ -101,7 +93,6 @@ class ExpenseListView(LoginRequiredMixin, TemporalFilterMixin, CategoryContextMi
 
 
 class ExpenseCreateView(LoginRequiredMixin, CategoryContextMixin, CreateView):
-    """Crear un nuevo gasto en una categoría específica."""
     model = Expense
     form_class = ExpenseForm
     template_name = 'expenses/expense_form.html'
@@ -123,7 +114,6 @@ class ExpenseCreateView(LoginRequiredMixin, CategoryContextMixin, CreateView):
 
 
 class ExpenseUpdateView(LoginRequiredMixin, CategoryContextMixin, UpdateView):
-    """Actualizar un gasto existente."""
     model = Expense
     form_class = ExpenseForm
     template_name = 'expenses/expense_form.html'
@@ -145,7 +135,6 @@ class ExpenseUpdateView(LoginRequiredMixin, CategoryContextMixin, UpdateView):
 
 
 class ExpenseDeleteView(LoginRequiredMixin, CategoryContextMixin, DeleteView):
-    """Eliminar un gasto."""
     model = Expense
     template_name = 'expenses/expense_confirm_delete.html'
     
@@ -157,13 +146,12 @@ class ExpenseDeleteView(LoginRequiredMixin, CategoryContextMixin, DeleteView):
         context = super().get_context_data(**kwargs)
         category_slug = self.kwargs['category_slug']
         category = get_object_or_404(ExpenseCategory, slug=category_slug)
-        self.category = category  # Set for CategoryContextMixin
+        self.category = category
         context.update(self.get_category_context(category))
         return context
 
 
 class ExpenseCategoryCreateView(LoginRequiredMixin, CreateView):
-    """Crear una nueva categoría de gastos."""
     model = ExpenseCategory
     form_class = ExpenseCategoryForm
     template_name = 'expenses/category_form.html'
@@ -184,7 +172,6 @@ class ExpenseCategoryCreateView(LoginRequiredMixin, CreateView):
 
 
 class ExpenseCategoryUpdateView(LoginRequiredMixin, UpdateView):
-    """Editar una categoría de gastos existente."""
     model = ExpenseCategory
     form_class = ExpenseCategoryForm
     template_name = 'expenses/category_form.html'
@@ -205,7 +192,6 @@ class ExpenseCategoryUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class ExpenseCategoryDeleteView(LoginRequiredMixin, DeleteView):
-    """Eliminar una categoría de gastos."""
     model = ExpenseCategory
     template_name = 'expenses/category_confirm_delete.html'
     success_url = reverse_lazy('expenses:categories')
@@ -214,7 +200,6 @@ class ExpenseCategoryDeleteView(LoginRequiredMixin, DeleteView):
         category = self.get_object()
         category_name = category.name
         
-        # Verificar si la categoría tiene gastos asociados
         if category.expenses.exists():
             messages.error(
                 request, 
@@ -222,7 +207,6 @@ class ExpenseCategoryDeleteView(LoginRequiredMixin, DeleteView):
             )
             return redirect('expenses:categories')
         
-        # Si no tiene gastos, proceder con la eliminación
         result = super().delete(request, *args, **kwargs)
         messages.success(
             request, 
@@ -237,7 +221,6 @@ class ExpenseCategoryDeleteView(LoginRequiredMixin, DeleteView):
 
 
 class ExpenseCategoryByTypeView(LoginRequiredMixin, TemporalFilterMixin, TemplateView):
-    """Vista que muestra categorías filtradas por tipo específico."""
     template_name = 'expenses/categories_by_type.html'
     
     def get_context_data(self, **kwargs):
@@ -245,18 +228,15 @@ class ExpenseCategoryByTypeView(LoginRequiredMixin, TemporalFilterMixin, Templat
         
         category_type = self.kwargs['category_type']
         
-        # Validar que el tipo de categoría sea válido
         valid_types = dict(ExpenseCategory.CategoryTypeChoices.choices)
         if category_type not in valid_types:
             raise Http404(ERROR_MESSAGES['INVALID_CATEGORY_TYPE'])
         
-        # Obtener filtros temporales usando el mixin
         filters = self.get_temporal_filters()
         expense_filter = filters['expense_filter']
         year = filters['year']
         month = filters['month']
         
-        # Obtener categorías del tipo específico con sus estadísticas
         base_filter = Q(expenses__accounting_year=year)
         if month:
             base_filter &= Q(expenses__accounting_month=month)
@@ -269,7 +249,6 @@ class ExpenseCategoryByTypeView(LoginRequiredMixin, TemporalFilterMixin, Templat
             expense_count=Count('expenses', filter=base_filter)
         ).order_by('name')
         
-        # Calcular total del tipo específico
         total_amount = Expense.objects.filter(
             category__category_type=category_type,
             **expense_filter

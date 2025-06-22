@@ -1,15 +1,3 @@
-{%comment%}
-Component: Category Card
-Description: Reusable card component for displaying expense categories
-Usage: {% include 'expenses/components/_category_card.html' with category=category show_type_badge=True current_year=current_year current_month=current_month %}
-Parameters:
-- category: Category object with all necessary data
-- show_type_badge: Whether to show the category type badge (default: True)
-- current_year: Current year for URL parameters
-- current_month: Current month for URL parameters
-- card_variant: Card layout variant ('default' or 'compact')
-{%endcomment%}
-
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
     <div class="p-6">
         <!-- Category Header -->

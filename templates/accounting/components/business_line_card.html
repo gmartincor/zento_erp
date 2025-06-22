@@ -1,26 +1,10 @@
-{%comment%}
-Component: Business Line Card
-Description: Card component for displaying business line information with navigation
-Usage: {% include 'accounting/components/business_line_card.html' with business_line=line stats=line_stats %}
-Parameters:
-- business_line: BusinessLine object with all necessary data
-- stats: Statistics dictionary for the business line
-- show_children: Whether to show child business lines count (default: True)
-- card_variant: Card layout variant ('default', 'compact', 'highlight')
-- show_categories: Whether to show WHITE/BLACK category buttons (default: auto-detect if leaf node)
-- current_user: User object for permission checks
-{%endcomment%}
-
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden 
             hover:shadow-md transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600
             {% if card_variant == 'highlight' %}ring-2 ring-primary-500 ring-opacity-20{% endif %}">
     
-    <!-- Card Header -->
     <div class="p-6 {% if card_variant == 'highlight' %}bg-primary-50 dark:bg-primary-900/10{% endif %}">
         <div class="flex items-start justify-between">
-            <!-- Business Line Info -->
             <div class="flex items-start space-x-4 flex-1">
-                <!-- Level Indicator & Icon -->
                 <div class="flex-shrink-0">
                     <div class="w-12 h-12 rounded-lg flex items-center justify-center
                                 {% if business_line.level == 1 %}bg-blue-100 dark:bg-blue-900/20
@@ -42,14 +26,12 @@ Parameters:
                     </div>
                 </div>
 
-                <!-- Business Line Details -->
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center space-x-2 mb-2">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">
                             {{ business_line.name }}
                         </h3>
                         
-                        <!-- Level Badge -->
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                      {% if business_line.level == 1 %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
                                      {% elif business_line.level == 2 %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
@@ -64,7 +46,6 @@ Parameters:
                     </p>
                     {% endif %}
 
-                    <!-- Business Line Meta Info -->
                     <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                         {% if business_line.slug %}
                         <span class="flex items-center space-x-1">
@@ -96,7 +77,6 @@ Parameters:
                 </div>
             </div>
 
-            <!-- Actions Dropdown (for future use) -->
             <div class="flex-shrink-0" x-data="{ open: false }">
                 <button @click="open = !open" 
                         class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -108,17 +88,14 @@ Parameters:
         </div>
     </div>
 
-    <!-- Statistics Section -->
     {% if stats and card_variant != 'compact' %}
     <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
         {% include 'accounting/components/statistics_panel.html' with stats=stats title="" panel_variant="compact" %}
     </div>
     {% endif %}
 
-    <!-- Action Buttons -->
     <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
         <div class="flex flex-wrap gap-2">
-            <!-- Navigate to Business Line Detail -->
             <a href="{% url 'accounting:business-lines-path' line_path=business_line.get_url_path %}"
                class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,7 +105,6 @@ Parameters:
                 Ver Detalle
             </a>
 
-            <!-- Category Buttons (only for leaf nodes) -->
             {% if show_categories|default:not_business_line.children.exists %}
             <a href="{% url 'accounting:category-services' line_path=business_line.slug category='white' %}"
                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">

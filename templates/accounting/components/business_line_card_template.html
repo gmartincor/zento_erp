@@ -1,8 +1,6 @@
-<!-- Business Line Card Component -->
 {% load presentation_tags %}
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
-    <!-- Header with icon and styling based on level -->
     <div class="flex items-start justify-between mb-4">
         <div class="flex items-center">
             <div class="p-3 rounded-lg {{ presentation.display.styling.bg_class }}">
@@ -24,14 +22,12 @@
             </div>
         </div>
         
-        <!-- Badges -->
         <div class="flex flex-col gap-2">
             {% level_badge business_line %}
             {% status_badge business_line %}
         </div>
     </div>
     
-    <!-- Metadata -->
     <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
         {% if presentation.display.has_slug %}
         <div>
@@ -56,7 +52,6 @@
         {% endif %}
     </div>
     
-    <!-- Actions -->
     {% if show_actions and user and presentation.user_actions %}
     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
         {% render_user_actions user business_line %}

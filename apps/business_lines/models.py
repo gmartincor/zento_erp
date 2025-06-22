@@ -4,9 +4,6 @@ from apps.core.models import TimeStampedModel
 
 
 class BusinessLine(TimeStampedModel):
-    """
-    Hierarchical business line model with up to 3 levels.
-    """
     
     class RemanenteChoices(models.TextChoices):
         REMANENTE_PEPE = 'remanente_pepe', 'Remanente Pepe'
@@ -87,34 +84,24 @@ class BusinessLine(TimeStampedModel):
         ]
 
     def save(self, *args, **kwargs):
-        """
-        Auto-calculate level based on parent hierarchy and generate unique slug.
-        """
-        # Auto-generate slug if not provided
         if not self.slug:
             self.slug = self._generate_unique_slug()
         
-        # Auto-calculate level based on parent
         if self.parent is None:
             self.level = 1
         else:
             self.level = self.parent.level + 1
         
-        # Validate maximum level
         if self.level > 3:
             raise ValueError("El nivel máximo permitido es 3")
         
         super().save(*args, **kwargs)
 
     def _generate_unique_slug(self):
-        """
-        Generate a unique slug for this business line considering its parent.
-        """
         base_slug = slugify(self.name)
         if not base_slug:
             base_slug = 'business-line'
         
-        # Check if the base slug is already taken at this level
         queryset = BusinessLine.objects.filter(parent=self.parent, slug=base_slug)
         if self.pk:
             queryset = queryset.exclude(pk=self.pk)
@@ -122,7 +109,6 @@ class BusinessLine(TimeStampedModel):
         if not queryset.exists():
             return base_slug
         
-        # Generate a unique slug by appending a number
         counter = 1
         while True:
             new_slug = f"{base_slug}-{counter}"
@@ -139,35 +125,22 @@ class BusinessLine(TimeStampedModel):
         return f"{'  ' * (self.level - 1)}{self.name}"
 
     def get_full_hierarchy(self):
-        """
-        Returns the full hierarchy path as a string.
-        """
         if self.parent:
             return f"{self.parent.get_full_hierarchy()} > {self.name}"
         return self.name
 
     def get_descendants(self):
-        """
-        Returns all descendants of this business line.
-        """
         return BusinessLine.objects.select_related('parent').filter(
             parent__in=self.get_descendants_ids()
         )
 
     def get_descendants_ids(self):
-        """
-        Returns a list of all descendant IDs.
-        """
         descendants = list(self.children.values_list('id', flat=True))
         for child in self.children.select_related('parent').all():
             descendants.extend(child.get_descendants_ids())
         return descendants
 
     def get_url_path(self):
-        """
-        Returns the hierarchical URL path for this business line.
-        Example: 'jaen/pepe/pepe-normal'
-        """
         path_parts = []
         current = self
         

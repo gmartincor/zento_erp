@@ -5,18 +5,12 @@ import os
 
 
 def expense_attachment_path(instance, filename):
-    """
-    Generate upload path for expense attachments.
-    """
     year = instance.date.year
     month = instance.date.month
     return f'expenses/{year}/{month:02d}/{filename}'
 
 
 class ExpenseCategory(TimeStampedModel):
-    """
-    Categories for organizing expenses by type.
-    """
     
     class CategoryTypeChoices(models.TextChoices):
         FIXED = 'FIXED', 'Fijo'
@@ -64,9 +58,6 @@ class ExpenseCategory(TimeStampedModel):
         ]
 
     def save(self, *args, **kwargs):
-        """
-        Auto-generate slug from name if not provided.
-        """
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
@@ -76,9 +67,6 @@ class ExpenseCategory(TimeStampedModel):
 
 
 class Expense(TimeStampedModel):
-    """
-    Individual expense records with categorization and accounting period tracking.
-    """
     
     category = models.ForeignKey(
         ExpenseCategory,
@@ -139,9 +127,6 @@ class Expense(TimeStampedModel):
         ]
 
     def save(self, *args, **kwargs):
-        """
-        Auto-calculate accounting year and month from date.
-        """
         if self.date:
             self.accounting_year = self.date.year
             self.accounting_month = self.date.month
@@ -151,9 +136,6 @@ class Expense(TimeStampedModel):
         return f"{self.category.name} - {self.amount}€ ({self.date})"
 
     def get_attachment_filename(self):
-        """
-        Get the filename of the attachment without the path.
-        """
         if self.attachment:
             return os.path.basename(self.attachment.name)
         return None

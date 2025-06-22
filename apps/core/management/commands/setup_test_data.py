@@ -24,7 +24,6 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Loading fixtures for Nutrition CRM...'))
         
-        # Load fixtures in dependency order
         fixtures = [
             ('apps/business_lines/fixtures/business_lines_complete.json', 'Business Lines'),
             ('apps/authentication/fixtures/users.json', 'Users'),
@@ -43,7 +42,6 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR(f'✗ Error loading {description}: {str(e)}'))
                     raise
 
-        # Set proper passwords for users
         self.stdout.write('Setting up user passwords...')
         try:
             admin_user = User.objects.get(username='admin')
@@ -62,7 +60,6 @@ class Command(BaseCommand):
         except User.DoesNotExist as e:
             self.stdout.write(self.style.ERROR(f'✗ Error setting passwords: {str(e)}'))
 
-        # Assign business lines to Glow users
         try:
             from apps.business_lines.models import BusinessLine
             glow_business_line = BusinessLine.objects.get(slug='glow')
@@ -74,10 +71,8 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'✗ Error assigning business lines: {str(e)}'))
 
-        # Display summary
         self.stdout.write(self.style.SUCCESS('\n=== FIXTURE LOADING COMPLETE ==='))
         
-        # Import models to show counts
         from apps.business_lines.models import BusinessLine
         from apps.accounting.models import Client, ClientService
         from apps.expenses.models import ExpenseCategory, Expense

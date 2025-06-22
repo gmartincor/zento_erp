@@ -1,53 +1,30 @@
-{%comment%}
-Component: Category Tabs
-Description: Navigation tabs for switching between WHITE and BLACK service categories
-Usage: {% include 'accounting/components/category_tabs.html' %}
-Context Required:
-- line_path: Current business line path
-- current_category: Current active category (WHITE/BLACK)
-- business_line: BusinessLine object
-{%endcomment%}
-
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1 mb-6">
     <nav class="flex space-x-1" aria-label="Categorías de servicios">
-        <!-- Tab WHITE -->
         <a href="{% url 'accounting:category-services' line_path=line_path category='white' %}"
            class="flex-1 group inline-flex items-center justify-center px-4 py-3 border-b-2 font-medium text-sm transition-all duration-200 {% if current_category == 'WHITE' %}border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20{% else %}border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600{% endif %} rounded-lg">
-            <!-- Icono WHITE -->
             <svg class="w-5 h-5 mr-2 {% if current_category == 'WHITE' %}text-green-500 dark:text-green-400{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" 
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            
             <span>Servicios White</span>
-            
-            <!-- Badge con contador (si hay servicios) -->
             {% if white_count %}
             <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if current_category == 'WHITE' %}bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200{% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
                 {{ white_count }}
             </span>
             {% endif %}
         </a>
-        
-        <!-- Tab BLACK -->
         <a href="{% url 'accounting:category-services' line_path=line_path category='black' %}"
            class="flex-1 group inline-flex items-center justify-center px-4 py-3 border-b-2 font-medium text-sm transition-all duration-200 {% if current_category == 'BLACK' %}border-purple-500 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20{% else %}border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600{% endif %} rounded-lg">
-            <!-- Icono BLACK -->
             <svg class="w-5 h-5 mr-2 {% if current_category == 'BLACK' %}text-purple-500 dark:text-purple-400{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" 
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            
             <span>Servicios Black</span>
-            
-            <!-- Badge con contador (si hay servicios) -->
             {% if black_count %}
             <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if current_category == 'BLACK' %}bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200{% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
                 {{ black_count }}
             </span>
             {% endif %}
-            
-            <!-- Indicador de remanentes para BLACK -->
             {% if current_category == 'BLACK' and business_line.has_remanente %}
             <span class="ml-1 inline-flex items-center">
                 <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
@@ -58,19 +35,14 @@ Context Required:
         </a>
     </nav>
 </div>
-
-<!-- Información contextual de la categoría activa -->
 <div class="bg-gradient-to-r {% if current_category == 'WHITE' %}from-green-50 to-green-100 dark:from-green-900/10 dark:to-green-800/10 border-green-200 dark:border-green-800{% else %}from-purple-50 to-purple-100 dark:from-purple-900/10 dark:to-purple-800/10 border-purple-200 dark:border-purple-800{% endif %} border rounded-lg p-4 mb-6">
     <div class="flex items-start space-x-3">
-        <!-- Icono informativo -->
         <div class="flex-shrink-0">
             <svg class="w-6 h-6 {% if current_category == 'WHITE' %}text-green-600 dark:text-green-400{% else %}text-purple-600 dark:text-purple-400{% endif %}" 
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
         </div>
-        
-        <!-- Contenido informativo -->
         <div class="flex-1">
             <h3 class="text-sm font-medium {% if current_category == 'WHITE' %}text-green-800 dark:text-green-200{% else %}text-purple-800 dark:text-purple-200{% endif %}">
                 {% if current_category == 'WHITE' %}
@@ -92,8 +64,6 @@ Context Required:
                     </p>
                 {% endif %}
             </div>
-            
-            <!-- Acciones rápidas -->
             <div class="mt-3 flex items-center space-x-4">
                 <a href="{% url 'accounting:service-create' line_path=line_path category=current_category|lower %}" 
                    class="inline-flex items-center text-sm font-medium {% if current_category == 'WHITE' %}text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200{% else %}text-purple-700 hover:text-purple-800 dark:text-purple-300 dark:hover:text-purple-200{% endif %} transition-colors">
@@ -102,8 +72,6 @@ Context Required:
                     </svg>
                     Crear Servicio {{ current_category }}
                 </a>
-                
-                <!-- Link a documentación/ayuda (futuro) -->
                 <a href="#" 
                    class="inline-flex items-center text-sm {% if current_category == 'WHITE' %}text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300{% else %}text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300{% endif %} transition-colors">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

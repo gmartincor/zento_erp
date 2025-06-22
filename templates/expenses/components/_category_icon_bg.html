@@ -1,13 +1,3 @@
-{%comment%}
-Component: Category Icon Background
-Description: Reusable background component for category icons
-Usage: {% include 'expenses/components/_category_icon_bg.html' with category_type=category.category_type padding='p-2' %}
-Parameters:
-- category_type: The category type ('FIXED', 'VARIABLE', 'TAX', 'OCCASIONAL')
-- padding: Padding classes (default: 'p-2')
-- extra_classes: Additional CSS classes
-{%endcomment%}
-
 <div class="{% if padding %}{{ padding }}{% else %}p-2{% endif %} rounded-lg {% if category_type == 'FIXED' %}bg-red-100 dark:bg-red-900{% elif category_type == 'VARIABLE' %}bg-yellow-100 dark:bg-yellow-900{% elif category_type == 'TAX' %}bg-purple-100 dark:bg-purple-900{% else %}bg-blue-100 dark:bg-blue-900{% endif %}{% if extra_classes %} {{ extra_classes }}{% endif %}">
     {% include 'expenses/components/_category_icon.html' with category_type=category_type size=icon_size %}
 </div>

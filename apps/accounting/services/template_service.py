@@ -1,10 +1,3 @@
-"""
-Template Service - Centralizes template data preparation.
-
-This service consolidates data preparation logic that was previously
-scattered across templates, improving maintainability and testability.
-"""
-
 from decimal import Decimal
 from typing import Dict, List, Any, Optional
 from collections import defaultdict
@@ -19,18 +12,7 @@ from apps.core.constants import SERVICE_CATEGORIES
 
 
 class CategoryStatsService:
-    """Service for calculating category-based statistics."""
-    
     def calculate_category_summary(self, services: QuerySet) -> Dict[str, Any]:
-        """
-        Calculate summary statistics for service categories.
-        
-        Args:
-            services: QuerySet of ClientService objects
-            
-        Returns:
-            Dictionary with category summary data
-        """
         category_data = services.values('category').annotate(
             total_amount=Sum('price'),
             service_count=Count('id')
@@ -39,7 +21,6 @@ class CategoryStatsService:
         total_amount = sum(item['total_amount'] or 0 for item in category_data)
         total_categories = len(category_data)
         
-        # Calculate breakdown with percentages
         category_breakdown = []
         for item in category_data:
             amount = item['total_amount'] or 0
@@ -66,15 +47,6 @@ class CategoryStatsService:
         }
     
     def calculate_category_stats_for_list(self, business_lines: QuerySet) -> Dict[str, Dict]:
-        """
-        Calculate category statistics for business line list view.
-        
-        Args:
-            business_lines: QuerySet of BusinessLine objects
-            
-        Returns:
-            Dictionary with category statistics by type
-        """
         all_services = ClientService.objects.filter(
             business_line__in=business_lines,
             is_active=True
@@ -99,18 +71,7 @@ class CategoryStatsService:
 
 
 class ClientStatsService:
-    """Service for calculating client-based statistics."""
-    
     def calculate_client_summary(self, services: QuerySet) -> Dict[str, Any]:
-        """
-        Calculate summary statistics for clients.
-        
-        Args:
-            services: QuerySet of ClientService objects
-            
-        Returns:
-            Dictionary with client summary data
-        """
         client_data = services.values(
             'client__id',
             'client__name',
@@ -123,7 +84,6 @@ class ClientStatsService:
         total_amount = sum(item['total_amount'] or 0 for item in client_data)
         total_clients = len(client_data)
         
-        # Calculate breakdown with percentages
         client_breakdown = []
         for item in client_data:
             amount = item['total_amount'] or 0
@@ -149,18 +109,7 @@ class ClientStatsService:
 
 
 class BusinessLineStatsService:
-    """Service for calculating business line statistics."""
-    
     def calculate_global_stats(self, business_lines: QuerySet) -> Dict[str, Any]:
-        """
-        Calculate global statistics across all business lines.
-        
-        Args:
-            business_lines: QuerySet of BusinessLine objects
-            
-        Returns:
-            Dictionary with global statistics
-        """
         all_services = ClientService.objects.filter(
             business_line__in=business_lines,
             is_active=True
@@ -178,36 +127,21 @@ class BusinessLineStatsService:
         }
     
     def calculate_business_line_metrics(self, business_line: BusinessLine) -> Dict[str, Any]:
-        """
-        Calculate comprehensive metrics for a single business line.
-        
-        Args:
-            business_line: BusinessLine instance
-            
-        Returns:
-            Dictionary with business line metrics
-        """
-        # Get all descendants including self
         descendant_lines = business_line.get_descendants(include_self=True)
         services = ClientService.objects.filter(
             business_line__in=descendant_lines,
             is_active=True
         )
         
-        # Basic metrics
         basic_stats = services.aggregate(
             total_revenue=Sum('price'),
             total_services=Count('id'),
             avg_service_value=Avg('price')
         )
         
-        # Category distribution
         category_stats = CategoryStatsService().calculate_category_summary(services)
-        
-        # Client metrics
         client_stats = ClientStatsService().calculate_client_summary(services)
         
-        # Time-based metrics (last 30 days)
         recent_cutoff = timezone.now() - timezone.timedelta(days=30)
         recent_services = services.filter(created_at__gte=recent_cutoff)
         recent_stats = recent_services.aggregate(
@@ -237,18 +171,7 @@ class BusinessLineStatsService:
 
 
 class HierarchyNavigationService:
-    """Service for handling hierarchical navigation data."""
-    
     def build_navigation_context(self, business_line: BusinessLine) -> Dict[str, Any]:
-        """
-        Build navigation context for a business line.
-        
-        Args:
-            business_line: BusinessLine instance
-            
-        Returns:
-            Dictionary with navigation context
-        """
         hierarchy = self._get_hierarchy_path(business_line)
         breadcrumbs = self._build_breadcrumbs(hierarchy)
         
@@ -264,7 +187,6 @@ class HierarchyNavigationService:
         }
     
     def _get_hierarchy_path(self, business_line: BusinessLine) -> List[BusinessLine]:
-        """Get the full hierarchy path from root to current business line."""
         path = []
         current = business_line
         
@@ -275,11 +197,9 @@ class HierarchyNavigationService:
         return path
     
     def _build_breadcrumbs(self, hierarchy: List[BusinessLine]) -> List[Dict[str, Any]]:
-        """Build breadcrumb navigation from hierarchy path."""
         breadcrumbs = []
         
         for i, line in enumerate(hierarchy):
-            # Build URL path
             path_segments = [ancestor.slug for ancestor in hierarchy[:i+1]]
             line_path = '/'.join(path_segments)
             
@@ -294,8 +214,6 @@ class HierarchyNavigationService:
 
 
 class TemplateDataService:
-    """Main service for consolidating template data preparation."""
-    
     def __init__(self):
         self.category_service = CategoryStatsService()
         self.client_service = ClientStatsService()
@@ -303,20 +221,7 @@ class TemplateDataService:
         self.navigation_service = HierarchicalNavigationService()
     
     def prepare_business_line_list_context(self, business_lines: QuerySet, search_query: str = '') -> Dict[str, Any]:
-        """
-        Prepare context data for business line list view.
-        
-        Args:
-            business_lines: QuerySet of BusinessLine objects
-            search_query: Optional search query string
-            
-        Returns:
-            Dictionary with complete context data
-        """
-        # Global statistics
         global_stats = self.business_line_service.calculate_global_stats(business_lines)
-        
-        # Category statistics
         category_stats = self.category_service.calculate_category_stats_for_list(business_lines)
         
         return {
@@ -328,22 +233,9 @@ class TemplateDataService:
         }
     
     def prepare_business_line_detail_context(self, business_line: BusinessLine) -> Dict[str, Any]:
-        """
-        Prepare context data for business line detail view.
-        
-        Args:
-            business_line: BusinessLine instance
-            
-        Returns:
-            Dictionary with complete context data
-        """
-        # Navigation context
         navigation_context = self.navigation_service.build_navigation_context(business_line)
-        
-        # Business line metrics
         metrics = self.business_line_service.calculate_business_line_metrics(business_line)
         
-        # Combine all context
         context = {
             **navigation_context,
             **metrics,
@@ -354,15 +246,6 @@ class TemplateDataService:
         return context
     
     def prepare_category_summary_context(self, services: QuerySet) -> Dict[str, Any]:
-        """
-        Prepare context data for category summary view.
-        
-        Args:
-            services: QuerySet of ClientService objects
-            
-        Returns:
-            Dictionary with complete context data
-        """
         category_summary = self.category_service.calculate_category_summary(services)
         
         return {
@@ -371,15 +254,6 @@ class TemplateDataService:
         }
     
     def prepare_client_revenue_context(self, services: QuerySet) -> Dict[str, Any]:
-        """
-        Prepare context data for client revenue view.
-        
-        Args:
-            services: QuerySet of ClientService objects
-            
-        Returns:
-            Dictionary with complete context data
-        """
         client_summary = self.client_service.calculate_client_summary(services)
         
         return {

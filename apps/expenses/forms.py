@@ -3,9 +3,6 @@ from .models import ExpenseCategory, Expense
 
 
 class ExpenseCategoryForm(forms.ModelForm):
-    """
-    Formulario para crear y editar categorías de gastos.
-    """
     
     class Meta:
         model = ExpenseCategory
@@ -33,9 +30,6 @@ class ExpenseCategoryForm(forms.ModelForm):
 
 
 class ExpenseForm(forms.ModelForm):
-    """
-    Formulario para crear y editar gastos.
-    """
     
     class Meta:
         model = Expense
@@ -67,7 +61,6 @@ class ExpenseForm(forms.ModelForm):
         category = kwargs.pop('category', None)
         super().__init__(*args, **kwargs)
         
-        # Si se especifica una categoría, preseleccionarla y filtrar solo esa categoría
         if category:
             self.fields['category'].queryset = ExpenseCategory.objects.filter(
                 id=category.id,
@@ -80,6 +73,5 @@ class ExpenseForm(forms.ModelForm):
                 is_active=True
             ).order_by('category_type', 'name')
         
-        # Configurar help text
         self.fields['invoice_number'].required = False
         self.fields['invoice_number'].help_text = 'Número de factura o referencia (opcional)'

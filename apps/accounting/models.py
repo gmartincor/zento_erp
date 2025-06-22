@@ -5,9 +5,6 @@ from apps.business_lines.models import BusinessLine
 
 
 class Client(TimeStampedModel, SoftDeleteModel):
-    """
-    Client model for managing customer information.
-    """
     
     class GenderChoices(models.TextChoices):
         MALE = 'M', 'Masculino'
@@ -69,9 +66,6 @@ class Client(TimeStampedModel, SoftDeleteModel):
 
 
 class ClientService(TimeStampedModel):
-    """
-    Links clients to business lines with service details.
-    """
     
     class CategoryChoices(models.TextChoices):
         WHITE = 'WHITE', 'Blanco'
@@ -150,36 +144,27 @@ class ClientService(TimeStampedModel):
         ]
 
     def clean(self):
-        """
-        Validate that remanentes are only used for BLACK category and match the business line's remanente_field.
-        """
         super().clean()
         
-        # Validate category
         if self.category != self.CategoryChoices.BLACK and self.remanentes:
             raise ValidationError({
                 'remanentes': 'Los remanentes solo pueden configurarse para la categoría BLACK.'
             })
         
-        # Validate remanentes structure
         if self.category == self.CategoryChoices.BLACK and not isinstance(self.remanentes, dict):
             raise ValidationError({
                 'remanentes': 'Los remanentes deben ser un diccionario válido para la categoría BLACK.'
             })
         
-        # Validate business line and remanente_field relationship
         if self.category == self.CategoryChoices.BLACK:
-            # Skip validation if business_line is None (can happen during form validation before saving)
             if not self.business_line_id:
                 return
             
-            # Validate that the business line has a remanente_field configured
             if not self.business_line.has_remanente or not self.business_line.remanente_field:
                 raise ValidationError({
                     'business_line': f'La línea de negocio "{self.business_line.name}" no tiene un tipo de remanente configurado.'
                 })
             
-            # Validate specific business lines to remanente_field mappings
             business_line_name = self.business_line.name.lower()
             expected_remanente = None
             
@@ -197,7 +182,6 @@ class ClientService(TimeStampedModel):
                     'business_line': f'La línea de negocio "{self.business_line.name}" debe usar el tipo de remanente "{expected_remanente}".'
                 })
             
-            # Validate that the remanentes JSON only contains valid keys for the business line's remanente_field
             if self.remanentes and isinstance(self.remanentes, dict):
                 valid_keys = {self.business_line.remanente_field}
                 invalid_keys = set(self.remanentes.keys()) - valid_keys
@@ -209,20 +193,13 @@ class ClientService(TimeStampedModel):
                     })
 
     def save(self, *args, **kwargs):
-        """
-        Custom save method to validate remanentes for BLACK category.
-        """
-        # Clear remanentes if not BLACK category
         if self.category != self.CategoryChoices.BLACK:
             self.remanentes = {}
         
-        # Ensure remanentes is a dict for BLACK category
         elif self.category == self.CategoryChoices.BLACK and not isinstance(self.remanentes, dict):
             self.remanentes = {}
         
-        # Format remanentes to only contain valid keys for the business line's remanente_field
         elif self.category == self.CategoryChoices.BLACK and self.business_line_id and self.business_line.remanente_field:
-            # Filter remanentes to only include the valid key for this business line
             valid_key = self.business_line.remanente_field
             if valid_key in self.remanentes:
                 valid_value = self.remanentes[valid_key]
@@ -230,7 +207,6 @@ class ClientService(TimeStampedModel):
             else:
                 self.remanentes = {}
         
-        # Call clean method for validation
         self.clean()
         
         super().save(*args, **kwargs)
@@ -239,10 +215,6 @@ class ClientService(TimeStampedModel):
         return f"{self.client.full_name} - {self.business_line.name} ({self.category})"
 
     def get_remanente_total(self):
-        """
-        Calculate total remanente amount for BLACK category.
-        Allows both positive and negative values.
-        """
         if self.category == self.CategoryChoices.BLACK and self.remanentes:
             total = 0
             for value in self.remanentes.values():

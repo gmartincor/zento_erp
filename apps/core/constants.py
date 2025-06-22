@@ -1,9 +1,3 @@
-"""
-Constants for the CRM Nutrition Pro application.
-Centralized constants to avoid code duplication and ensure consistency.
-"""
-
-# Date and Time Constants
 MONTHS_DICT = {
     1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
     5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
@@ -16,14 +10,11 @@ MONTHS_CHOICES = [
     (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')
 ]
 
-# Default date range for financial reports
 DEFAULT_START_YEAR = 2024
-FINANCIAL_YEAR_RANGE_EXTENSION = 2  # Years to extend beyond current year
+FINANCIAL_YEAR_RANGE_EXTENSION = 2
 
-# Pagination defaults
 DEFAULT_PAGINATION = 25
 
-# Message types and common messages
 SUCCESS_MESSAGES = {
     'CATEGORY_CREATED': 'Categoría "{name}" creada exitosamente.',
     'CATEGORY_UPDATED': 'Categoría "{name}" actualizada exitosamente.',
@@ -41,7 +32,6 @@ ERROR_MESSAGES = {
     'INVALID_CATEGORY_TYPE': 'Tipo de categoría no válido',
 }
 
-# Accounting module constants
 ACCOUNTING_SUCCESS_MESSAGES = {
     'CLIENT_CREATED': 'Cliente "{name}" creado exitosamente.',
     'CLIENT_UPDATED': 'Cliente "{name}" actualizado exitosamente.',
@@ -66,7 +56,6 @@ ACCOUNTING_ERROR_MESSAGES = {
     'DUPLICATE_SERVICE': 'Ya existe un servicio de categoría "{category}" para este cliente en esta línea de negocio.',
 }
 
-# URL pattern constants for accounting
 ACCOUNTING_URL_PATTERNS = {
     'INDEX': 'accounting:index',
     'LINE_DETAIL': 'accounting:business-lines-path',
@@ -79,7 +68,6 @@ ACCOUNTING_URL_PATTERNS = {
     'CLIENT_EDIT': 'accounting:client-edit',
 }
 
-# Service categories
 SERVICE_CATEGORIES = {
     'WHITE': 'WHITE',
     'BLACK': 'BLACK',
@@ -90,7 +78,6 @@ SERVICE_CATEGORY_DISPLAY = {
     'BLACK': 'Servicios Black',
 }
 
-# Payment method display names
 PAYMENT_METHOD_DISPLAY = {
     'CARD': 'Tarjeta',
     'CASH': 'Efectivo',
@@ -98,21 +85,18 @@ PAYMENT_METHOD_DISPLAY = {
     'BIZUM': 'Bizum',
 }
 
-# Gender display names
 GENDER_DISPLAY = {
     'M': 'Masculino',
     'F': 'Femenino',
     'O': 'Otro',
 }
 
-# Business line level constants
 BUSINESS_LINE_LEVELS = {
     'LEVEL_1': 1,
     'LEVEL_2': 2,
     'LEVEL_3': 3,
 }
 
-# Navigation constants
 NAVIGATION_ITEMS = {
     'ACCOUNTING': {
         'name': 'Ingresos',

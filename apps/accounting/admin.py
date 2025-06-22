@@ -5,9 +5,6 @@ from .models import Client, ClientService
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    """
-    Admin interface for Client model.
-    """
     
     list_display = [
         'full_name',
@@ -60,17 +57,11 @@ class ClientAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-        """
-        Optimize queryset - no select_related needed as Client has no FK relationships.
-        """
         return super().get_queryset(request)
 
 
 @admin.register(ClientService)
 class ClientServiceAdmin(admin.ModelAdmin):
-    """
-    Admin interface for ClientService model with optimized queries.
-    """
     
     list_display = [
         'client_name_display',
@@ -132,16 +123,10 @@ class ClientServiceAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-        """
-        Optimize queries with select_related for client and business_line.
-        """
         queryset = super().get_queryset(request)
         return queryset.select_related('client', 'business_line')
 
     def client_name_display(self, obj):
-        """
-        Display client name with DNI and active status indicator.
-        """
         status_icon = '✓' if obj.client.is_active else '✗'
         status_color = 'green' if obj.client.is_active else 'red'
         
@@ -157,12 +142,8 @@ class ClientServiceAdmin(admin.ModelAdmin):
     client_name_display.admin_order_field = 'client__full_name'
 
     def get_form(self, request, obj=None, **kwargs):
-        """
-        Customize form to show remanentes help text for BLACK category.
-        """
         form = super().get_form(request, obj, **kwargs)
         
-        # Add help text for remanentes field
         if 'remanentes' in form.base_fields:
             form.base_fields['remanentes'].help_text = (
                 'Formato JSON. Solo válido para categoría BLACK. '
@@ -176,13 +157,8 @@ class ClientServiceAdmin(admin.ModelAdmin):
         return form
 
     def save_model(self, request, obj, form, change):
-        """
-        Custom save to handle remanentes validation.
-        """
-        # The model's save method already handles remanentes validation
         super().save_model(request, obj, form, change)
 
 
-# Add autocomplete support for Client
 class ClientAdmin(ClientAdmin):
     search_fields = ['full_name', 'dni', 'email']

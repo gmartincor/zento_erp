@@ -1,13 +1,3 @@
-{%comment%}
-Component: Service Card
-Description: Reusable card component for displaying individual client services
-Usage: {% include 'accounting/components/service_card.html' with service=service show_remanentes=True %}
-Parameters:
-- service: ClientService object with related client data
-- show_remanentes: Whether to show remanentes section (for BLACK category)
-- card_variant: Card layout variant ('default', 'compact', 'detailed')
-{%endcomment%}
-
 {% load presentation_tags %}
 
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 group">
@@ -15,7 +5,6 @@ Parameters:
     <div class="p-6 pb-4">
         <div class="flex items-start justify-between">
             <div class="flex items-center space-x-3">
-                <!-- Avatar del cliente -->
                 <div class="flex-shrink-0">
                     <div class="h-12 w-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800 dark:to-primary-900 flex items-center justify-center">
                         <span class="text-lg font-semibold text-primary-700 dark:text-primary-300">
@@ -24,7 +13,6 @@ Parameters:
                     </div>
                 </div>
                 
-                <!-- Información del cliente -->
                 <div class="min-w-0 flex-1">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">
                         {{ service.client.full_name }}
@@ -45,17 +33,14 @@ Parameters:
                 </div>
             </div>
             
-            <!-- Badge de categoría -->
             <span class="px-2 py-1 text-xs font-medium rounded-full {% if service.category == 'WHITE' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{% else %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% endif %}">
                 {{ service.category }}
             </span>
         </div>
     </div>
     
-    <!-- Información del servicio -->
     <div class="px-6 pb-4">
         <div class="grid grid-cols-2 gap-4">
-            <!-- Precio -->
             <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div class="text-2xl font-bold text-gray-900 dark:text-white">
                     {{ service.price|format_currency:"€" }}
@@ -65,7 +50,6 @@ Parameters:
                 </div>
             </div>
             
-            <!-- Método de pago -->
             <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div class="text-sm font-medium text-gray-900 dark:text-white">
                     {{ service.get_payment_method_display }}
@@ -76,7 +60,6 @@ Parameters:
             </div>
         </div>
         
-        <!-- Fechas del servicio -->
         <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <div class="flex items-center justify-between text-sm">
                 <div>
@@ -102,7 +85,6 @@ Parameters:
             </div>
         </div>
         
-        <!-- Información del cliente inline -->
         <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div class="grid grid-cols-2 gap-3 text-sm">
                 {% if service.client.birth_date %}
@@ -132,7 +114,6 @@ Parameters:
             </div>
         </div>
         
-        <!-- Remanentes (solo para categoría BLACK) -->
         {% if show_remanentes and service.category == 'BLACK' %}
         <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
             <div class="flex items-center justify-between mb-2">
@@ -160,7 +141,6 @@ Parameters:
                     {% endfor %}
                 </div>
                 
-                <!-- Total de remanentes -->
                 {% if service.remanentes.items|length > 1 %}
                 <div class="mt-2 pt-2 border-t border-yellow-200 dark:border-yellow-700">
                     <div class="flex justify-between items-center text-sm font-semibold">
@@ -179,7 +159,6 @@ Parameters:
         </div>
         {% endif %}
         
-        <!-- Notas del servicio -->
         {% if service.notes %}
         <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-1">
@@ -192,10 +171,8 @@ Parameters:
         {% endif %}
     </div>
     
-    <!-- Footer con acciones -->
     <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
         <div class="flex justify-between items-center">
-            <!-- Información de fechas -->
             <div class="text-xs text-gray-500 dark:text-gray-400">
                 <div>Creado: {{ service.created|date:"d M Y" }}</div>
                 {% if service.updated != service.created %}
@@ -203,7 +180,6 @@ Parameters:
                 {% endif %}
             </div>
             
-            <!-- Acciones -->
             <div class="flex space-x-2">
                 <a href="{% url 'accounting:service-edit' line_path=line_path category=service.category|lower service_id=service.id %}" 
                    class="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-md transition-colors font-medium flex items-center">

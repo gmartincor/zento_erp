@@ -1,22 +1,3 @@
-{%comment%}
-Enhanced Hierarchical Breadcrumb Component
-=========================================
-
-Unified breadcrumb component that combines the best of both navigation systems:
-- Full hierarchical navigation from hierarchy_navigation.html
-- Modular, reusable structure
-- Consistent design across all accounting views
-
-Parameters:
-- breadcrumb_path: List of breadcrumb items (from BusinessLineHierarchyMixin.get_breadcrumb_path)
-- current_page_title: Optional custom title for current page
-- show_stats: Whether to show statistics in breadcrumbs (default: False)
-- compact_mode: Use compact layout for smaller screens (default: False)
-
-Usage:
-{% include 'accounting/components/enhanced_breadcrumb.html' with breadcrumb_path=breadcrumb_path %}
-{%endcomment%}
-
 <div class="breadcrumb-container mb-6">
     <!-- Main Breadcrumb Navigation -->
     <nav class="flex flex-wrap items-center space-x-1 text-sm mb-2" aria-label="Breadcrumb">
@@ -38,7 +19,6 @@ Usage:
             <!-- Accounting Section -->
             <li>
                 <div class="flex items-center">
-                    <!-- Separator -->
                     <svg class="h-4 w-4 text-gray-300 dark:text-gray-600 mx-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                     </svg>
@@ -54,12 +34,10 @@ Usage:
             {% for item in breadcrumb_path %}
             <li>
                 <div class="flex items-center">
-                    <!-- Separator -->
                     <svg class="h-4 w-4 text-gray-300 dark:text-gray-600 mx-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                     </svg>
 
-                    <!-- Breadcrumb Link or Current Page -->
                     {% if item.url and not forloop.last %}
                     <a href="{{ item.url }}" 
                        class="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 truncate max-w-xs font-medium"
@@ -71,7 +49,6 @@ Usage:
                         {% endif %}
                     </a>
                     {% else %}
-                    <!-- Current page - no link -->
                     <span class="text-gray-900 dark:text-white font-semibold px-2 py-1 truncate max-w-xs" 
                           title="{{ item.name }}" 
                           aria-current="page">
@@ -86,7 +63,6 @@ Usage:
             </li>
             {% endfor %}
 
-            <!-- Custom Current Page Title (if different from breadcrumb) -->
             {% if current_page_title and current_page_title != breadcrumb_path.last.name %}
             <li>
                 <div class="flex items-center">
@@ -102,7 +78,6 @@ Usage:
         </ol>
     </nav>
 
-    <!-- Breadcrumb Statistics (optional) -->
     {% if show_stats and breadcrumb_path %}
     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 px-2">
         <span class="inline-flex items-center space-x-4">
@@ -120,7 +95,6 @@ Usage:
     {% endif %}
 </div>
 
-<!-- Mobile Optimized Version -->
 <div class="sm:hidden" x-data="{ showFullPath: false }">
     {% if breadcrumb_path|length > 2 %}
     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 mb-4">
@@ -138,7 +112,6 @@ Usage:
         </button>
         
         <div x-show="showFullPath" x-transition class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <!-- Show full breadcrumb path in compact mode when toggled -->
             <nav class="flex flex-wrap items-center space-x-1 text-xs" aria-label="Full Breadcrumb">
                 <ol class="flex flex-wrap items-center space-x-1">
                     {% for item in breadcrumb_path %}
