@@ -238,6 +238,11 @@ class ServiceCreateView(
                 )
             )
             
+            messages.info(
+                self.request,
+                'Ahora puedes agregar el primer pago para activar el servicio.'
+            )
+            
             return redirect(self.get_success_url())
             
         except Exception as e:
@@ -252,6 +257,10 @@ class ServiceCreateView(
         return super().form_invalid(form)
     
     def get_success_url(self):
+        if hasattr(self, 'object') and self.object:
+            return reverse('accounting:payment_create', 
+                          kwargs={'service_id': self.object.id})
+        
         line_path = self.kwargs.get('line_path', '')
         category = self.kwargs.get('category', '')
         

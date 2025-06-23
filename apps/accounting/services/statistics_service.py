@@ -225,13 +225,6 @@ class StatisticsService:
             'total_remanentes': stats.get('total_remanentes') or Decimal('0')
         }
     
-    def _apply_date_filters(self, queryset, year, month):
-        if year:
-            queryset = queryset.filter(start_date__year=year)
-        if month:
-            queryset = queryset.filter(start_date__month=month)
-        return queryset
-    
     def _apply_payment_date_filters(self, payments_query, year=None, month=None):
         if year:
             payments_query = payments_query.filter(payment_date__year=year)

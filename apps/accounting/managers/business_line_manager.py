@@ -38,8 +38,11 @@ class BusinessLineQuerySet(models.QuerySet):
                 )
             ),
             total_revenue=Sum(
-                'client_services__price',
-                filter=Q(client_services__is_active=True)
+                'client_services__payments__amount',
+                filter=Q(
+                    client_services__is_active=True,
+                    client_services__payments__status='PAID'
+                )
             )
         )
 

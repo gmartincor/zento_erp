@@ -232,6 +232,40 @@ class ClientService(TimeStampedModel):
     def payment_count(self):
         return self.payments.filter(status=ServicePayment.StatusChoices.PAID).count()
 
+    @property
+    def current_amount(self):
+        """Get the amount of the latest payment (current pricing)"""
+        latest_payment = self.payments.order_by('-created').first()
+        return latest_payment.amount if latest_payment else 0
+
+    @property
+    def current_payment_method(self):
+        """Get the payment method of the latest payment"""
+        latest_payment = self.payments.order_by('-created').first()
+        return latest_payment.payment_method if latest_payment else None
+
+    def get_payment_method_display(self):
+        """Get the display name of the current payment method"""
+        method = self.current_payment_method
+        if not method:
+            return "No definido"
+        
+        # Import ServicePayment here to avoid circular imports
+        payment_choices = dict(ServicePayment.PaymentMethodChoices.choices)
+        return payment_choices.get(method, method)
+
+    @property
+    def current_start_date(self):
+        """Get the start date of the latest payment"""
+        latest_payment = self.payments.order_by('-created').first()
+        return latest_payment.period_start if latest_payment else None
+
+    @property
+    def current_end_date(self):
+        """Get the end date of the latest payment"""
+        latest_payment = self.payments.order_by('-created').first()
+        return latest_payment.period_end if latest_payment else None
+
 
 class ServicePayment(TimeStampedModel):
     
