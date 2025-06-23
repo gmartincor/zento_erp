@@ -57,12 +57,90 @@
 <!-- Tabs de navegación entre categorías -->
 {% include 'accounting/components/category_tabs.html' %}
 
-<!-- Panel de estadísticas -->
-{% if category_stats %}
+<!-- Panel de estadísticas mejorado -->
 <div class="mb-8">
-    {% include 'accounting/components/statistics_panel.html' with stats=category_stats variant='compact' %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4"></path>
+                    </svg>
+                    Estadísticas de Ingresos
+                </h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {{ revenue_summary.period.description }}
+                </p>
+            </div>
+            
+            <!-- Selector de período -->
+            <div class="mt-4 lg:mt-0">
+                <form method="get" class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Período:</label>
+                    <select name="period" onchange="this.form.submit()" 
+                            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        {% for period_value, period_label in available_periods %}
+                            <option value="{{ period_value }}" {% if period_value == selected_period %}selected{% endif %}>
+                                {{ period_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Métricas principales -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {{ revenue_summary.total_revenue }}
+                </div>
+                <div class="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                    Total Ingresos
+                </div>
+            </div>
+            
+            <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {{ revenue_summary.service_count }}
+                </div>
+                <div class="text-sm text-green-700 dark:text-green-300 mt-1">
+                    Total Servicios
+                </div>
+            </div>
+            
+            {% if has_remanentes %}
+            <div class="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                    {{ category_stats.total_remanentes|format_currency }}
+                </div>
+                <div class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                    Total Remanentes
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {{ revenue_summary.avg_revenue_per_service }}
+                </div>
+                <div class="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                    Ingreso promedio por servicio
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información adicional -->
+        {% if revenue_summary.payment_count > 0 %}
+        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+                <span>{{ revenue_summary.payment_count }} pago{{ revenue_summary.payment_count|pluralize }} registrado{{ revenue_summary.payment_count|pluralize }}</span>
+                <span>Promedio por pago: {{ revenue_summary.avg_payment }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 </div>
-{% endif %}
 
 <!-- Filtros y búsqueda -->
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6" 

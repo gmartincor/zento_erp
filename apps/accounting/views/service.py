@@ -8,6 +8,8 @@ from django.http import Http404
 from apps.accounting.models import Client, ClientService
 from apps.accounting.forms.service_forms import ClientServiceCreateForm, ClientServiceUpdateForm
 from apps.accounting.utils import BusinessLineNavigator, ServiceStatisticsCalculator
+from apps.accounting.services.presentation_service import PresentationService
+from apps.accounting.services.revenue_analytics_service import RevenueAnalyticsService
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
     BusinessLineHierarchyMixin,
@@ -64,11 +66,30 @@ class ServiceCategoryListView(
         category_counts = self.get_category_counts(business_line)
         context.update(category_counts)
         
+        presentation_service = PresentationService()
+        period_type = self.request.GET.get('period', RevenueAnalyticsService.PeriodType.ALL_TIME)
+        
+        revenue_summary = presentation_service.prepare_category_revenue_summary(
+            business_line, category, period_type
+        )
+        
         context.update({
             'create_url': reverse('accounting:service-create', 
                                 kwargs={'line_path': line_path, 'category': category.lower()}),
             'line_detail_url': reverse('accounting:business-lines-path', 
                                      kwargs={'line_path': line_path}),
+            'revenue_summary': revenue_summary,
+            'available_periods': [
+                ('all_time', 'Histórico total'),
+                ('current_month', 'Mes actual'),
+                ('last_month', 'Mes anterior'),
+                ('current_year', 'Año actual'),
+                ('last_year', 'Año anterior'),
+                ('last_3_months', 'Últimos 3 meses'),
+                ('last_6_months', 'Últimos 6 meses'),
+                ('last_12_months', 'Últimos 12 meses'),
+            ],
+            'selected_period': period_type,
         })
         
         return context

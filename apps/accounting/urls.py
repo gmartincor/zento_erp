@@ -1,5 +1,6 @@
 from django.urls import path, re_path
 from . import views
+from .views import payment_history
 
 app_name = 'accounting'
 
@@ -50,6 +51,9 @@ urlpatterns = [
         views.BusinessLineHierarchyView.as_view(),
         name='business-lines-path'
     ),
+    
+    # Payment History
+    path('payments/history/', payment_history.payment_history_view, name='payment_history'),
     
     # Payment URLs
     path('payments/', views.payment_list, name='payments'),

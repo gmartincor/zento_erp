@@ -4,6 +4,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from apps.core.constants import SERVICE_CATEGORIES
+from apps.accounting.services.revenue_analytics_service import RevenueAnalyticsService
 
 
 class BusinessLinePresentationService:
@@ -172,6 +173,7 @@ class PresentationService:
         self.category = CategoryPresentationService()
         self.financial = FinancialFormatService()
         self.permissions = UIPermissionService()
+        self.revenue_analytics = RevenueAnalyticsService()
     
     def prepare_business_line_presentation(self, business_line, user=None) -> Dict[str, Any]:
         data = {
@@ -185,9 +187,41 @@ class PresentationService:
         return data
     
     def prepare_service_presentation(self, service) -> Dict[str, Any]:
+        revenue_breakdown = self.revenue_analytics.get_service_revenue_breakdown(service)
+        
         return {
-            'formatted_price': self.financial.format_currency(service.amount),
-            'formatted_end_date': service.end_date.strftime('%d/%m/%Y') if service.end_date else None,
+            'current_pricing': {
+                'amount': self.financial.format_currency(revenue_breakdown['current_pricing']['amount']),
+                'payment_method': revenue_breakdown['current_pricing']['payment_method'],
+                'period_start': revenue_breakdown['current_pricing']['period_start'],
+                'period_end': revenue_breakdown['current_pricing']['period_end'],
+            },
+            'revenue_summary': {
+                'total_revenue': self.financial.format_currency(revenue_breakdown['revenue_summary']['total_revenue']),
+                'payment_count': revenue_breakdown['revenue_summary']['payment_count'],
+                'avg_payment': self.financial.format_currency(revenue_breakdown['revenue_summary']['avg_payment']),
+            },
             'category_badge': self.category.get_category_badge(service.category),
-            'has_remanentes': bool(getattr(service, 'remanentes', None))
+            'has_remanentes': bool(getattr(service, 'remanentes', None)),
+            'payments_history': revenue_breakdown['payments_history']
+        }
+    
+    def prepare_category_revenue_summary(
+        self, 
+        business_line, 
+        category: str, 
+        period_type: str = RevenueAnalyticsService.PeriodType.ALL_TIME
+    ) -> Dict[str, Any]:
+        
+        revenue_summary = self.revenue_analytics.get_business_line_revenue_summary(
+            business_line, category, period_type
+        )
+        
+        return {
+            'period': revenue_summary['period'],
+            'total_revenue': self.financial.format_currency(revenue_summary['total_revenue']),
+            'payment_count': revenue_summary['payment_count'],
+            'service_count': revenue_summary['service_count'],
+            'avg_payment': self.financial.format_currency(revenue_summary['avg_payment']),
+            'avg_revenue_per_service': self.financial.format_currency(revenue_summary['avg_revenue_per_service']),
         }

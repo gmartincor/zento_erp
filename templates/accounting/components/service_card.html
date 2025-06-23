@@ -53,21 +53,41 @@
         </div>
         
         <div class="grid grid-cols-2 gap-4">
-            <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div class="text-2xl font-bold text-gray-900 dark:text-white">
+            <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="text-2xl font-bold text-blue-900 dark:text-blue-100">
                     {{ service.current_amount|format_currency:"€" }}
                 </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Precio del Servicio
+                <div class="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                    Precio Actual
                 </div>
             </div>
             
+            <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div class="text-2xl font-bold text-green-900 dark:text-green-100">
+                    {{ service.total_paid|format_currency:"€" }}
+                </div>
+                <div class="text-xs text-green-700 dark:text-green-300 mt-1">
+                    Total Pagado
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mt-4">
             <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div class="text-sm font-medium text-gray-900 dark:text-white">
                     {{ service.get_payment_method_display }}
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Método de Pago
+                </div>
+            </div>
+            
+            <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ service.payment_count }}
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Pago{{ service.payment_count|pluralize }}
                 </div>
             </div>
         </div>

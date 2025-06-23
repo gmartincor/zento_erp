@@ -48,7 +48,8 @@
                 <ul x-show="open" x-transition class="mt-2 ml-8 space-y-1">
                     <li><a href="{% url 'accounting:index' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Gestión de Ingresos Totales</a></li>
                     <li><a href="{% url 'accounting:business-lines' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Por Línea de Negocio</a></li>
-                    <li><a href="{% url 'accounting:payments' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Historial de Pagos</a></li>
+                    <li><a href="{% url 'accounting:payments' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Gestión de Pagos</a></li>
+                    <li><a href="{% url 'accounting:payment_history' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Historial de Pagos</a></li>
                     <li><a href="{% url 'accounting:expiring_services' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Próximos a Vencer</a></li>
                 </ul>
             </li>
