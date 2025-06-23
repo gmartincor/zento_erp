@@ -40,6 +40,18 @@
     </div>
     
     <div class="px-6 pb-4">
+        <div class="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+            <div class="text-sm">
+                <span class="text-primary-600 dark:text-primary-400 font-medium">Línea de negocio:</span>
+                <span class="text-primary-900 dark:text-primary-100 ml-1 font-semibold">
+                    {{ service.business_line.name }}
+                </span>
+                <span class="text-primary-500 dark:text-primary-400 text-xs ml-2">
+                    (Nivel {{ service.business_line.level }})
+                </span>
+            </div>
+        </div>
+        
         <div class="grid grid-cols-2 gap-4">
             <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -61,28 +73,7 @@
         </div>
         
         <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <div class="flex items-center justify-between text-sm">
-                <div>
-                    <span class="text-gray-600 dark:text-gray-400">Inicio:</span>
-                    <span class="font-medium text-gray-900 dark:text-white ml-1">
-                        {{ service.start_date|date:"d M Y" }}
-                    </span>
-                </div>
-                {% if service.end_date %}
-                <div>
-                    <span class="text-gray-600 dark:text-gray-400">Fin:</span>
-                    <span class="font-medium text-gray-900 dark:text-white ml-1">
-                        {{ service.end_date|date:"d M Y" }}
-                    </span>
-                </div>
-                {% else %}
-                <div>
-                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
-                        Activo
-                    </span>
-                </div>
-                {% endif %}
-            </div>
+            {% include 'accounting/components/service_dates.html' with service=service compact=False %}
         </div>
         
         <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">

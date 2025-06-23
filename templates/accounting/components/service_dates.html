@@ -1,0 +1,39 @@
+{% if compact %}
+<div class="text-sm space-y-1">
+    <div>
+        <span class="text-gray-600 dark:text-gray-400">Inicio:</span>
+        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.start_date|date:"d M Y" }}</span>
+    </div>
+    {% if service.renewal_date %}
+    <div>
+        <span class="text-gray-600 dark:text-gray-400">Renovación:</span>
+        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.renewal_date|date:"d M Y" }}</span>
+    </div>
+    {% else %}
+    <div>
+        <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded-full">
+            Sin renovación
+        </span>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="grid grid-cols-2 gap-4 text-sm">
+    <div>
+        <span class="text-gray-600 dark:text-gray-400">Inicio:</span>
+        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.start_date|date:"d M Y" }}</span>
+    </div>
+    {% if service.renewal_date %}
+    <div>
+        <span class="text-gray-600 dark:text-gray-400">Renovación:</span>
+        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.renewal_date|date:"d M Y" }}</span>
+    </div>
+    {% else %}
+    <div class="flex justify-end">
+        <span class="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
+            Sin renovación
+        </span>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
