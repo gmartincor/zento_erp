@@ -9,9 +9,37 @@ from apps.accounting.services.validation_service import ValidationService
 from apps.accounting.services.form_service import (
     FormInitializationService, 
     FormFieldService, 
-    FormValidationService
+    FormValidationService,
+    ClientServiceFormHandler,
+    ClientDataUpdater
 )
 
+
+class ServiceFormValidator:
+    @staticmethod
+    def validate_form_data(form_instance, cleaned_data):
+        client = getattr(form_instance, '_get_temp_client_for_validation', lambda: cleaned_data.get('client'))()
+        business_line = cleaned_data.get('business_line')
+        category = cleaned_data.get('category')
+        remanentes = cleaned_data.get('remanentes')
+        
+        if not business_line:
+            form_instance.add_error('business_line', 'Este campo es requerido.')
+        
+        if not category:
+            form_instance.add_error('category', 'Este campo es requerido.')
+        
+        if business_line and category:
+            try:
+                form_instance._validate_business_rules(
+                    client, business_line, category, remanentes
+                )
+            except ValidationError as e:
+                if hasattr(e, 'error_dict'):
+                    for field, errors in e.error_dict.items():
+                        form_instance.add_error(field, errors)
+                else:
+                    form_instance.add_error(None, str(e))
 
 class BaseClientServiceForm(forms.ModelForm):
     class Meta:
@@ -113,34 +141,7 @@ class BaseClientServiceForm(forms.ModelForm):
     
     def clean(self):
         cleaned_data = super().clean()
-        
-        if hasattr(self, '_get_temp_client_for_validation'):
-            client = self._get_temp_client_for_validation()
-        else:
-            client = cleaned_data.get('client')
-        
-        business_line = cleaned_data.get('business_line')
-        category = cleaned_data.get('category')
-        remanentes = cleaned_data.get('remanentes')
-        
-        if not business_line:
-            self.add_error('business_line', 'Este campo es requerido.')
-        
-        if not category:
-            self.add_error('category', 'Este campo es requerido.')
-        
-        if business_line and category:
-            try:
-                self._validate_business_rules(
-                    client, business_line, category, remanentes
-                )
-            except ValidationError as e:
-                if hasattr(e, 'error_dict'):
-                    for field, errors in e.error_dict.items():
-                        self.add_error(field, errors)
-                else:
-                    self.add_error(None, str(e))
-        
+        ServiceFormValidator.validate_form_data(self, cleaned_data)
         return cleaned_data
     
     def _validate_business_rules(self, client, business_line, category, remanentes):
@@ -216,7 +217,8 @@ class ClientServiceCreateForm(BaseClientServiceForm):
             dni=self.cleaned_data['client_dni'],
             gender=self.cleaned_data['client_gender'],
             email=self.cleaned_data.get('client_email', ''),
-            phone=self.cleaned_data.get('client_phone', '')
+            phone=self.cleaned_data.get('client_phone', ''),
+            notes=self.cleaned_data.get('client_notes', '')
         )
 
 
@@ -225,18 +227,17 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
         super().__init__(*args, **kwargs)
         self._hide_client_field()
         self._add_client_edit_fields()
-        self._initialize_form_data()
+        self._setup_hidden_fields()
     
-    def _initialize_form_data(self):
+    def _setup_hidden_fields(self):
         if self.instance and self.instance.pk:
-            date_fields = ['start_date', 'renewal_date']
-            for field_name in date_fields:
-                if field_name in self.fields and hasattr(self.instance, field_name):
-                    field_value = getattr(self.instance, field_name)
-                    if field_value:
-                        formatted_date = FormInitializationService.format_date_for_html_input(field_value)
-                        if formatted_date:
-                            self.fields[field_name].initial = formatted_date
+            if 'business_line' in self.fields:
+                self.fields['business_line'].initial = self.instance.business_line
+                self.fields['business_line'].widget = forms.HiddenInput()
+            
+            if 'category' in self.fields:
+                self.fields['category'].initial = self.instance.category
+                self.fields['category'].widget = forms.HiddenInput()
     
     def _hide_client_field(self):
         if 'client' in self.fields:
@@ -246,10 +247,7 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
     
     def _add_client_edit_fields(self):
         if self.instance and self.instance.client:
-            client_fields = FormFieldService.create_client_fields()
-            FormFieldService.populate_client_fields_with_data(client_fields, self.instance.client)
-            for field_name, field in client_fields.items():
-                self.fields[field_name] = field
+            ClientServiceFormHandler.setup_update_form(self, self.instance.client)
     
     def clean_client_dni(self):
         dni = self.cleaned_data.get('client_dni')
@@ -268,7 +266,11 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
     
     def save(self, commit=True):
         if commit:
-            self._update_client_data()
+            if self.instance and self.instance.client:
+                ClientDataUpdater.update_client_from_form_data(
+                    self.instance.client, 
+                    self.cleaned_data
+                )
             
             service = self.instance
             service.price = self.cleaned_data['price']
@@ -280,16 +282,6 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
             service.save()
             return service
         return super().save(commit=False)
-    
-    def _update_client_data(self):
-        if self.instance and self.instance.client:
-            client = self.instance.client
-            client.full_name = self.cleaned_data.get('client_name', client.full_name)
-            client.dni = self.cleaned_data.get('client_dni', client.dni)
-            client.gender = self.cleaned_data.get('client_gender', client.gender)
-            client.email = self.cleaned_data.get('client_email', client.email)
-            client.phone = self.cleaned_data.get('client_phone', client.phone)
-            client.save()
 
 
 class ClientServiceFilterForm(forms.Form):

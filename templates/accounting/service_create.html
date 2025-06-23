@@ -124,6 +124,21 @@
                         </div>
                     {% endif %}
                 </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Notas
+                    </label>
+                    {{ form.client_notes }}
+                    {% if form.client_notes.errors %}
+                        <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                            {{ form.client_notes.errors|first }}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Información adicional, observaciones médicas, preferencias, etc.
+                    </p>
+                </div>
             </div>
         </div>
         
