@@ -6,6 +6,11 @@ from apps.business_lines.models import BusinessLine
 from apps.accounting.services.business_line_service import BusinessLineService
 from apps.accounting.services.client_service import ClientServiceOperations
 from apps.accounting.services.validation_service import ValidationService
+from apps.accounting.services.form_service import (
+    FormInitializationService, 
+    FormFieldService, 
+    FormValidationService
+)
 
 
 class BaseClientServiceForm(forms.ModelForm):
@@ -53,7 +58,7 @@ class BaseClientServiceForm(forms.ModelForm):
         self.category = kwargs.pop('category', None)
         super().__init__(*args, **kwargs)
         self._setup_form_fields()
-        self._apply_field_styling()
+        self._configure_form_display()
     
     def _setup_form_fields(self):
         if self.user:
@@ -68,34 +73,11 @@ class BaseClientServiceForm(forms.ModelForm):
         if self.category:
             self.fields['category'].initial = self.category
             self.fields['category'].widget = forms.HiddenInput()
-            
-        self._enhance_field_metadata()
     
-    def _apply_field_styling(self):
-        # Clases base para todos los campos
-        base_input_classes = (
-            'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 '
-            'rounded-md shadow-sm focus:outline-none focus:ring-primary-500 '
-            'focus:border-primary-500 dark:bg-gray-700 dark:text-white'
-        )
-        
-        # Clases específicas por tipo de widget
-        widget_classes = {
-            forms.TextInput: base_input_classes,
-            forms.EmailInput: base_input_classes,
-            forms.NumberInput: base_input_classes,
-            forms.DateInput: base_input_classes,
-            forms.Select: base_input_classes,
-            forms.Textarea: base_input_classes,
-            forms.CheckboxInput: 'mr-2',
-        }
-        
-        for field_name, field in self.fields.items():
-            widget_type = type(field.widget)
-            if widget_type in widget_classes:
-                field.widget.attrs['class'] = widget_classes[widget_type]
-            else:
-                field.widget.attrs['class'] = base_input_classes
+    def _configure_form_display(self):
+        FormInitializationService.apply_consistent_styling(self)
+        FormInitializationService.configure_date_widgets(self)
+        self._enhance_field_metadata()
     
     def _enhance_field_metadata(self):
         field_enhancements = {
@@ -172,43 +154,13 @@ class ClientServiceCreateForm(BaseClientServiceForm):
         self.fields.pop('client', None)
     
     def _add_client_creation_fields(self):
-        input_classes = (
-            'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 '
-            'rounded-md shadow-sm focus:outline-none focus:ring-primary-500 '
-            'focus:border-primary-500 dark:bg-gray-700 dark:text-white'
-        )
-        
-        self.fields['client_name'] = forms.CharField(
-            required=True,
-            max_length=255,
-            label='Nombre completo',
-            help_text='Nombre completo del cliente',
-            widget=forms.TextInput(attrs={'class': input_classes})
-        )
-        self.fields['client_dni'] = forms.CharField(
-            required=True,
-            max_length=20,
-            label='DNI/NIE',
-            help_text='Documento de identidad del cliente',
-            widget=forms.TextInput(attrs={'class': input_classes})
-        )
-        self.fields['client_gender'] = forms.ChoiceField(
-            required=True,
-            choices=Client.GenderChoices.choices,
-            label='Género',
-            widget=forms.Select(attrs={'class': input_classes})
-        )
-        self.fields['client_email'] = forms.EmailField(
-            required=False,
-            label='Email',
-            widget=forms.EmailInput(attrs={'class': input_classes})
-        )
-        self.fields['client_phone'] = forms.CharField(
-            required=False,
-            max_length=20,
-            label='Teléfono',
-            widget=forms.TextInput(attrs={'class': input_classes})
-        )
+        client_fields = FormFieldService.create_client_fields()
+        new_fields = {}
+        for field_name, field in client_fields.items():
+            new_fields[field_name] = field
+        for field_name, field in self.fields.items():
+            new_fields[field_name] = field
+        self.fields = new_fields
     
     def clean_client_dni(self):
         dni = self.cleaned_data.get('client_dni')
@@ -228,7 +180,6 @@ class ClientServiceCreateForm(BaseClientServiceForm):
             if not business_line.remanente_field:
                 raise ValidationError('La línea de negocio no tiene configurado el tipo de remanente.')
         
-        # Check for existing active service (only if we have a real client with ID)
         if hasattr(client, 'pk') and client.pk:
             existing = ClientService.objects.filter(
                 client=client,
@@ -274,18 +225,18 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
         super().__init__(*args, **kwargs)
         self._hide_client_field()
         self._add_client_edit_fields()
+        self._initialize_form_data()
     
-    def get_initial(self):
-        initial = super().get_initial()
+    def _initialize_form_data(self):
         if self.instance and self.instance.pk:
-            initial.update({
-                'price': self.instance.price,
-                'payment_method': self.instance.payment_method,
-                'start_date': self.instance.start_date,
-                'renewal_date': self.instance.renewal_date,
-                'remanentes': self.instance.remanentes
-            })
-        return initial
+            date_fields = ['start_date', 'renewal_date']
+            for field_name in date_fields:
+                if field_name in self.fields and hasattr(self.instance, field_name):
+                    field_value = getattr(self.instance, field_name)
+                    if field_value:
+                        formatted_date = FormInitializationService.format_date_for_html_input(field_value)
+                        if formatted_date:
+                            self.fields[field_name].initial = formatted_date
     
     def _hide_client_field(self):
         if 'client' in self.fields:
@@ -294,46 +245,11 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
                 self.fields['client'].initial = self.instance.client
     
     def _add_client_edit_fields(self):
-        input_classes = (
-            'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 '
-            'rounded-md shadow-sm focus:outline-none focus:ring-primary-500 '
-            'focus:border-primary-500 dark:bg-gray-700 dark:text-white'
-        )
-        
         if self.instance and self.instance.client:
-            client = self.instance.client
-            
-            self.fields['client_name'] = forms.CharField(
-                max_length=255,
-                label='Nombre completo',
-                initial=client.full_name,
-                widget=forms.TextInput(attrs={'class': input_classes})
-            )
-            self.fields['client_dni'] = forms.CharField(
-                max_length=20,
-                label='DNI/NIE',
-                initial=client.dni,
-                widget=forms.TextInput(attrs={'class': input_classes})
-            )
-            self.fields['client_gender'] = forms.ChoiceField(
-                choices=Client.GenderChoices.choices,
-                label='Género',
-                initial=client.gender,
-                widget=forms.Select(attrs={'class': input_classes})
-            )
-            self.fields['client_email'] = forms.EmailField(
-                required=False,
-                label='Email',
-                initial=client.email,
-                widget=forms.EmailInput(attrs={'class': input_classes})
-            )
-            self.fields['client_phone'] = forms.CharField(
-                required=False,
-                max_length=20,
-                label='Teléfono',
-                initial=client.phone,
-                widget=forms.TextInput(attrs={'class': input_classes})
-            )
+            client_fields = FormFieldService.create_client_fields()
+            FormFieldService.populate_client_fields_with_data(client_fields, self.instance.client)
+            for field_name, field in client_fields.items():
+                self.fields[field_name] = field
     
     def clean_client_dni(self):
         dni = self.cleaned_data.get('client_dni')
