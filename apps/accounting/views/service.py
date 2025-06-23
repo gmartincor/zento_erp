@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.http import Http404
 
 from apps.accounting.models import Client, ClientService
+from apps.accounting.forms.service_forms import ClientServiceCreateForm, ClientServiceUpdateForm
 from apps.accounting.utils import BusinessLineNavigator, ServiceStatisticsCalculator
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
@@ -81,8 +82,22 @@ class ServiceEditView(
     UpdateView
 ):
     model = ClientService
+    form_class = ClientServiceUpdateForm
     template_name = 'accounting/service_edit.html'
-    fields = ['client', 'price', 'start_date', 'renewal_date', 'payment_method', 'remanentes']
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        line_path = self.kwargs.get('line_path', '')
+        category = self.kwargs.get('category', '').upper()
+        
+        business_line = self.resolve_business_line_from_path(line_path)
+        
+        kwargs.update({
+            'user': self.request.user,
+            'business_line': business_line,
+            'category': category
+        })
+        return kwargs
     
     def get_object(self):
         service = get_object_or_404(
@@ -133,14 +148,19 @@ class ServiceEditView(
                       kwargs={'line_path': line_path, 'category': category})
     
     def form_valid(self, form):
-        response = super().form_valid(form)
-        
-        messages.success(
-            self.request,
-            ACCOUNTING_SUCCESS_MESSAGES.get('SERVICE_UPDATED', 'Servicio actualizado correctamente.')
-        )
-        
-        return response
+        try:
+            self.object = form.save()
+            
+            messages.success(
+                self.request,
+                ACCOUNTING_SUCCESS_MESSAGES.get('SERVICE_UPDATED', 'Servicio actualizado correctamente.')
+            )
+            
+            return redirect(self.get_success_url())
+            
+        except Exception as e:
+            form.add_error(None, f'Error al actualizar el servicio: {str(e)}')
+            return self.form_invalid(form)
 
 
 class ServiceCreateView(
@@ -151,8 +171,22 @@ class ServiceCreateView(
     CreateView
 ):
     model = ClientService
+    form_class = ClientServiceCreateForm
     template_name = 'accounting/service_create.html'
-    fields = ['client', 'price', 'start_date', 'renewal_date', 'payment_method', 'remanentes']
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        line_path = self.kwargs.get('line_path', '')
+        category = self.kwargs.get('category', '').upper()
+        
+        business_line = self.resolve_business_line_from_path(line_path)
+        
+        kwargs.update({
+            'user': self.request.user,
+            'business_line': business_line,
+            'category': category
+        })
+        return kwargs
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -187,16 +221,21 @@ class ServiceCreateView(
         form.instance.business_line = business_line
         form.instance.category = category
         
-        response = super().form_valid(form)
-        
-        messages.success(
-            self.request,
-            ACCOUNTING_SUCCESS_MESSAGES.get('SERVICE_CREATED', 'Servicio creado correctamente para {client}').format(
-                client=form.instance.client.full_name
+        try:
+            self.object = form.save()
+            
+            messages.success(
+                self.request,
+                ACCOUNTING_SUCCESS_MESSAGES.get('SERVICE_CREATED', 'Servicio creado correctamente para {client}').format(
+                    client=self.object.client.full_name
+                )
             )
-        )
-        
-        return response
+            
+            return redirect(self.get_success_url())
+            
+        except Exception as e:
+            form.add_error(None, f'Error al crear el servicio: {str(e)}')
+            return self.form_invalid(form)
     
     def get_success_url(self):
         line_path = self.kwargs.get('line_path', '')

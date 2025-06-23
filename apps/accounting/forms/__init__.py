@@ -1,10 +1,11 @@
-from .service_forms import ClientServiceForm, ClientServiceCreateForm, ClientServiceUpdateForm
+from .service_forms import BaseClientServiceForm, ClientServiceCreateForm, ClientServiceUpdateForm, ClientServiceFilterForm
 from .client_forms import ClientForm, ClientCreateForm, ClientUpdateForm
 
 __all__ = [
-    'ClientServiceForm',
+    'BaseClientServiceForm',
     'ClientServiceCreateForm', 
     'ClientServiceUpdateForm',
+    'ClientServiceFilterForm',
     'ClientForm',
     'ClientCreateForm',
     'ClientUpdateForm'
