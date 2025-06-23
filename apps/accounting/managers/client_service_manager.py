@@ -1,7 +1,9 @@
 from typing import Dict, List, Optional, Any
 from decimal import Decimal
+from datetime import date, timedelta
 from django.db import models
-from django.db.models import QuerySet, Q, Sum, Count, Avg, F
+from django.db.models import QuerySet, Q, Sum, Count, Avg, F, Case, When, Value
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -73,30 +75,40 @@ class ClientServiceManager(models.Manager):
         business_line,
         category: Optional[str] = None
     ) -> Dict[str, Any]:
+        from apps.accounting.models import ServicePayment
+        
         queryset = self.get_queryset().by_business_line(business_line).active()
         if category:
             queryset = queryset.by_category(category)
-        stats = queryset.aggregate(
-            total_services=Count('id'),
-            total_revenue=Sum('price'),
-            avg_price=Avg('price'),
-            unique_clients=Count('client', distinct=True)
+        
+        total_services = queryset.count()
+        unique_clients = queryset.values('client').distinct().count()
+        
+        paid_payments = ServicePayment.objects.filter(
+            client_service__in=queryset,
+            status=ServicePayment.StatusChoices.PAID
         )
-        category_stats = {
-            'WHITE': queryset.filter(category='WHITE').aggregate(
-                count=Count('id'),
-                revenue=Sum('price')
-            ),
-            'BLACK': queryset.filter(category='BLACK').aggregate(
-                count=Count('id'),
-                revenue=Sum('price')
-            )
-        }
+        
+        revenue_stats = paid_payments.aggregate(
+            total_revenue=Sum('amount'),
+            avg_payment=Avg('amount')
+        )
+        
+        category_stats = {}
+        for cat_choice in queryset.model.CategoryChoices:
+            cat_services = queryset.filter(category=cat_choice.value)
+            cat_payments = paid_payments.filter(client_service__in=cat_services)
+            
+            category_stats[cat_choice.value] = {
+                'count': cat_services.count(),
+                'revenue': cat_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            }
+        
         return {
-            'total_services': stats['total_services'] or 0,
-            'total_revenue': stats['total_revenue'] or Decimal('0'),
-            'avg_price': stats['avg_price'] or Decimal('0'),
-            'unique_clients': stats['unique_clients'] or 0,
+            'total_services': total_services,
+            'total_revenue': revenue_stats['total_revenue'] or Decimal('0'),
+            'avg_payment': revenue_stats['avg_payment'] or Decimal('0'),
+            'unique_clients': unique_clients,
             'category_breakdown': category_stats
         }
     
@@ -114,23 +126,36 @@ class ClientServiceManager(models.Manager):
         if category:
             queryset = queryset.by_category(category)
             
-        stats = queryset.aggregate(
+        services = queryset
+        service_stats = services.aggregate(
             total_services=Count('id'),
-            total_revenue=Sum('price'),
-            avg_price=Avg('price'),
             unique_clients=Count('client', distinct=True)
         )
         
+        from apps.accounting.models import ServicePayment
+        payment_stats = ServicePayment.objects.filter(
+            client_service__in=services
+        ).aggregate(
+            total_revenue=Sum('amount'),
+            avg_price=Avg('amount')
+        )
+        
         category_stats = {
-            'WHITE': queryset.filter(category='WHITE').aggregate(
-                count=Count('id'),
-                revenue=Sum('price')
+            'WHITE': ServicePayment.objects.filter(
+                client_service__in=services.filter(category='WHITE')
+            ).aggregate(
+                count=Count('client_service__id', distinct=True),
+                revenue=Sum('amount')
             ),
-            'BLACK': queryset.filter(category='BLACK').aggregate(
-                count=Count('id'),
-                revenue=Sum('price')
+            'BLACK': ServicePayment.objects.filter(
+                client_service__in=services.filter(category='BLACK')
+            ).aggregate(
+                count=Count('client_service__id', distinct=True),
+                revenue=Sum('amount')
             )
         }
+        
+        stats = {**service_stats, **payment_stats}
         
         return {
             'total_services': stats['total_services'] or 0,
@@ -148,14 +173,23 @@ class ClientServiceManager(models.Manager):
         queryset = self.get_queryset().filter(client=client).active()
         if business_lines:
             queryset = queryset.by_business_lines(business_lines)
-        stats = queryset.aggregate(
-            total_revenue=Sum('price'),
+        services = queryset
+        service_stats = services.aggregate(
             total_services=Count('id'),
             white_services=Count('id', filter=Q(category='WHITE')),
-            black_services=Count('id', filter=Q(category='BLACK')),
-            white_revenue=Sum('price', filter=Q(category='WHITE')),
-            black_revenue=Sum('price', filter=Q(category='BLACK'))
+            black_services=Count('id', filter=Q(category='BLACK'))
         )
+        
+        from apps.accounting.models import ServicePayment
+        payment_stats = ServicePayment.objects.filter(
+            client_service__in=services
+        ).aggregate(
+            total_revenue=Sum('amount'),
+            white_revenue=Sum('amount', filter=Q(client_service__category='WHITE')),
+            black_revenue=Sum('amount', filter=Q(client_service__category='BLACK'))
+        )
+        
+        stats = {**service_stats, **payment_stats}
         return {
             'client': client,
             'total_revenue': stats['total_revenue'] or Decimal('0'),
@@ -171,32 +205,44 @@ class ClientServiceManager(models.Manager):
         business_lines: QuerySet,
         limit: int = 10
     ) -> List[Dict[str, Any]]:
-        from apps.accounting.models import Client
-        clients = Client.objects.filter(
+        from apps.accounting.models import Client, ServicePayment
+        
+        # Get clients that have services in the specified business lines
+        clients_with_services = Client.objects.filter(
             services__business_line__in=business_lines,
             services__is_active=True
-        ).annotate(
-            total_revenue=Sum('services__price'),
-            total_services=Count('services', distinct=True),
-            white_services=Count(
-                'services',
-                filter=Q(services__category='WHITE', services__is_active=True)
-            ),
-            black_services=Count(
-                'services',
-                filter=Q(services__category='BLACK', services__is_active=True)
+        ).distinct()
+        
+        client_data = []
+        for client in clients_with_services:
+            services = client.services.filter(
+                business_line__in=business_lines,
+                is_active=True
             )
-        ).order_by('-total_revenue')[:limit]
-        return [
-            {
+            
+            service_stats = services.aggregate(
+                total_services=Count('id'),
+                white_services=Count('id', filter=Q(category='WHITE')),
+                black_services=Count('id', filter=Q(category='BLACK'))
+            )
+            
+            revenue_stats = ServicePayment.objects.filter(
+                client_service__in=services
+            ).aggregate(
+                total_revenue=Sum('amount')
+            )
+            
+            client_data.append({
                 'client': client,
-                'total_revenue': client.total_revenue or Decimal('0'),
-                'total_services': client.total_services or 0,
-                'white_services': client.white_services or 0,
-                'black_services': client.black_services or 0,
-            }
-            for client in clients
-        ]
+                'total_revenue': revenue_stats['total_revenue'] or Decimal('0'),
+                'total_services': service_stats['total_services'] or 0,
+                'white_services': service_stats['white_services'] or 0,
+                'black_services': service_stats['black_services'] or 0,
+            })
+        
+        # Sort by revenue and limit
+        client_data.sort(key=lambda x: x['total_revenue'], reverse=True)
+        return client_data[:limit]
     
     def get_services_with_remanentes(self, business_lines: QuerySet) -> QuerySet:
         return self.get_queryset().filter(
@@ -213,17 +259,20 @@ class ClientServiceManager(models.Manager):
         self,
         business_lines: QuerySet
     ) -> Dict[str, Decimal]:
-        from apps.accounting.models import ClientService
+        from apps.accounting.models import ServicePayment
+        
         revenue_data = {}
-        for choice in ClientService.PaymentMethodChoices:
-            revenue = self.get_queryset().filter(
-                business_line__in=business_lines,
-                payment_method=choice.value,
-                is_active=True
-            ).aggregate(
-                total=Sum('price')
-            )['total'] or Decimal('0')
-            revenue_data[choice.value] = revenue
+        services = self.get_queryset().filter(business_line__in=business_lines, is_active=True)
+        
+        for method_choice in ServicePayment.PaymentMethodChoices:
+            revenue = ServicePayment.objects.filter(
+                client_service__in=services,
+                payment_method=method_choice.value,
+                status=ServicePayment.StatusChoices.PAID
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            
+            revenue_data[method_choice.value] = revenue
+        
         return revenue_data
     
     def get_monthly_revenue_trend(
@@ -231,20 +280,53 @@ class ClientServiceManager(models.Manager):
         business_lines: QuerySet,
         year: int
     ) -> List[Dict[str, Any]]:
+        from apps.accounting.models import ServicePayment
+        
         monthly_data = []
+        services = self.get_queryset().filter(business_line__in=business_lines)
+        
         for month in range(1, 13):
-            revenue = self.get_queryset().filter(
-                business_line__in=business_lines,
-                start_date__year=year,
-                start_date__month=month,
-                is_active=True
-            ).aggregate(
-                total_revenue=Sum('price'),
-                total_services=Count('id')
+            payments = ServicePayment.objects.filter(
+                client_service__in=services,
+                payment_date__year=year,
+                payment_date__month=month,
+                status=ServicePayment.StatusChoices.PAID
             )
+            
+            revenue_stats = payments.aggregate(
+                total_revenue=Sum('amount'),
+                total_payments=Count('id')
+            )
+            
             monthly_data.append({
                 'month': month,
-                'total_revenue': revenue['total_revenue'] or Decimal('0'),
-                'total_services': revenue['total_services'] or 0
+                'total_revenue': revenue_stats['total_revenue'] or Decimal('0'),
+                'total_payments': revenue_stats['total_payments'] or 0
             })
+        
+        return monthly_data
+
+    def get_services_by_status(self, business_lines: QuerySet) -> Dict[str, int]:
+        services = self.get_queryset().filter(business_line__in=business_lines)
+        
+        status_counts = {
+            'ACTIVE': 0,
+            'INACTIVE': 0,
+            'EXPIRED_RECENT': 0,
+            'EXPIRED': 0
+        }
+        
+        for service in services:
+            status_counts[service.current_status] += 1
+        
+        return status_counts
+
+    def get_expiring_services(self, business_lines: QuerySet, days_ahead: int = 30) -> QuerySet:
+        from apps.accounting.services.payment_service import PaymentService
+        
+        expiring_data = PaymentService.get_expiring_services(days_ahead)
+        service_ids = [service.id for service, _ in expiring_data 
+                      if service.business_line_id in business_lines.values_list('id', flat=True)]
+        
+        return self.get_queryset().filter(id__in=service_ids).with_client_data()
         return monthly_data

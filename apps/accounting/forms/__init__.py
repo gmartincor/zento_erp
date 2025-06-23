@@ -1,5 +1,6 @@
 from .service_forms import BaseClientServiceForm, ClientServiceCreateForm, ClientServiceUpdateForm, ClientServiceFilterForm
 from .client_forms import ClientForm, ClientCreateForm, ClientUpdateForm
+from .payment_forms import PaymentBaseForm, RenewalForm, PaymentCreateForm, PaymentUpdateForm, PaymentFilterForm
 
 __all__ = [
     'BaseClientServiceForm',
@@ -8,5 +9,10 @@ __all__ = [
     'ClientServiceFilterForm',
     'ClientForm',
     'ClientCreateForm',
-    'ClientUpdateForm'
+    'ClientUpdateForm',
+    'PaymentBaseForm',
+    'RenewalForm',
+    'PaymentCreateForm',
+    'PaymentUpdateForm',
+    'PaymentFilterForm'
 ]

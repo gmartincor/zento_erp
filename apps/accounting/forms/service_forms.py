@@ -45,23 +45,9 @@ class BaseClientServiceForm(forms.ModelForm):
     class Meta:
         model = ClientService
         fields = [
-            'client', 'business_line', 'category', 'price', 
-            'payment_method', 'start_date', 'renewal_date', 'remanentes'
+            'client', 'business_line', 'category', 'remanentes'
         ]
         widgets = {
-            'start_date': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
-            }),
-            'renewal_date': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
-            }),
-            'price': forms.NumberInput(attrs={
-                'step': '0.01', 
-                'min': '0',
-                'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
-            }),
             'remanentes': forms.Textarea(attrs={
                 'rows': 3,
                 'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
@@ -73,9 +59,6 @@ class BaseClientServiceForm(forms.ModelForm):
                 'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
             }),
             'category': forms.Select(attrs={
-                'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
-            }),
-            'payment_method': forms.Select(attrs={
                 'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
             }),
         }
@@ -117,18 +100,6 @@ class BaseClientServiceForm(forms.ModelForm):
             },
             'category': {
                 'help_text': 'Categoría del servicio (WHITE o BLACK)'
-            },
-            'price': {
-                'help_text': 'Precio del servicio en euros'
-            },
-            'payment_method': {
-                'help_text': 'Método de pago utilizado por el cliente'
-            },
-            'start_date': {
-                'help_text': 'Fecha de inicio del servicio'
-            },
-            'renewal_date': {
-                'help_text': 'Fecha de renovación (opcional)'
             },
             'remanentes': {
                 'help_text': 'Solo para categoría BLACK. Formato JSON válido.'
@@ -202,10 +173,6 @@ class ClientServiceCreateForm(BaseClientServiceForm):
                 client=client,
                 business_line=self.cleaned_data['business_line'],
                 category=self.cleaned_data['category'],
-                price=self.cleaned_data['price'],
-                payment_method=self.cleaned_data['payment_method'],
-                start_date=self.cleaned_data['start_date'],
-                renewal_date=self.cleaned_data.get('renewal_date'),
                 remanentes=self.cleaned_data.get('remanentes')
             )
         return self.instance
@@ -273,10 +240,6 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
                 )
             
             service = self.instance
-            service.price = self.cleaned_data['price']
-            service.payment_method = self.cleaned_data['payment_method']
-            service.start_date = self.cleaned_data['start_date']
-            service.renewal_date = self.cleaned_data.get('renewal_date')
             service.remanentes = self.cleaned_data.get('remanentes', {})
             
             service.save()
@@ -297,17 +260,4 @@ class ClientServiceFilterForm(forms.Form):
         required=False,
         choices=[('', 'Todas las categorías')] + ClientService.CategoryChoices.choices,
         widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    payment_method = forms.ChoiceField(
-        required=False,
-        choices=[('', 'Todos los métodos')] + ClientService.PaymentMethodChoices.choices,
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    date_from = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
-    )
-    date_to = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
     )

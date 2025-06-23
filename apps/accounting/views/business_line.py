@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 
 from apps.business_lines.models import BusinessLine
-from apps.accounting.models import ClientService
+from apps.accounting.models import ClientService, ServicePayment
 from apps.accounting.services.template_service import TemplateDataService
 from apps.accounting.services.presentation_service import PresentationService
 from apps.core.mixins import (
@@ -119,8 +119,12 @@ class BusinessLineHierarchyView(
                     white_services = services.filter(category='WHITE')
                     black_count = black_services.count()
                     white_count = white_services.count()
-                    black_revenue = black_services.aggregate(total=Sum('price'))['total'] or 0
-                    white_revenue = white_services.aggregate(total=Sum('price'))['total'] or 0
+                    black_revenue = ServicePayment.objects.filter(
+                        client_service__in=black_services
+                    ).aggregate(total=Sum('amount'))['total'] or 0
+                    white_revenue = ServicePayment.objects.filter(
+                        client_service__in=white_services
+                    ).aggregate(total=Sum('amount'))['total'] or 0
                     category_items = []
                     category_items.append({
                         'name': 'BLACK',
@@ -166,9 +170,9 @@ class BusinessLineHierarchyView(
                     current_line_services = ClientService.objects.filter(
                         business_line=current_line
                     ).count()
-                    current_line_revenue = ClientService.objects.filter(
-                        business_line=current_line
-                    ).aggregate(total=Sum('price'))['total'] or 0
+                    current_line_revenue = ServicePayment.objects.filter(
+                        client_service__business_line=current_line
+                    ).aggregate(total=Sum('amount'))['total'] or 0
                     context.update({
                         'current_line': current_line,
                         'children': accessible_children,
@@ -196,9 +200,10 @@ class BusinessLineHierarchyView(
             total_services = ClientService.objects.filter(
                 business_line__in=accessible_lines
             ).count()
-            total_revenue = ClientService.objects.filter(
-                business_line__in=accessible_lines
-            ).aggregate(total=Sum('price'))['total'] or 0
+            from apps.accounting.models import ServicePayment
+            total_revenue = ServicePayment.objects.filter(
+                client_service__business_line__in=accessible_lines
+            ).aggregate(total=Sum('amount'))['total'] or 0
             context.update({
                 'business_lines': root_lines,
                 'items': root_lines,

@@ -126,7 +126,7 @@ class BusinessLineManager(models.Manager):
         business_line,
         include_descendants: bool = True
     ) -> Dict[str, Any]:
-        from apps.accounting.models import ClientService
+        from apps.accounting.models import ClientService, ServicePayment
         
         if include_descendants:
             descendant_ids = business_line.get_descendant_ids()
@@ -134,15 +134,23 @@ class BusinessLineManager(models.Manager):
         else:
             services_filter = Q(business_line=business_line, is_active=True)
         
-        stats = ClientService.objects.filter(services_filter).aggregate(
+        services = ClientService.objects.filter(services_filter)
+        service_stats = services.aggregate(
             total_services=Count('id'),
-            total_revenue=Sum('price'),
             unique_clients=Count('client', distinct=True),
             white_services=Count('id', filter=Q(category='WHITE')),
             black_services=Count('id', filter=Q(category='BLACK')),
-            white_revenue=Sum('price', filter=Q(category='WHITE')),
-            black_revenue=Sum('price', filter=Q(category='BLACK'))
         )
+        
+        payment_stats = ServicePayment.objects.filter(
+            client_service__in=services
+        ).aggregate(
+            total_revenue=Sum('amount'),
+            white_revenue=Sum('amount', filter=Q(client_service__category='WHITE')),
+            black_revenue=Sum('amount', filter=Q(client_service__category='BLACK'))
+        )
+        
+        stats = {**service_stats, **payment_stats}
         
         return {
             'business_line': business_line,

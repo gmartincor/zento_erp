@@ -50,4 +50,26 @@ urlpatterns = [
         views.BusinessLineHierarchyView.as_view(),
         name='business-lines-path'
     ),
+    
+    # Payment URLs
+    path('payments/', views.payment_list, name='payments'),
+    path('payments/<int:payment_id>/', views.payment_detail, name='payment_detail'),
+    path('payments/<int:payment_id>/edit/', views.payment_update, name='payment_update'),
+    path('payments/<int:payment_id>/mark-paid/', views.payment_mark_paid, name='payment_mark_paid'),
+    path('payments/<int:payment_id>/cancel/', views.payment_cancel, name='payment_cancel'),
+    
+    # Service payment management
+    path('services/<int:service_id>/payments/', views.service_payment_history, name='service_payment_history'),
+    path('services/<int:service_id>/renew/', views.service_renewal, name='service_renewal'),
+    path('services/<int:service_id>/payments/create/', views.payment_create, name='payment_create'),
+    
+    # Expiring services
+    path('expiring-services/', views.expiring_services, name='expiring_services'),
+    
+    # Business line specific payments
+    re_path(
+        r'^business-lines/(?P<business_line_path>[\w-]+(?:/[\w-]+)*)/payments/$',
+        views.payment_list,
+        name='business_line_payments'
+    ),
 ]

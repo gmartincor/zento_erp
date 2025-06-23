@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 
 from apps.business_lines.models import BusinessLine
-from apps.accounting.models import ClientService
+from apps.accounting.models import ClientService, ServicePayment
 
 User = get_user_model()
 
@@ -104,15 +104,28 @@ class BusinessLineService:
                 is_active=True
             )
         
-        stats = services_query.aggregate(
-            total_revenue=Sum('price'),
+        payments_query = ServicePayment.objects.filter(
+            client_service__in=services_query
+        )
+        
+        stats = payments_query.aggregate(
+            total_revenue=Sum('amount'),
+            avg_price=Avg('amount'),
+        )
+        
+        service_stats = services_query.aggregate(
             total_services=Count('id'),
-            avg_price=Avg('price'),
             white_count=Count('id', filter=Q(category='WHITE')),
             black_count=Count('id', filter=Q(category='BLACK')),
-            white_revenue=Sum('price', filter=Q(category='WHITE')),
-            black_revenue=Sum('price', filter=Q(category='BLACK')),
         )
+        
+        payment_category_stats = payments_query.aggregate(
+            white_revenue=Sum('amount', filter=Q(client_service__category='WHITE')),
+            black_revenue=Sum('amount', filter=Q(client_service__category='BLACK')),
+        )
+        
+        stats.update(service_stats)
+        stats.update(payment_category_stats)
         
         stats['total_revenue'] = stats['total_revenue'] or 0
         stats['total_services'] = stats['total_services'] or 0

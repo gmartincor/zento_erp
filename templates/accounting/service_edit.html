@@ -167,55 +167,32 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Precio *
-                    </label>
-                    {{ form.price }}
-                    {% if form.price.errors %}
-                        <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                            {{ form.price.errors|first }}
+            <div class="grid grid-cols-1 gap-4">
+                <!-- Payment information is managed separately -->
+                <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">
+                                    Gestión de Pagos
+                                </h4>
+                                <p class="text-sm text-blue-700 dark:text-blue-400">
+                                    Los pagos se gestionan por separado desde la sección de pagos.
+                                </p>
+                            </div>
                         </div>
-                    {% endif %}
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Método de pago *
-                    </label>
-                    {{ form.payment_method }}
-                    {% if form.payment_method.errors %}
-                        <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                            {{ form.payment_method.errors|first }}
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Fecha de inicio *
-                    </label>
-                    {{ form.start_date }}
-                    {% if form.start_date.errors %}
-                        <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                            {{ form.start_date.errors|first }}
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Fecha de renovación
-                    </label>
-                    {{ form.renewal_date }}
-                    {% if form.renewal_date.errors %}
-                        <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                            {{ form.renewal_date.errors|first }}
-                        </div>
-                    {% endif %}
+                        <a href="{% url 'accounting:payment_list' %}?service={{ object.id }}" 
+                           class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+                            Ver Pagos
+                        </a>
+                    </div>
                 </div>
             </div>
+                        </div>
+                </div>
             
             {% if service.category == 'BLACK' %}
             <div class="mt-4">

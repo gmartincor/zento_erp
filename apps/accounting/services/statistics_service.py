@@ -4,43 +4,83 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 
 from apps.business_lines.models import BusinessLine
-from apps.accounting.models import ClientService
+from apps.accounting.models import ClientService, ServicePayment
 
 
 class StatisticsService:
     def calculate_business_line_stats(self, business_line, include_children=True):
         services_query = self._get_services_for_line(business_line, include_children)
-        stats = services_query.aggregate(
-            total_revenue=Sum('price'),
+        
+        paid_payments = ServicePayment.objects.filter(
+            client_service__in=services_query,
+            status=ServicePayment.StatusChoices.PAID
+        )
+        
+        stats = paid_payments.aggregate(
+            total_revenue=Sum('amount'),
+            total_payments=Count('id')
+        )
+        
+        service_stats = services_query.aggregate(
             total_services=Count('id'),
             white_services=Count('id', filter=Q(category='WHITE')),
             black_services=Count('id', filter=Q(category='BLACK')),
-            white_revenue=Sum('price', filter=Q(category='WHITE')),
-            black_revenue=Sum('price', filter=Q(category='BLACK')),
-            unique_clients=Count('client', distinct=True),
-            avg_price=Avg('price')
+            unique_clients=Count('client', distinct=True)
         )
+        
+        category_revenue = {
+            'white_revenue': paid_payments.filter(
+                client_service__category='WHITE'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0'),
+            'black_revenue': paid_payments.filter(
+                client_service__category='BLACK'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        }
+        
         total_remanentes = self._calculate_remanente_totals(
             services_query.filter(category='BLACK')
         )
-        return self._normalize_stats(stats, total_remanentes)
+        
+        combined_stats = {**stats, **service_stats, **category_revenue}
+        return self._normalize_stats(combined_stats, total_remanentes)
     
     def get_revenue_summary_by_period(self, business_lines, year=None, month=None):
         services_query = ClientService.objects.filter(
             business_line__in=business_lines,
             is_active=True
         )
-        services_query = self._apply_date_filters(services_query, year, month)
-        period_stats = services_query.aggregate(
-            total_revenue=Sum('price'),
+        
+        payments_query = ServicePayment.objects.filter(
+            client_service__in=services_query,
+            status=ServicePayment.StatusChoices.PAID
+        )
+        
+        payments_query = self._apply_payment_date_filters(payments_query, year, month)
+        
+        period_stats = payments_query.aggregate(
+            total_revenue=Sum('amount'),
+            total_payments=Count('id')
+        )
+        
+        service_stats = services_query.aggregate(
             total_services=Count('id'),
-            white_revenue=Sum('price', filter=Q(category='WHITE')),
-            black_revenue=Sum('price', filter=Q(category='BLACK')),
             unique_clients=Count('client', distinct=True)
         )
+        
+        category_revenue = {
+            'white_revenue': payments_query.filter(
+                client_service__category='WHITE'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0'),
+            'black_revenue': payments_query.filter(
+                client_service__category='BLACK'
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        }
+        
         period_info = self._get_period_info(year, month)
+        combined_stats = {**period_stats, **service_stats, **category_revenue}
+        
         return {
-            **self._normalize_basic_stats(period_stats),
+            **self._normalize_basic_stats(combined_stats),
             'period_info': period_info,
             'business_lines_count': business_lines.count()
         }
@@ -51,28 +91,55 @@ class StatisticsService:
             category=category,
             is_active=True
         )
-        stats = services_query.aggregate(
-            total_revenue=Sum('price'),
+        
+        payments_query = ServicePayment.objects.filter(
+            client_service__in=services_query,
+            status=ServicePayment.StatusChoices.PAID
+        )
+        
+        stats = payments_query.aggregate(
+            total_revenue=Sum('amount'),
+            payment_count=Count('id'),
+            avg_payment=Avg('amount')
+        )
+        
+        service_stats = services_query.aggregate(
             service_count=Count('id'),
-            avg_price=Avg('price'),
             unique_clients=Count('client', distinct=True)
         )
+        
+        combined_stats = {**stats, **service_stats}
+        
         if category == 'BLACK':
-            stats['total_remanentes'] = self._calculate_remanente_totals(services_query)
-        return self._normalize_basic_stats(stats)
+            combined_stats['total_remanentes'] = self._calculate_remanente_totals(services_query)
+        
+        return self._normalize_basic_stats(combined_stats)
     
     def get_client_performance_analysis(self, business_lines, limit=10):
+        services_query = ClientService.objects.filter(
+            business_line__in=business_lines, 
+            is_active=True
+        )
+        
         top_clients = (
-            ClientService.objects
-            .filter(business_line__in=business_lines, is_active=True)
-            .values('client__id', 'client__full_name', 'client__dni')
+            ServicePayment.objects
+            .filter(
+                client_service__in=services_query,
+                status=ServicePayment.StatusChoices.PAID
+            )
+            .values(
+                'client_service__client__id', 
+                'client_service__client__full_name', 
+                'client_service__client__dni'
+            )
             .annotate(
-                total_revenue=Sum('price'),
-                service_count=Count('id'),
-                avg_service_price=Avg('price')
+                total_revenue=Sum('amount'),
+                payment_count=Count('id'),
+                avg_payment=Avg('amount')
             )
             .order_by('-total_revenue')[:limit]
         )
+        
         client_stats = self._calculate_client_distribution_stats(business_lines)
         return {
             'top_clients': list(top_clients),

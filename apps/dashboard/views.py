@@ -4,7 +4,7 @@ from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import datetime, timedelta
 
-from apps.accounting.models import ClientService
+from apps.accounting.models import ClientService, ServicePayment
 from apps.expenses.models import Expense, ExpenseCategory
 from apps.business_lines.models import BusinessLine
 
@@ -16,13 +16,13 @@ def dashboard_home(request):
     start_of_month = today.replace(day=1)
     start_of_year = today.replace(month=1, day=1)
     
-    total_ingresos = ClientService.objects.aggregate(
-        total=Sum('price')
+    total_ingresos = ServicePayment.objects.aggregate(
+        total=Sum('amount')
     )['total'] or 0
     
-    ingresos_mes = ClientService.objects.filter(
-        start_date__gte=start_of_month
-    ).aggregate(total=Sum('price'))['total'] or 0
+    ingresos_mes = ServicePayment.objects.filter(
+        payment_date__gte=start_of_month
+    ).aggregate(total=Sum('amount'))['total'] or 0
     
     total_gastos = Expense.objects.aggregate(
         total=Sum('amount')
@@ -38,7 +38,7 @@ def dashboard_home(request):
     lineas_negocio = BusinessLine.objects.filter(
         parent__isnull=False
     ).annotate(
-        total_ingresos=Sum('client_services__price'),
+        total_ingresos=Sum('client_services__servicepayment__amount'),
         total_gastos=Sum('expense__amount'),
         num_servicios=Count('client_services'),
         num_gastos=Count('expense')

@@ -6,16 +6,20 @@ from django.db.models import QuerySet, Sum, Count, Avg
 from django.utils import timezone
 
 from apps.business_lines.models import BusinessLine
-from apps.accounting.models import ClientService
+from apps.accounting.models import ClientService, ServicePayment
 from apps.accounting.services.navigation_service import HierarchicalNavigationService
 from apps.core.constants import SERVICE_CATEGORIES
 
 
 class CategoryStatsService:
     def calculate_category_summary(self, services: QuerySet) -> Dict[str, Any]:
-        category_data = services.values('category').annotate(
-            total_amount=Sum('price'),
-            service_count=Count('id')
+        from apps.accounting.models import ServicePayment
+        
+        category_data = ServicePayment.objects.filter(
+            client_service__in=services
+        ).values('client_service__category').annotate(
+            total_amount=Sum('amount'),
+            service_count=Count('client_service__id', distinct=True)
         ).order_by('-total_amount')
         
         total_amount = sum(item['total_amount'] or 0 for item in category_data)
@@ -29,10 +33,10 @@ class CategoryStatsService:
             
             category_breakdown.append({
                 'category_name': dict(SERVICE_CATEGORIES).get(
-                    item['category'], 
-                    item['category'] or 'Sin categoría'
+                    item['client_service__category'], 
+                    item['client_service__category'] or 'Sin categoría'
                 ),
-                'category_code': item['category'],
+                'category_code': item['client_service__category'],
                 'total_amount': amount,
                 'service_count': item['service_count'],
                 'average_amount': average,
@@ -56,9 +60,11 @@ class CategoryStatsService:
         
         for category_code, category_name in SERVICE_CATEGORIES.items():
             category_services = all_services.filter(category=category_code)
-            category_stats = category_services.aggregate(
-                total_revenue=Sum('price'),
-                total_services=Count('id')
+            category_stats = ServicePayment.objects.filter(
+                client_service__in=category_services
+            ).aggregate(
+                total_revenue=Sum('amount'),
+                total_services=Count('client_service__id', distinct=True)
             )
             
             stats_by_category[category_code] = {
@@ -72,13 +78,15 @@ class CategoryStatsService:
 
 class ClientStatsService:
     def calculate_client_summary(self, services: QuerySet) -> Dict[str, Any]:
-        client_data = services.values(
-            'client__id',
-            'client__name',
-            'client__email'
+        client_data = ServicePayment.objects.filter(
+            client_service__in=services
+        ).values(
+            'client_service__client__id',
+            'client_service__client__name',
+            'client_service__client__email'
         ).annotate(
-            total_amount=Sum('price'),
-            service_count=Count('id')
+            total_amount=Sum('amount'),
+            service_count=Count('client_service__id', distinct=True)
         ).order_by('-total_amount')
         
         total_amount = sum(item['total_amount'] or 0 for item in client_data)
@@ -91,9 +99,9 @@ class ClientStatsService:
             average = amount / item['service_count'] if item['service_count'] > 0 else 0
             
             client_breakdown.append({
-                'client_id': item['client__id'],
-                'client_name': item['client__name'],
-                'client_email': item['client__email'],
+                'client_id': item['client_service__client__id'],
+                'client_name': item['client_service__client__name'],
+                'client_email': item['client_service__client__email'],
                 'total_amount': amount,
                 'service_count': item['service_count'],
                 'average_amount': average,
@@ -115,9 +123,11 @@ class BusinessLineStatsService:
             is_active=True
         )
         
-        global_stats = all_services.aggregate(
-            total_revenue=Sum('price'),
-            total_services=Count('id')
+        global_stats = ServicePayment.objects.filter(
+            client_service__in=all_services
+        ).aggregate(
+            total_revenue=Sum('amount'),
+            total_services=Count('client_service__id', distinct=True)
         )
         
         return {
@@ -133,20 +143,24 @@ class BusinessLineStatsService:
             is_active=True
         )
         
-        basic_stats = services.aggregate(
-            total_revenue=Sum('price'),
-            total_services=Count('id'),
-            avg_service_value=Avg('price')
+        basic_stats = ServicePayment.objects.filter(
+            client_service__in=services
+        ).aggregate(
+            total_revenue=Sum('amount'),
+            total_services=Count('client_service__id', distinct=True),
+            avg_service_value=Avg('amount')
         )
         
         category_stats = CategoryStatsService().calculate_category_summary(services)
         client_stats = ClientStatsService().calculate_client_summary(services)
         
         recent_cutoff = timezone.now() - timezone.timedelta(days=30)
-        recent_services = services.filter(created_at__gte=recent_cutoff)
-        recent_stats = recent_services.aggregate(
-            recent_revenue=Sum('price'),
-            recent_services=Count('id')
+        recent_services = services.filter(created__gte=recent_cutoff)
+        recent_stats = ServicePayment.objects.filter(
+            client_service__in=recent_services
+        ).aggregate(
+            recent_revenue=Sum('amount'),
+            recent_services=Count('client_service__id', distinct=True)
         )
         
         return {

@@ -11,9 +11,7 @@ User = get_user_model()
 
 
 class ClientServiceOperations:
-    def create_client_service(self, client, business_line, category, price, 
-                             payment_method, start_date, renewal_date=None, 
-                             remanentes=None):
+    def create_client_service(self, client, business_line, category, remanentes=None):
         with transaction.atomic():
             self._validate_service_creation(
                 client, business_line, category, remanentes
@@ -22,10 +20,6 @@ class ClientServiceOperations:
                 client=client,
                 business_line=business_line,
                 category=category,
-                price=price,
-                payment_method=payment_method,
-                start_date=start_date,
-                renewal_date=renewal_date,
                 remanentes=remanentes or {}
             )
             service.full_clean()
@@ -70,13 +64,22 @@ class ClientServiceOperations:
 
     def get_client_services_summary(self, client):
         from django.db.models import Sum, Count
+        from apps.accounting.models import ServicePayment
+        
         services = client.services.filter(is_active=True)
-        summary = services.aggregate(
+        service_summary = services.aggregate(
             total_services=Count('id'),
-            total_revenue=Sum('price'),
             white_services=Count('id', filter=Q(category='WHITE')),
             black_services=Count('id', filter=Q(category='BLACK'))
         )
+        
+        payment_summary = ServicePayment.objects.filter(
+            client_service__in=services
+        ).aggregate(
+            total_revenue=Sum('amount')
+        )
+        
+        summary = {**service_summary, **payment_summary}
         black_services = services.filter(category='BLACK')
         total_remanentes = sum(
             service.get_remanente_total() for service in black_services

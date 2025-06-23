@@ -100,7 +100,7 @@ class HierarchicalNavigationService:
         business_line: BusinessLine,
         include_children: bool = False
     ) -> Dict[str, Any]:
-        from apps.accounting.models import ClientService
+        from apps.accounting.models import ClientService, ServicePayment
         from django.db.models import Count, Sum, Q
         services = ClientService.objects.filter(
             business_line=business_line,
@@ -113,14 +113,21 @@ class HierarchicalNavigationService:
                 business_line__id__in=all_line_ids,
                 is_active=True
             )
-        stats = services.aggregate(
+        service_stats = services.aggregate(
             total_services=Count('id'),
-            total_revenue=Sum('price'),
             white_count=Count('id', filter=Q(category='WHITE')),
             black_count=Count('id', filter=Q(category='BLACK')),
-            white_revenue=Sum('price', filter=Q(category='WHITE')),
-            black_revenue=Sum('price', filter=Q(category='BLACK'))
         )
+        
+        payment_stats = ServicePayment.objects.filter(
+            client_service__in=services
+        ).aggregate(
+            total_revenue=Sum('amount'),
+            white_revenue=Sum('amount', filter=Q(client_service__category='WHITE')),
+            black_revenue=Sum('amount', filter=Q(client_service__category='BLACK'))
+        )
+        
+        stats = {**service_stats, **payment_stats}
         for key, value in stats.items():
             if value is None:
                 stats[key] = 0

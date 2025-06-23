@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from apps.core.models import TimeStampedModel, SoftDeleteModel
 from apps.business_lines.models import BusinessLine
 from .managers.client_service_manager import ClientServiceManager
@@ -72,12 +73,6 @@ class ClientService(TimeStampedModel):
         WHITE = 'WHITE', 'Blanco'
         BLACK = 'BLACK', 'Negro'
     
-    class PaymentMethodChoices(models.TextChoices):
-        CARD = 'CARD', 'Tarjeta'
-        CASH = 'CASH', 'Efectivo'
-        TRANSFER = 'TRANSFER', 'Transferencia'
-        BIZUM = 'BIZUM', 'Bizum'
-    
     client = models.ForeignKey(
         Client,
         on_delete=models.CASCADE,
@@ -96,28 +91,6 @@ class ClientService(TimeStampedModel):
         max_length=10,
         choices=CategoryChoices.choices,
         verbose_name="Categoría"
-    )
-    
-    price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name="Precio"
-    )
-    
-    payment_method = models.CharField(
-        max_length=15,
-        choices=PaymentMethodChoices.choices,
-        verbose_name="Método de pago"
-    )
-    
-    start_date = models.DateField(
-        verbose_name="Fecha de inicio"
-    )
-    
-    renewal_date = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="Fecha de renovación"
     )
     
     remanentes = models.JSONField(
@@ -143,7 +116,6 @@ class ClientService(TimeStampedModel):
         indexes = [
             models.Index(fields=['client', 'is_active']),
             models.Index(fields=['business_line', 'category']),
-            models.Index(fields=['start_date']),
         ]
 
     def clean(self):
@@ -230,3 +202,181 @@ class ClientService(TimeStampedModel):
     
     def get_line_path(self):
         return self.business_line.get_url_path()
+
+    @property
+    def current_status(self):
+        latest_payment = self.payments.filter(status=ServicePayment.StatusChoices.PAID).order_by('-period_end').first()
+        if not latest_payment:
+            return 'INACTIVE'
+        
+        today = timezone.now().date()
+        if latest_payment.period_end >= today:
+            return 'ACTIVE'
+        elif (today - latest_payment.period_end).days <= 30:
+            return 'EXPIRED_RECENT'
+        else:
+            return 'EXPIRED'
+
+    @property
+    def active_until(self):
+        latest_payment = self.payments.filter(status=ServicePayment.StatusChoices.PAID).order_by('-period_end').first()
+        return latest_payment.period_end if latest_payment else None
+
+    @property
+    def total_paid(self):
+        return self.payments.filter(status=ServicePayment.StatusChoices.PAID).aggregate(
+            total=models.Sum('amount')
+        )['total'] or 0
+
+    @property
+    def payment_count(self):
+        return self.payments.filter(status=ServicePayment.StatusChoices.PAID).count()
+
+
+class ServicePayment(TimeStampedModel):
+    
+    class StatusChoices(models.TextChoices):
+        PENDING = 'PENDING', 'Pendiente'
+        PAID = 'PAID', 'Pagado'
+        OVERDUE = 'OVERDUE', 'Vencido'
+        CANCELLED = 'CANCELLED', 'Cancelado'
+        REFUNDED = 'REFUNDED', 'Reembolsado'
+    
+    class PaymentMethodChoices(models.TextChoices):
+        CARD = 'CARD', 'Tarjeta'
+        CASH = 'CASH', 'Efectivo'
+        TRANSFER = 'TRANSFER', 'Transferencia'
+        BIZUM = 'BIZUM', 'Bizum'
+        PAYPAL = 'PAYPAL', 'PayPal'
+        OTHER = 'OTHER', 'Otro'
+    
+    client_service = models.ForeignKey(
+        ClientService,
+        on_delete=models.CASCADE,
+        related_name='payments',
+        verbose_name="Servicio"
+    )
+    
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Monto"
+    )
+    
+    payment_date = models.DateField(
+        default=timezone.now,
+        verbose_name="Fecha de pago"
+    )
+    
+    period_start = models.DateField(
+        verbose_name="Inicio del período"
+    )
+    
+    period_end = models.DateField(
+        verbose_name="Fin del período"
+    )
+    
+    status = models.CharField(
+        max_length=15,
+        choices=StatusChoices.choices,
+        default=StatusChoices.PENDING,
+        verbose_name="Estado"
+    )
+    
+    payment_method = models.CharField(
+        max_length=15,
+        choices=PaymentMethodChoices.choices,
+        verbose_name="Método de pago"
+    )
+    
+    reference_number = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Número de referencia",
+        help_text="Referencia de la transacción"
+    )
+    
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Notas"
+    )
+
+    class Meta:
+        db_table = 'service_payments'
+        verbose_name = "Pago de servicio"
+        verbose_name_plural = "Pagos de servicios"
+        indexes = [
+            models.Index(fields=['client_service', 'status']),
+            models.Index(fields=['payment_date']),
+            models.Index(fields=['period_start', 'period_end']),
+            models.Index(fields=['status', 'payment_date']),
+        ]
+        ordering = ['-payment_date', '-created']
+
+    def clean(self):
+        super().clean()
+        
+        if self.period_start and self.period_end and self.period_start >= self.period_end:
+            raise ValidationError({
+                'period_end': 'La fecha de fin debe ser posterior a la fecha de inicio.'
+            })
+        
+        if self.payment_date and self.period_start and self.payment_date > self.period_end:
+            raise ValidationError({
+                'payment_date': 'La fecha de pago no puede ser posterior al fin del período.'
+            })
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.client_service.client.full_name} - {self.amount}€ ({self.get_status_display()})"
+
+    @property
+    def duration_days(self):
+        if self.period_start and self.period_end:
+            return (self.period_end - self.period_start).days + 1
+        return 0
+
+    @property
+    def is_active_period(self):
+        if not self.period_start or not self.period_end:
+            return False
+        today = timezone.now().date()
+        return self.period_start <= today <= self.period_end
+
+    @property
+    def days_until_expiry(self):
+        if not self.period_end:
+            return None
+        today = timezone.now().date()
+        return (self.period_end - today).days
+
+    def mark_as_paid(self, payment_date=None, payment_method=None, reference_number=None):
+        self.status = self.StatusChoices.PAID
+        if payment_date:
+            self.payment_date = payment_date
+        if payment_method:
+            self.payment_method = payment_method
+        if reference_number:
+            self.reference_number = reference_number
+        self.save()
+
+    def mark_as_overdue(self):
+        if self.status == self.StatusChoices.PENDING:
+            self.status = self.StatusChoices.OVERDUE
+            self.save()
+
+    def cancel(self, reason=None):
+        self.status = self.StatusChoices.CANCELLED
+        if reason:
+            self.notes = f"{self.notes}\nCancelado: {reason}" if self.notes else f"Cancelado: {reason}"
+        self.save()
+
+    def refund(self, reason=None):
+        if self.status == self.StatusChoices.PAID:
+            self.status = self.StatusChoices.REFUNDED
+            if reason:
+                self.notes = f"{self.notes}\nReembolsado: {reason}" if self.notes else f"Reembolsado: {reason}"
+            self.save()

@@ -275,12 +275,12 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-white font-semibold">
-                                {{ service.price|format_currency:"$" }}
+                                {{ service.current_amount|format_currency:"€" }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ service.start_date|date:"d/m/Y" }}
+                                {{ service.current_start_date|date:"d/m/Y" }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

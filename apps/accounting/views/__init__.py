@@ -18,6 +18,17 @@ from .reports import (
     CategorySummaryView,
     ClientRevenueView
 )
+from .payment import (
+    payment_list,
+    payment_detail,
+    service_renewal,
+    payment_create,
+    payment_update,
+    payment_mark_paid,
+    payment_cancel,
+    service_payment_history,
+    expiring_services
+)
 
 __all__ = [
     'AccountingDashboardView',
@@ -29,4 +40,13 @@ __all__ = [
     'ServiceCreateView',
     'CategorySummaryView',
     'ClientRevenueView',
+    'payment_list',
+    'payment_detail',
+    'service_renewal',
+    'payment_create',
+    'payment_update',
+    'payment_mark_paid',
+    'payment_cancel',
+    'service_payment_history',
+    'expiring_services'
 ]
