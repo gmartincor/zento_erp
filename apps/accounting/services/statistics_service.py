@@ -232,6 +232,13 @@ class StatisticsService:
             queryset = queryset.filter(start_date__month=month)
         return queryset
     
+    def _apply_payment_date_filters(self, payments_query, year=None, month=None):
+        if year:
+            payments_query = payments_query.filter(payment_date__year=year)
+        if month:
+            payments_query = payments_query.filter(payment_date__month=month)
+        return payments_query
+    
     def _get_period_info(self, year, month):
         now = timezone.now()
         return {

@@ -105,7 +105,7 @@ class BusinessLineHierarchyView(
             current_line = hierarchy_context.get('business_line')
             if current_line:
                 from apps.accounting.services.business_line_service import BusinessLineService
-                from apps.accounting.models import ClientService
+                from apps.accounting.models import ClientService, ServicePayment
                 from django.db.models import Sum, Count, Q
                 
                 business_line_service = BusinessLineService()
@@ -191,7 +191,7 @@ class BusinessLineHierarchyView(
                     })
         else:
             from apps.accounting.services.business_line_service import BusinessLineService
-            from apps.accounting.models import ClientService
+            from apps.accounting.models import ClientService, ServicePayment
             from django.db.models import Sum, Count
             
             business_line_service = BusinessLineService()
