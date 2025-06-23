@@ -1,8 +1,13 @@
 from .views.base import AccountingDashboardView
 from .views.business_line import (
-    BusinessLineDetailView,
     BusinessLineListView,
     BusinessLineHierarchyView
+)
+from .views.business_line_crud import (
+    BusinessLineCreateView,
+    BusinessLineUpdateView,
+    BusinessLineDeleteView,
+    BusinessLineManagementDetailView
 )
 from .views.service import (
     ServiceCategoryListView,
@@ -16,9 +21,12 @@ from .views.reports import (
 
 __all__ = [
     'AccountingDashboardView',
-    'BusinessLineDetailView',
     'BusinessLineListView',
-    'BusinessLineHierarchyView', 
+    'BusinessLineHierarchyView',
+    'BusinessLineCreateView',
+    'BusinessLineUpdateView',
+    'BusinessLineDeleteView',
+    'BusinessLineManagementDetailView',
     'ServiceCategoryListView',
     'ServiceEditView',
     'ServiceCreateView',

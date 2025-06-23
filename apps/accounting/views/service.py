@@ -161,6 +161,13 @@ class ServiceEditView(
         except Exception as e:
             form.add_error(None, f'Error al actualizar el servicio: {str(e)}')
             return self.form_invalid(form)
+    
+    def form_invalid(self, form):
+        messages.error(
+            self.request, 
+            'Por favor, corrige los errores en el formulario.'
+        )
+        return super().form_invalid(form)
 
 
 class ServiceCreateView(
@@ -218,8 +225,8 @@ class ServiceCreateView(
         
         self.validate_category(category)
         
-        form.instance.business_line = business_line
-        form.instance.category = category
+        form.cleaned_data['business_line'] = business_line
+        form.cleaned_data['category'] = category
         
         try:
             self.object = form.save()
@@ -236,6 +243,13 @@ class ServiceCreateView(
         except Exception as e:
             form.add_error(None, f'Error al crear el servicio: {str(e)}')
             return self.form_invalid(form)
+    
+    def form_invalid(self, form):
+        messages.error(
+            self.request,
+            'Por favor, corrige los errores en el formulario.'
+        )
+        return super().form_invalid(form)
     
     def get_success_url(self):
         line_path = self.kwargs.get('line_path', '')

@@ -60,12 +60,15 @@ class BaseClientServiceForm(forms.ModelForm):
             business_line_service = BusinessLineService()
             accessible_lines = business_line_service.get_accessible_lines(self.user)
             self.fields['business_line'].queryset = accessible_lines
+        
         if self.business_line:
             self.fields['business_line'].initial = self.business_line
             self.fields['business_line'].widget = forms.HiddenInput()
+            
         if self.category:
             self.fields['category'].initial = self.category
             self.fields['category'].widget = forms.HiddenInput()
+            
         self._enhance_field_metadata()
     
     def _apply_field_styling(self):
@@ -129,7 +132,6 @@ class BaseClientServiceForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         
-        # For create form, use temporary client data for validation
         if hasattr(self, '_get_temp_client_for_validation'):
             client = self._get_temp_client_for_validation()
         else:
@@ -139,8 +141,12 @@ class BaseClientServiceForm(forms.ModelForm):
         category = cleaned_data.get('category')
         remanentes = cleaned_data.get('remanentes')
         
-        # Allow validation to proceed even if some fields are missing, 
-        # the specific field validations will catch those issues
+        if not business_line:
+            self.add_error('business_line', 'Este campo es requerido.')
+        
+        if not category:
+            self.add_error('category', 'Este campo es requerido.')
+        
         if business_line and category:
             try:
                 self._validate_business_rules(
@@ -151,7 +157,8 @@ class BaseClientServiceForm(forms.ModelForm):
                     for field, errors in e.error_dict.items():
                         self.add_error(field, errors)
                 else:
-                    raise forms.ValidationError(str(e))
+                    self.add_error(None, str(e))
+        
         return cleaned_data
     
     def _validate_business_rules(self, client, business_line, category, remanentes):
@@ -241,8 +248,8 @@ class ClientServiceCreateForm(BaseClientServiceForm):
             client_service_ops = ClientServiceOperations()
             return client_service_ops.create_client_service(
                 client=client,
-                business_line=self.instance.business_line,
-                category=self.instance.category,
+                business_line=self.cleaned_data['business_line'],
+                category=self.cleaned_data['category'],
                 price=self.cleaned_data['price'],
                 payment_method=self.cleaned_data['payment_method'],
                 start_date=self.cleaned_data['start_date'],
@@ -265,18 +272,26 @@ class ClientServiceCreateForm(BaseClientServiceForm):
 class ClientServiceUpdateForm(BaseClientServiceForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._hide_client_field()
         self._add_client_edit_fields()
-        self._initialize_service_fields()
     
-    def _initialize_service_fields(self):
+    def get_initial(self):
+        initial = super().get_initial()
         if self.instance and self.instance.pk:
-            service = self.instance
-            self.fields['price'].initial = service.price
-            self.fields['payment_method'].initial = service.payment_method
-            self.fields['start_date'].initial = service.start_date
-            self.fields['renewal_date'].initial = service.renewal_date
-            if service.remanentes:
-                self.fields['remanentes'].initial = service.remanentes
+            initial.update({
+                'price': self.instance.price,
+                'payment_method': self.instance.payment_method,
+                'start_date': self.instance.start_date,
+                'renewal_date': self.instance.renewal_date,
+                'remanentes': self.instance.remanentes
+            })
+        return initial
+    
+    def _hide_client_field(self):
+        if 'client' in self.fields:
+            self.fields['client'].widget = forms.HiddenInput()
+            if self.instance and self.instance.client:
+                self.fields['client'].initial = self.instance.client
     
     def _add_client_edit_fields(self):
         input_classes = (
@@ -339,7 +354,6 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
         if commit:
             self._update_client_data()
             
-            # Update service fields
             service = self.instance
             service.price = self.cleaned_data['price']
             service.payment_method = self.cleaned_data['payment_method']

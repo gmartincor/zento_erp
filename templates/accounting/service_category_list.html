@@ -221,7 +221,7 @@
                             </td>
                             {% endif %}
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="{% url 'accounting:service-edit' line_path=line_path category=service.category|lower service_id=service.id %}" 
+                                <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
                                    class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 mr-3">
                                     Editar
                                 </a>

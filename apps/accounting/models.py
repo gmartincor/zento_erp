@@ -227,3 +227,6 @@ class ClientService(TimeStampedModel):
                     pass
             return total
         return 0
+    
+    def get_line_path(self):
+        return self.business_line.get_url_path()
