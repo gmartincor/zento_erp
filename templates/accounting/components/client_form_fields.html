@@ -1,0 +1,76 @@
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Nombre completo *
+        </label>
+        {{ form.client_name }}
+        {% if form.client_name.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.client_name.errors|first }}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            DNI/NIE *
+        </label>
+        {{ form.client_dni }}
+        {% if form.client_dni.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.client_dni.errors|first }}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Género *
+        </label>
+        {{ form.client_gender }}
+        {% if form.client_gender.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.client_gender.errors|first }}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Email
+        </label>
+        {{ form.client_email }}
+        {% if form.client_email.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.client_email.errors|first }}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Teléfono
+        </label>
+        {{ form.client_phone }}
+        {% if form.client_phone.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.client_phone.errors|first }}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Notas
+        </label>
+        {{ form.client_notes }}
+        {% if form.client_notes.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.client_notes.errors|first }}
+            </div>
+        {% endif %}
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Información adicional, observaciones médicas, preferencias, etc.
+        </p>
+    </div>
+</div>

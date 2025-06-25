@@ -1,0 +1,10 @@
+{% load service_tags %}
+
+<div class="flex items-center space-x-2">
+    {{ status|service_status_badge }}
+    {% if active_until %}
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+            hasta {{ active_until|date:"d/m/Y" }}
+        </span>
+    {% endif %}
+</div>

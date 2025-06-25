@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 from datetime import date, timedelta
 from decimal import Decimal
 from django.db import transaction, models
@@ -86,6 +86,90 @@ class PaymentService:
                 client_service.save()
 
         return payment
+    
+    @classmethod
+    def validate_payment_consistency_after_service_update(cls, service: ClientService) -> Dict[str, Any]:
+        validation_results = {
+            'is_valid': True,
+            'warnings': [],
+            'recommendations': []
+        }
+        
+        if not service.client.is_active:
+            validation_results['warnings'].append(
+                'El cliente asociado está inactivo. Los pagos existentes no se ven afectados.'
+            )
+        
+        if not service.is_active:
+            validation_results['warnings'].append(
+                'El servicio está inactivo. Considera revisar los pagos pendientes.'
+            )
+        
+        active_payments = service.payments.filter(status=ServicePayment.StatusChoices.PAID).count()
+        if active_payments > 0:
+            validation_results['recommendations'].append(
+                f'Este servicio tiene {active_payments} pagos registrados. '
+                'Cualquier cambio significativo puede requerir ajustes en los pagos futuros.'
+            )
+        
+        return validation_results
+    
+    @classmethod
+    def get_service_payment_status(cls, service: ClientService) -> str:
+        latest_payment = service.payments.filter(
+            status=ServicePayment.StatusChoices.PAID
+        ).order_by('-period_end').first()
+        
+        if not latest_payment:
+            return service.status
+        
+        today = timezone.now().date()
+        if latest_payment.period_end >= today:
+            return 'ACTIVE'
+        else:
+            return 'EXPIRED'
+    
+    @classmethod
+    def get_service_active_until(cls, service: ClientService) -> Optional[date]:
+        latest_payment = service.payments.filter(
+            status=ServicePayment.StatusChoices.PAID
+        ).order_by('-period_end').first()
+        return latest_payment.period_end if latest_payment else service.end_date
+    
+    @classmethod
+    def get_service_total_paid(cls, service: ClientService) -> Decimal:
+        total = service.payments.filter(
+            status=ServicePayment.StatusChoices.PAID
+        ).aggregate(total=models.Sum('amount'))['total']
+        return total or Decimal('0.00')
+    
+    @classmethod
+    def get_service_payment_count(cls, service: ClientService) -> int:
+        return service.payments.filter(status=ServicePayment.StatusChoices.PAID).count()
+    
+    @classmethod
+    def get_service_current_amount(cls, service: ClientService) -> Decimal:
+        latest_payment = service.payments.order_by('-created').first()
+        return latest_payment.amount if latest_payment else service.price
+    
+    @classmethod
+    def get_service_current_payment_method(cls, service: ClientService) -> Optional[str]:
+        latest_payment = service.payments.order_by('-created').first()
+        return latest_payment.payment_method if latest_payment else None
+    
+    @classmethod
+    def get_service_current_dates(cls, service: ClientService) -> Dict[str, Any]:
+        latest_payment = service.payments.order_by('-created').first()
+        if not latest_payment:
+            return {
+                'start_date': service.start_date,
+                'end_date': service.end_date
+            }
+        
+        return {
+            'start_date': latest_payment.period_start,
+            'end_date': latest_payment.period_end
+        }
 
     @classmethod
     def _calculate_period_end(cls, start_date: date, duration_months: int) -> date:

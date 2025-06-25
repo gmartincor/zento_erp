@@ -1,0 +1,58 @@
+{% load service_tags %}
+
+<div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <div class="flex items-center justify-between mb-3">
+        <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+            Información de Pago
+        </h4>
+        {% if has_payments %}
+            <span class="text-xs text-green-600 dark:text-green-400">Configurado</span>
+        {% else %}
+            <span class="text-xs text-gray-500 dark:text-gray-400">Sin configurar</span>
+        {% endif %}
+    </div>
+    
+    {% if has_payments %}
+        <div class="space-y-2 text-sm">
+            {% if current_amount %}
+                <div class="flex justify-between">
+                    <span class="text-gray-600 dark:text-gray-400">Precio:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">
+                        {{ current_amount|currency_format }}
+                    </span>
+                </div>
+            {% endif %}
+            
+            {% if payment_method %}
+                <div class="flex justify-between">
+                    <span class="text-gray-600 dark:text-gray-400">Método:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">
+                        {{ payment_method|payment_method_display }}
+                    </span>
+                </div>
+            {% endif %}
+            
+            {% if start_date %}
+                <div class="flex justify-between">
+                    <span class="text-gray-600 dark:text-gray-400">Inicio:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">
+                        {{ start_date|date:"d/m/Y" }}
+                    </span>
+                </div>
+            {% endif %}
+            
+            {% if end_date %}
+                <div class="flex justify-between">
+                    <span class="text-gray-600 dark:text-gray-400">Renovación:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">
+                        {{ end_date|date:"d/m/Y" }}
+                    </span>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            No hay información de pago configurada para este servicio.
+        </p>
+    {% endif %}
+</div>

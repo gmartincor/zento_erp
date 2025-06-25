@@ -1,0 +1,46 @@
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Historial del Servicio</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <span class="text-gray-600 dark:text-gray-400">Creado:</span>
+            <span class="font-medium text-gray-900 dark:text-white ml-1">
+                {{ service.created|date:"d M Y H:i" }}
+            </span>
+        </div>
+        
+        {% if service.updated != service.created %}
+        <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <span class="text-gray-600 dark:text-gray-400">Última actualización:</span>
+            <span class="font-medium text-gray-900 dark:text-white ml-1">
+                {{ service.updated|date:"d M Y H:i" }}
+            </span>
+        </div>
+        {% endif %}
+        
+        {% if service.payment_count > 0 %}
+        <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <span class="text-gray-600 dark:text-gray-400">Total pagos:</span>
+            <span class="font-medium text-gray-900 dark:text-white ml-1">
+                {{ service.payment_count }}
+            </span>
+        </div>
+        
+        <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <span class="text-gray-600 dark:text-gray-400">Total facturado:</span>
+            <span class="font-medium text-gray-900 dark:text-white ml-1">
+                {{ service.total_paid|floatformat:2 }}€
+            </span>
+        </div>
+        {% endif %}
+        
+        {% if service.active_until %}
+        <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <span class="text-gray-600 dark:text-gray-400">Activo hasta:</span>
+            <span class="font-medium text-gray-900 dark:text-white ml-1">
+                {{ service.active_until|date:"d/m/Y" }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+</div>

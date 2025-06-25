@@ -25,10 +25,10 @@
                 <div class="text-sm text-gray-500 dark:text-gray-400">Estado</div>
                 {% if client_service.current_status == 'ACTIVE' %}
                     <div class="text-lg font-semibold text-green-600">Activo</div>
-                {% elif client_service.current_status == 'EXPIRED_RECENT' %}
-                    <div class="text-lg font-semibold text-orange-600">Vencido reciente</div>
                 {% elif client_service.current_status == 'EXPIRED' %}
                     <div class="text-lg font-semibold text-red-600">Vencido</div>
+                {% elif client_service.current_status == 'SUSPENDED' %}
+                    <div class="text-lg font-semibold text-orange-600">Suspendido</div>
                 {% else %}
                     <div class="text-lg font-semibold text-gray-600">Inactivo</div>
                 {% endif %}

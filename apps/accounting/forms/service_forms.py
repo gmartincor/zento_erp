@@ -3,51 +3,86 @@ from django.core.exceptions import ValidationError
 
 from apps.accounting.models import Client, ClientService
 from apps.business_lines.models import BusinessLine
-from apps.accounting.services.business_line_service import BusinessLineService
-from apps.accounting.services.client_service import ClientServiceOperations
-from apps.accounting.services.validation_service import ValidationService
-from apps.accounting.services.form_service import (
-    FormInitializationService, 
-    FormFieldService, 
-    FormValidationService,
-    ClientServiceFormHandler,
-    ClientDataUpdater
-)
+from apps.accounting.services.client_service_transaction import ClientServiceTransactionManager
 
 
-class ServiceFormValidator:
+class ClientServiceFormValidator:
+    
     @staticmethod
-    def validate_form_data(form_instance, cleaned_data):
-        client = getattr(form_instance, '_get_temp_client_for_validation', lambda: cleaned_data.get('client'))()
-        business_line = cleaned_data.get('business_line')
-        category = cleaned_data.get('category')
-        remanentes = cleaned_data.get('remanentes')
+    def validate_client_data(cleaned_data):
+        client_name = cleaned_data.get('client_name', '').strip()
+        client_dni = cleaned_data.get('client_dni', '').strip().upper()
+        client_gender = cleaned_data.get('client_gender')
+        client_email = cleaned_data.get('client_email', '').strip()
         
-        if not business_line:
-            form_instance.add_error('business_line', 'Este campo es requerido.')
+        errors = {}
         
-        if not category:
-            form_instance.add_error('category', 'Este campo es requerido.')
+        if not client_name:
+            errors['client_name'] = 'El nombre es obligatorio'
         
-        if business_line and category:
-            try:
-                form_instance._validate_business_rules(
-                    client, business_line, category, remanentes
+        if not client_dni:
+            errors['client_dni'] = 'El DNI es obligatorio'
+        elif len(client_dni) != 9:
+            errors['client_dni'] = 'El DNI debe tener 9 caracteres'
+        
+        if not client_gender:
+            errors['client_gender'] = 'El género es obligatorio'
+        
+        if client_email and '@' not in client_email:
+            errors['client_email'] = 'Formato de email inválido'
+        
+        if errors:
+            raise ValidationError(errors)
+        
+        return cleaned_data
+    
+    @staticmethod
+    def validate_service_rules(business_line, category, remanentes, client=None):
+        if category == 'BLACK' and business_line.has_remanente:
+            if not business_line.remanente_field:
+                raise ValidationError('La línea de negocio no tiene configurado el tipo de remanente.')
+        
+        if client and hasattr(client, 'pk') and client.pk:
+            existing = ClientService.objects.filter(
+                client=client,
+                business_line=business_line,
+                category=category,
+                is_active=True
+            ).exists()
+            if existing:
+                raise ValidationError(
+                    f'El cliente ya tiene un servicio {category} activo en {business_line.name}'
                 )
-            except ValidationError as e:
-                if hasattr(e, 'error_dict'):
-                    for field, errors in e.error_dict.items():
-                        form_instance.add_error(field, errors)
-                else:
-                    form_instance.add_error(None, str(e))
+
 
 class BaseClientServiceForm(forms.ModelForm):
     class Meta:
         model = ClientService
         fields = [
-            'client', 'business_line', 'category', 'remanentes'
+            'client', 'business_line', 'category', 
+            'price', 'start_date', 'end_date', 'status', 'notes', 'remanentes'
         ]
         widgets = {
+            'price': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white',
+                'step': '0.01',
+                'min': '0'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white',
+                'type': 'date'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white',
+                'type': 'date'
+            }),
+            'status': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+            }),
+            'notes': forms.Textarea(attrs={
+                'rows': 3,
+                'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+            }),
             'remanentes': forms.Textarea(attrs={
                 'rows': 3,
                 'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
@@ -68,11 +103,11 @@ class BaseClientServiceForm(forms.ModelForm):
         self.business_line = kwargs.pop('business_line', None)
         self.category = kwargs.pop('category', None)
         super().__init__(*args, **kwargs)
-        self._setup_form_fields()
-        self._configure_form_display()
+        self._setup_fields()
     
-    def _setup_form_fields(self):
+    def _setup_fields(self):
         if self.user:
+            from apps.accounting.services.business_line_service import BusinessLineService
             business_line_service = BusinessLineService()
             accessible_lines = business_line_service.get_accessible_lines(self.user)
             self.fields['business_line'].queryset = accessible_lines
@@ -84,49 +119,65 @@ class BaseClientServiceForm(forms.ModelForm):
         if self.category:
             self.fields['category'].initial = self.category
             self.fields['category'].widget = forms.HiddenInput()
-    
-    def _configure_form_display(self):
-        FormInitializationService.apply_consistent_styling(self)
-        FormInitializationService.configure_date_widgets(self)
-        self._enhance_field_metadata()
-    
-    def _enhance_field_metadata(self):
-        field_enhancements = {
-            'client': {
-                'help_text': 'Selecciona el cliente para este servicio'
-            },
-            'business_line': {
-                'help_text': 'Línea de negocio a la que pertenece el servicio'
-            },
-            'category': {
-                'help_text': 'Categoría del servicio (WHITE o BLACK)'
-            },
-            'remanentes': {
-                'help_text': 'Solo para categoría BLACK. Formato JSON válido.'
-            }
-        }
-        for field_name, enhancements in field_enhancements.items():
-            if field_name in self.fields:
-                for attr, value in enhancements.items():
-                    setattr(self.fields[field_name], attr, value)
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        ServiceFormValidator.validate_form_data(self, cleaned_data)
-        return cleaned_data
-    
-    def _validate_business_rules(self, client, business_line, category, remanentes):
-        pass
 
 
 class ClientServiceCreateForm(BaseClientServiceForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._add_client_creation_fields()
+        self._add_client_fields()
         self.fields.pop('client', None)
     
-    def _add_client_creation_fields(self):
-        client_fields = FormFieldService.create_client_fields()
+    def _add_client_fields(self):
+        client_fields = {
+            'client_name': forms.CharField(
+                required=True,
+                max_length=255,
+                label='Nombre completo',
+                widget=forms.TextInput(attrs={
+                    'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                })
+            ),
+            'client_dni': forms.CharField(
+                required=True,
+                max_length=20,
+                label='DNI/NIE',
+                widget=forms.TextInput(attrs={
+                    'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                })
+            ),
+            'client_gender': forms.ChoiceField(
+                required=True,
+                choices=Client.GenderChoices.choices,
+                label='Género',
+                widget=forms.Select(attrs={
+                    'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                })
+            ),
+            'client_email': forms.EmailField(
+                required=False,
+                label='Email',
+                widget=forms.EmailInput(attrs={
+                    'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                })
+            ),
+            'client_phone': forms.CharField(
+                required=False,
+                max_length=20,
+                label='Teléfono',
+                widget=forms.TextInput(attrs={
+                    'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                })
+            ),
+            'client_notes': forms.CharField(
+                required=False,
+                label='Notas',
+                widget=forms.Textarea(attrs={
+                    'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white',
+                    'rows': 3
+                })
+            ),
+        }
+        
         new_fields = {}
         for field_name, field in client_fields.items():
             new_fields[field_name] = field
@@ -134,67 +185,111 @@ class ClientServiceCreateForm(BaseClientServiceForm):
             new_fields[field_name] = field
         self.fields = new_fields
     
-    def clean_client_dni(self):
-        dni = self.cleaned_data.get('client_dni')
-        if dni and Client.objects.filter(dni=dni, is_deleted=False).exists():
-            raise forms.ValidationError(f'Ya existe un cliente con DNI {dni}')
-        return dni
-    
-    def _get_temp_client_for_validation(self):
-        return Client(
-            full_name=self.cleaned_data.get('client_name', ''),
-            dni=self.cleaned_data.get('client_dni', ''),
-            gender=self.cleaned_data.get('client_gender', '')
-        )
-    
-    def _validate_business_rules(self, client, business_line, category, remanentes):
-        if category == 'BLACK' and business_line.has_remanente:
-            if not business_line.remanente_field:
-                raise ValidationError('La línea de negocio no tiene configurado el tipo de remanente.')
+    def clean(self):
+        cleaned_data = super().clean()
         
-        if hasattr(client, 'pk') and client.pk:
-            existing = ClientService.objects.filter(
-                client=client,
-                business_line=business_line,
-                category=category,
-                is_active=True
-            ).exists()
-            if existing:
-                raise ValidationError(
-                    f'El cliente ya tiene un servicio {category} activo en {business_line.name}'
-                )
+        ClientServiceFormValidator.validate_client_data(cleaned_data)
+        
+        dni = cleaned_data.get('client_dni', '').strip().upper()
+        if dni and Client.objects.filter(dni=dni, is_deleted=False).exists():
+            raise ValidationError({'client_dni': f'Ya existe un cliente con DNI {dni}'})
+        
+        business_line = cleaned_data.get('business_line')
+        category = cleaned_data.get('category')
+        remanentes = cleaned_data.get('remanentes', {})
+        
+        if business_line and category:
+            ClientServiceFormValidator.validate_service_rules(business_line, category, remanentes)
+        
+        return cleaned_data
     
     def save(self, commit=True):
-        if commit:
-            client = self._create_client()
-            
-            client_service_ops = ClientServiceOperations()
-            return client_service_ops.create_client_service(
-                client=client,
-                business_line=self.cleaned_data['business_line'],
-                category=self.cleaned_data['category'],
-                remanentes=self.cleaned_data.get('remanentes')
-            )
-        return self.instance
-    
-    def _create_client(self):
-        client_service_ops = ClientServiceOperations()
-        return client_service_ops.create_client(
-            full_name=self.cleaned_data['client_name'],
-            dni=self.cleaned_data['client_dni'],
-            gender=self.cleaned_data['client_gender'],
-            email=self.cleaned_data.get('client_email', ''),
-            phone=self.cleaned_data.get('client_phone', ''),
-            notes=self.cleaned_data.get('client_notes', '')
+        if not commit:
+            return super().save(commit=False)
+        
+        return ClientServiceTransactionManager.create_client_service(
+            self.cleaned_data,
+            self.cleaned_data['business_line'],
+            self.cleaned_data['category']
         )
 
 
 class ClientServiceUpdateForm(BaseClientServiceForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._hide_client_field()
-        self._add_client_edit_fields()
+        self._setup_client_fields()
         self._setup_hidden_fields()
+    
+    def _setup_client_fields(self):
+        if 'client' in self.fields:
+            self.fields['client'].widget = forms.HiddenInput()
+            if self.instance and self.instance.client:
+                self.fields['client'].initial = self.instance.client
+        
+        if self.instance and self.instance.client:
+            client = self.instance.client
+            client_fields = {
+                'client_name': forms.CharField(
+                    required=True,
+                    max_length=255,
+                    label='Nombre completo',
+                    initial=client.full_name,
+                    widget=forms.TextInput(attrs={
+                        'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                    })
+                ),
+                'client_dni': forms.CharField(
+                    required=True,
+                    max_length=20,
+                    label='DNI/NIE',
+                    initial=client.dni,
+                    widget=forms.TextInput(attrs={
+                        'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                    })
+                ),
+                'client_gender': forms.ChoiceField(
+                    required=True,
+                    choices=Client.GenderChoices.choices,
+                    label='Género',
+                    initial=client.gender,
+                    widget=forms.Select(attrs={
+                        'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                    })
+                ),
+                'client_email': forms.EmailField(
+                    required=False,
+                    label='Email',
+                    initial=client.email,
+                    widget=forms.EmailInput(attrs={
+                        'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                    })
+                ),
+                'client_phone': forms.CharField(
+                    required=False,
+                    max_length=20,
+                    label='Teléfono',
+                    initial=client.phone,
+                    widget=forms.TextInput(attrs={
+                        'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+                    })
+                ),
+                'client_notes': forms.CharField(
+                    required=False,
+                    label='Notas',
+                    initial=client.notes,
+                    widget=forms.Textarea(attrs={
+                        'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white',
+                        'rows': 3
+                    })
+                ),
+            }
+            
+            new_fields = {}
+            for field_name, field in client_fields.items():
+                new_fields[field_name] = field
+            for field_name, field in self.fields.items():
+                new_fields[field_name] = field
+            self.fields = new_fields
     
     def _setup_hidden_fields(self):
         if self.instance and self.instance.pk:
@@ -206,45 +301,27 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
                 self.fields['category'].initial = self.instance.category
                 self.fields['category'].widget = forms.HiddenInput()
     
-    def _hide_client_field(self):
-        if 'client' in self.fields:
-            self.fields['client'].widget = forms.HiddenInput()
-            if self.instance and self.instance.client:
-                self.fields['client'].initial = self.instance.client
-    
-    def _add_client_edit_fields(self):
-        if self.instance and self.instance.client:
-            ClientServiceFormHandler.setup_update_form(self, self.instance.client)
-    
-    def clean_client_dni(self):
-        dni = self.cleaned_data.get('client_dni')
-        if dni and self.instance and self.instance.client:
-            existing_client = Client.objects.filter(
-                dni=dni, is_deleted=False
-            ).exclude(id=self.instance.client.id).first()
-            if existing_client:
-                raise forms.ValidationError(f'Ya existe un cliente con DNI {dni}')
-        return dni
-    
-    def _validate_business_rules(self, client, business_line, category, remanentes):
-        if category == 'BLACK' and business_line.has_remanente:
-            if not business_line.remanente_field:
-                raise ValidationError('La línea de negocio no tiene configurado el tipo de remanente.')
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        ClientServiceFormValidator.validate_client_data(cleaned_data)
+        
+        if self.instance and self.instance.pk:
+            new_dni = cleaned_data.get('client_dni', '').strip().upper()
+            if new_dni and new_dni != self.instance.client.dni:
+                if Client.objects.filter(dni=new_dni).exclude(pk=self.instance.client.pk).exists():
+                    raise ValidationError({'client_dni': f'Ya existe otro cliente con el DNI {new_dni}'})
+        
+        return cleaned_data
     
     def save(self, commit=True):
-        if commit:
-            if self.instance and self.instance.client:
-                ClientDataUpdater.update_client_from_form_data(
-                    self.instance.client, 
-                    self.cleaned_data
-                )
-            
-            service = self.instance
-            service.remanentes = self.cleaned_data.get('remanentes', {})
-            
-            service.save()
-            return service
-        return super().save(commit=False)
+        if not commit:
+            return super().save(commit=False)
+        
+        return ClientServiceTransactionManager.update_client_service(
+            self.instance,
+            self.cleaned_data
+        )
 
 
 class ClientServiceFilterForm(forms.Form):

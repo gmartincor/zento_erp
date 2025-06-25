@@ -1,0 +1,85 @@
+{% load accounting_tags service_tags %}
+
+<div class="bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800 p-4">
+    <div class="space-y-3">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-primary-800 dark:text-primary-200">
+                Información del Servicio
+            </h3>
+            <div class="text-sm text-primary-600 dark:text-primary-400">
+                ID: #{{ service.id }}
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+                <div class="flex items-center text-sm">
+                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Línea de negocio:</span>
+                    <span class="text-primary-900 dark:text-primary-100 font-semibold">
+                        {{ business_line.name }}
+                    </span>
+                    <span class="text-primary-500 dark:text-primary-400 text-xs ml-2">
+                        (Nivel {{ business_line.level }})
+                    </span>
+                </div>
+                
+                <div class="flex items-center text-sm">
+                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Categoría:</span>
+                    <span class="text-primary-900 dark:text-primary-100 font-semibold">
+                        {{ category_display }}
+                    </span>
+                </div>
+                
+                <div class="flex items-center text-sm">
+                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Estado:</span>
+                    {% service_status_indicator service %}
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                {% if service.current_amount %}
+                <div class="flex items-center text-sm">
+                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Precio actual:</span>
+                    <span class="text-primary-900 dark:text-primary-100 font-semibold">
+                        {{ service.current_amount|currency_format }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if service.current_payment_method %}
+                <div class="flex items-center text-sm">
+                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Método de pago:</span>
+                    <span class="text-primary-900 dark:text-primary-100 font-semibold">
+                        {{ service.current_payment_method|payment_method_display }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if service.current_start_date and service.current_end_date %}
+                <div class="flex items-center text-sm">
+                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Período:</span>
+                    <span class="text-primary-900 dark:text-primary-100 font-semibold">
+                        {{ service.current_start_date|date:"d/m/Y" }} - {{ service.current_end_date|date:"d/m/Y" }}
+                    </span>
+                </div>
+                {% elif service.current_start_date %}
+                <div class="flex items-center text-sm">
+                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Fecha de inicio:</span>
+                    <span class="text-primary-900 dark:text-primary-100 font-semibold">
+                        {{ service.current_start_date|date:"d/m/Y" }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if service.current_end_date %}
+                <div class="flex items-center text-sm">
+                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Renovación:</span>
+                    <span class="text-primary-900 dark:text-primary-100 font-semibold">
+                        {{ service.current_end_date|date:"d/m/Y" }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

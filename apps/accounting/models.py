@@ -73,6 +73,12 @@ class ClientService(TimeStampedModel):
         WHITE = 'WHITE', 'Blanco'
         BLACK = 'BLACK', 'Negro'
     
+    class StatusChoices(models.TextChoices):
+        ACTIVE = 'ACTIVE', 'Activo'
+        INACTIVE = 'INACTIVE', 'Inactivo'
+        SUSPENDED = 'SUSPENDED', 'Suspendido'
+        EXPIRED = 'EXPIRED', 'Expirado'
+    
     client = models.ForeignKey(
         Client,
         on_delete=models.CASCADE,
@@ -91,6 +97,38 @@ class ClientService(TimeStampedModel):
         max_length=10,
         choices=CategoryChoices.choices,
         verbose_name="Categoría"
+    )
+    
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        verbose_name="Precio base"
+    )
+    
+    start_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de inicio"
+    )
+    
+    end_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de finalización"
+    )
+    
+    status = models.CharField(
+        max_length=15,
+        choices=StatusChoices.choices,
+        default=StatusChoices.INACTIVE,
+        verbose_name="Estado del servicio"
+    )
+    
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Notas del servicio",
+        help_text="Observaciones específicas del servicio"
     )
     
     remanentes = models.JSONField(
@@ -120,6 +158,16 @@ class ClientService(TimeStampedModel):
 
     def clean(self):
         super().clean()
+        
+        if self.start_date and self.end_date and self.start_date >= self.end_date:
+            raise ValidationError({
+                'end_date': 'La fecha de finalización debe ser posterior a la fecha de inicio.'
+            })
+        
+        if self.price < 0:
+            raise ValidationError({
+                'price': 'El precio no puede ser negativo.'
+            })
         
         if self.category != self.CategoryChoices.BLACK and self.remanentes:
             raise ValidationError({
@@ -200,71 +248,88 @@ class ClientService(TimeStampedModel):
             return total
         return 0
     
-    def get_line_path(self):
-        return self.business_line.get_url_path()
+    @property
+    def is_expired(self):
+        if not self.end_date:
+            return False
+        return timezone.now().date() > self.end_date
+    
+    @property
+    def days_until_expiry(self):
+        if not self.end_date:
+            return None
+        today = timezone.now().date()
+        if today > self.end_date:
+            return 0
+        return (self.end_date - today).days
+    
+    @property
+    def needs_renewal(self):
+        if not self.end_date:
+            return False
+        days_left = self.days_until_expiry
+        return days_left is not None and days_left <= 30
 
     @property
     def current_status(self):
-        latest_payment = self.payments.filter(status=ServicePayment.StatusChoices.PAID).order_by('-period_end').first()
-        if not latest_payment:
-            return 'INACTIVE'
-        
-        today = timezone.now().date()
-        if latest_payment.period_end >= today:
-            return 'ACTIVE'
-        elif (today - latest_payment.period_end).days <= 30:
-            return 'EXPIRED_RECENT'
-        else:
-            return 'EXPIRED'
+        from apps.accounting.services.payment_service import PaymentService
+        return PaymentService.get_service_payment_status(self)
 
     @property
     def active_until(self):
-        latest_payment = self.payments.filter(status=ServicePayment.StatusChoices.PAID).order_by('-period_end').first()
-        return latest_payment.period_end if latest_payment else None
+        from apps.accounting.services.payment_service import PaymentService
+        return PaymentService.get_service_active_until(self)
 
     @property
     def total_paid(self):
-        return self.payments.filter(status=ServicePayment.StatusChoices.PAID).aggregate(
-            total=models.Sum('amount')
-        )['total'] or 0
+        from apps.accounting.services.payment_service import PaymentService
+        return PaymentService.get_service_total_paid(self)
 
     @property
     def payment_count(self):
-        return self.payments.filter(status=ServicePayment.StatusChoices.PAID).count()
+        from apps.accounting.services.payment_service import PaymentService
+        return PaymentService.get_service_payment_count(self)
 
     @property
     def current_amount(self):
-        """Get the amount of the latest payment (current pricing)"""
-        latest_payment = self.payments.order_by('-created').first()
-        return latest_payment.amount if latest_payment else 0
+        from apps.accounting.services.payment_service import PaymentService
+        return PaymentService.get_service_current_amount(self)
 
     @property
     def current_payment_method(self):
-        """Get the payment method of the latest payment"""
-        latest_payment = self.payments.order_by('-created').first()
-        return latest_payment.payment_method if latest_payment else None
+        from apps.accounting.services.payment_service import PaymentService
+        return PaymentService.get_service_current_payment_method(self)
 
     def get_payment_method_display(self):
-        """Get the display name of the current payment method"""
         method = self.current_payment_method
         if not method:
             return "No definido"
         
-        # Import ServicePayment here to avoid circular imports
+        from apps.accounting.models import ServicePayment
         payment_choices = dict(ServicePayment.PaymentMethodChoices.choices)
         return payment_choices.get(method, method)
 
     @property
     def current_start_date(self):
-        """Get the start date of the latest payment"""
-        latest_payment = self.payments.order_by('-created').first()
-        return latest_payment.period_start if latest_payment else None
+        from apps.accounting.services.payment_service import PaymentService
+        dates = PaymentService.get_service_current_dates(self)
+        return dates['start_date']
 
     @property
     def current_end_date(self):
-        """Get the end date of the latest payment"""
-        latest_payment = self.payments.order_by('-created').first()
-        return latest_payment.period_end if latest_payment else None
+        from apps.accounting.services.payment_service import PaymentService
+        dates = PaymentService.get_service_current_dates(self)
+        return dates['end_date']
+
+    def get_line_path(self):
+        """
+        Obtiene el path jerárquico de la línea de negocio para usar en URLs.
+        Nunca retorna una cadena vacía.
+        """
+        if self.business_line:
+            path = self.business_line.get_url_path()
+            return path if path else 'default'
+        return 'default'
 
 
 class ServicePayment(TimeStampedModel):
