@@ -9,6 +9,7 @@ from apps.accounting.models import Client, ClientService
 from apps.accounting.forms.service_forms import ClientServiceCreateForm, ClientServiceUpdateForm
 from apps.accounting.services.presentation_service import PresentationService
 from apps.accounting.services.revenue_analytics_service import RevenueAnalyticsService
+from apps.accounting.services.service_workflow_manager import ServiceWorkflowManager
 from apps.accounting.services.service_flow_manager import ServiceFlowManager, ServiceContextBuilder
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
@@ -125,6 +126,7 @@ class ServiceEditView(BaseServiceView, UpdateView):
         
         context.update(self.get_base_context())
         context.update(ServiceContextBuilder(service).build_edit_context())
+        context.update(ServiceWorkflowManager.get_service_next_steps_context(service))
         
         return context
     
@@ -135,9 +137,11 @@ class ServiceEditView(BaseServiceView, UpdateView):
     
     def form_valid(self, form):
         try:
-            self.object = form.save()
-            ServiceFlowManager.handle_service_update_success(self.request, self.object)
-            return redirect(self.get_success_url())
+            service, redirect_url = ServiceWorkflowManager.handle_service_update_flow(
+                self.request, self.object, form.cleaned_data
+            )
+            self.object = service
+            return redirect(redirect_url)
         except Exception as e:
             form.add_error(None, f'Error al actualizar el servicio: {str(e)}')
             return self.form_invalid(form)
@@ -161,13 +165,19 @@ class ServiceCreateView(BaseServiceView, CreateView):
         
         self.validate_category(category)
         
+        if not ServiceWorkflowManager.validate_service_creation_permissions(self.request.user, business_line):
+            messages.error(self.request, 'No tienes permisos para crear servicios en esta línea de negocio.')
+            return self.form_invalid(form)
+        
         form.cleaned_data['business_line'] = business_line
         form.cleaned_data['category'] = category
         
         try:
-            self.object = form.save()
-            ServiceFlowManager.handle_service_creation_success(self.request, self.object)
-            return redirect(self.get_success_url())
+            service, redirect_url = ServiceWorkflowManager.handle_service_creation_flow(
+                self.request, form.cleaned_data, business_line, category
+            )
+            self.object = service
+            return redirect(redirect_url)
         except Exception as e:
             form.add_error(None, f'Error al crear el servicio: {str(e)}')
             return self.form_invalid(form)

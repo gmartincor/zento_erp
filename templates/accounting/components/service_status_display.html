@@ -1,0 +1,96 @@
+{% load service_tags %}
+
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Estado del Servicio
+    </h3>
+    
+    <div class="space-y-3">
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Estado Actual:</span>
+            <div class="flex items-center">
+                {% if service.status == 'ACTIVE' %}
+                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span class="text-sm font-medium text-green-600">Activo</span>
+                {% elif service.status == 'INACTIVE' %}
+                    <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
+                    <span class="text-sm font-medium text-gray-600">Inactivo</span>
+                {% elif service.status == 'SUSPENDED' %}
+                    <div class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                    <span class="text-sm font-medium text-yellow-600">Suspendido</span>
+                {% else %}
+                    <div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                    <span class="text-sm font-medium text-red-600">{{ service.get_status_display }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Precio Base:</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ service.price|floatformat:2 }}€
+            </span>
+        </div>
+        
+        {% if service.total_paid %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Total Pagado:</span>
+            <span class="text-sm font-medium text-green-600">
+                {{ service.total_paid|floatformat:2 }}€
+            </span>
+        </div>
+        {% endif %}
+        
+        {% if service.payment_count %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Número de Pagos:</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ service.payment_count }}
+            </span>
+        </div>
+        {% endif %}
+        
+        {% if service.active_until %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Activo Hasta:</span>
+            <span class="text-sm font-medium text-blue-600">
+                {{ service.active_until|date:"d/m/Y" }}
+            </span>
+        </div>
+        {% endif %}
+        
+        {% if service.start_date %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Fecha de Inicio:</span>
+            <span class="text-sm text-gray-900 dark:text-white">
+                {{ service.start_date|date:"d/m/Y" }}
+            </span>
+        </div>
+        {% endif %}
+        
+        {% if service.end_date %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Fecha de Fin:</span>
+            <span class="text-sm text-gray-900 dark:text-white">
+                {{ service.end_date|date:"d/m/Y" }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if service.notes %}
+    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Notas:</h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400">{{ service.notes }}</p>
+    </div>
+    {% endif %}
+    
+    {% if service.category == 'BLACK' and service.remanentes %}
+    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Remanentes:</h4>
+        <div class="bg-gray-50 dark:bg-gray-900 rounded p-2">
+            <pre class="text-xs text-gray-600 dark:text-gray-400">{{ service.remanentes|pprint }}</pre>
+        </div>
+    </div>
+    {% endif %}
+</div>

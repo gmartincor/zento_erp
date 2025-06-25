@@ -13,6 +13,7 @@ from apps.accounting.forms import RenewalForm, PaymentCreateForm, PaymentUpdateF
 from apps.accounting.services.payment_service import PaymentService
 from apps.accounting.services.business_line_service import BusinessLineService
 from apps.accounting.services.service_flow_manager import ServiceContextBuilder
+from apps.accounting.services.service_workflow_manager import ServiceWorkflowManager
 
 
 @login_required
@@ -159,9 +160,10 @@ def payment_create(request, service_id: int):
         form = PaymentCreateForm(request.POST, client_service=client_service)
         if form.is_valid():
             try:
-                payment = form.save()
-                messages.success(request, 'Pago creado exitosamente.')
-                return redirect('accounting:payment-detail', payment_id=payment.id)
+                payment, redirect_url = ServiceWorkflowManager.handle_payment_creation_flow(
+                    request, service_id, form.cleaned_data
+                )
+                return redirect(redirect_url)
             except Exception as e:
                 messages.error(request, f'Error al crear el pago: {str(e)}')
     else:

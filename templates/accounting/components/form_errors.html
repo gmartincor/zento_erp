@@ -1,4 +1,4 @@
-{% if form.non_field_errors %}
+{% if form.non_field_errors or form.errors %}
 <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
     <div class="flex">
         <div class="flex-shrink-0">
@@ -8,14 +8,34 @@
         </div>
         <div class="ml-3">
             <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
-                Error en el formulario
+                {% if form.non_field_errors %}
+                    Error en el formulario
+                {% else %}
+                    Errores de validación
+                {% endif %}
             </h3>
             <div class="mt-2 text-sm text-red-700 dark:text-red-300">
-                <ul class="list-disc list-inside space-y-1">
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
+                {% if form.non_field_errors %}
+                    <ul class="list-disc list-inside space-y-1">
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                
+                {% if form.errors %}
+                    <ul class="list-disc list-inside space-y-1 mt-2">
+                        {% for field, errors in form.errors.items %}
+                            {% if field != '__all__' %}
+                                {% for error in errors %}
+                                    <li>
+                                        <strong>{{ field|title }}:</strong> {{ error }}
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
         </div>
     </div>

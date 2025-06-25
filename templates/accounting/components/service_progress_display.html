@@ -1,0 +1,107 @@
+{% load service_tags %}
+
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Progreso del Servicio
+    </h3>
+    
+    <div class="space-y-4">
+        <!-- Paso 1: Creación del servicio -->
+        <div class="flex items-center">
+            <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Servicio Creado</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ service.created|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+        
+        <!-- Paso 2: Configuración del cliente -->
+        <div class="flex items-center">
+            <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Cliente Configurado</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ service.client.full_name }}</p>
+            </div>
+        </div>
+        
+        <!-- Paso 3: Primer pago -->
+        {% if has_payments %}
+        <div class="flex items-center">
+            <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Primer Pago Registrado</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ service.total_paid|floatformat:2 }}€ total</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="flex items-center">
+            <div class="flex items-center justify-center w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full">
+                <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-yellow-800 dark:text-yellow-300">Primer Pago Pendiente</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Requerido para activar el servicio</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Paso 4: Activación del servicio -->
+        {% if is_active %}
+        <div class="flex items-center">
+            <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Servicio Activo</p>
+                {% if service.active_until %}
+                <p class="text-sm text-gray-600 dark:text-gray-400">Hasta {{ service.active_until|date:"d/m/Y" }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="flex items-center">
+            <div class="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Servicio Inactivo</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Requiere pago para activarse</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if needs_payment %}
+    <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">Acción Requerida</h4>
+                    <p class="text-sm text-blue-700 dark:text-blue-400">{{ next_step_message }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
