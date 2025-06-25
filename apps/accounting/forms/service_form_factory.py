@@ -22,6 +22,22 @@ class ServiceFormFactory:
             raise ValueError(f"Unknown form type: {form_type}")
             
         return form_class(**kwargs)
+    
+    @staticmethod
+    def get_create_form(category=None):
+        return ClientServiceCreateForm
+    
+    @staticmethod
+    def get_update_form(category=None):
+        return ClientServiceUpdateForm
+    
+    @staticmethod
+    def get_renewal_form(category=None):
+        return ServiceRenewalForm
+    
+    @staticmethod
+    def get_filter_form(category=None):
+        return ClientServiceFilterForm
 
 
 class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMixin, forms.ModelForm):
