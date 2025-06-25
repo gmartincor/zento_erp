@@ -26,7 +26,7 @@ class BaseServiceView(
     
     def get_business_line_data(self):
         line_path = self.kwargs.get('line_path', '')
-        category = self.kwargs.get('category', '').upper()
+        category = self.kwargs.get('category', '').lower()
         business_line = self.resolve_business_line_from_path(line_path)
         self.check_business_line_permission(business_line)
         return business_line, line_path, category
@@ -48,11 +48,10 @@ class BaseServiceView(
         context.update({
             'business_line': business_line,
             'category': category,
-            'current_category': category.lower(),
-            'category_lower': category.lower(),
+            'current_category': category,
             'category_display': self.get_category_display_name(category),
             'back_url': reverse('accounting:category-services', 
-                              kwargs={'line_path': line_path, 'category': category.lower()}),
+                              kwargs={'line_path': line_path, 'category': category}),
         })
         return context
 
@@ -77,7 +76,7 @@ class ServiceCategoryListView(BaseServiceView, ListView):
             'line_detail_url': reverse('accounting:business-lines-path', 
                                      kwargs={'line_path': line_path}),
             'create_url': reverse('accounting:service-create',
-                                kwargs={'line_path': line_path, 'category': category.lower()}),
+                                kwargs={'line_path': line_path, 'category': category}),
         })
         
         return context
