@@ -48,6 +48,8 @@ class BaseServiceView(
         context.update({
             'business_line': business_line,
             'category': category,
+            'current_category': category.lower(),
+            'category_lower': category.lower(),
             'category_display': self.get_category_display_name(category),
             'back_url': reverse('accounting:category-services', 
                               kwargs={'line_path': line_path, 'category': category.lower()}),
