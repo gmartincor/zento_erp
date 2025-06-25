@@ -14,11 +14,11 @@
             </div>
         </div>
         <div class="flex space-x-2">
-            <a href="{% url 'accounting:service_payment_history' service.id %}" 
+            <a href="{% url 'accounting:service-payment-history' service_id=service.id %}" 
                class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
                 Ver Pagos
             </a>
-            <a href="{% url 'accounting:payment_create' service.id %}" 
+            <a href="{% url 'accounting:payment-create' service_id=service.id %}" 
                class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors">
                 Nuevo Pago
             </a>

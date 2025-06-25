@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from apps.core.constants import SERVICE_CATEGORIES
+from apps.core.constants import SERVICE_CATEGORIES, CATEGORY_CONFIG, CATEGORY_DEFAULTS
 from apps.accounting.services.revenue_analytics_service import RevenueAnalyticsService
 
 
@@ -65,27 +65,15 @@ class BusinessLinePresentationService:
             'has_remanente': getattr(business_line, 'has_remanente', False)
         }
 
+class CategoryNormalizationService:
+    @staticmethod
+    def normalize_category_code(category_code: str) -> str:
+        return category_code.upper() if category_code else CATEGORY_DEFAULTS['DEFAULT_CATEGORY']
 
-class CategoryPresentationService:
-    CATEGORY_CONFIG = {
-        'WHITE': {
-            'name': 'Servicios Blancos',
-            'color': 'green',
-            'icon': 'check-circle',
-            'bg_class': 'bg-emerald-100 dark:bg-emerald-900',
-            'text_class': 'text-emerald-600 dark:text-emerald-300'
-        },
-        'BLACK': {
-            'name': 'Servicios Negros',
-            'color': 'purple',
-            'icon': 'exclamation-circle',
-            'bg_class': 'bg-purple-100 dark:bg-purple-900',
-            'text_class': 'text-purple-600 dark:text-purple-300'
-        }
-    }
-    
+class CategoryPresentationService(CategoryNormalizationService):
     def get_category_styling(self, category_code: str) -> Dict[str, str]:
-        return self.CATEGORY_CONFIG.get(category_code, self.CATEGORY_CONFIG['WHITE'])
+        normalized_code = self.normalize_category_code(category_code)
+        return CATEGORY_CONFIG.get(normalized_code, CATEGORY_CONFIG[CATEGORY_DEFAULTS['DEFAULT_CATEGORY']])
     
     def get_category_badge(self, category_code: str) -> Dict[str, str]:
         config = self.get_category_styling(category_code)

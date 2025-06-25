@@ -92,12 +92,17 @@ def service_status_indicator(service):
 @register.inclusion_tag('accounting/components/payment_info_card.html')
 def payment_info_card(service):
     """Muestra una tarjeta con información de pagos del servicio"""
+    payment_method_display = None
+    if service.current_payment_method:
+        method_choices = dict(ServicePayment.PaymentMethodChoices.choices)
+        payment_method_display = method_choices.get(service.current_payment_method, service.current_payment_method)
+    
     return {
         'service': service,
         'has_payments': service.payment_count > 0,
-        'current_amount': service.current_amount,
+        'current_amount': service.price,
         'payment_method': service.current_payment_method,
-        'payment_method_display': service.get_payment_method_display(),
+        'payment_method_display': payment_method_display,
         'start_date': service.current_start_date,
         'end_date': service.current_end_date
     }

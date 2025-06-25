@@ -1,7 +1,6 @@
 {% load presentation_tags %}
 
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 group">
-    <!-- Header con información del cliente -->
     <div class="p-6 pb-4">
         <div class="flex items-start justify-between">
             <div class="flex items-center space-x-3">
@@ -33,14 +32,14 @@
                 </div>
             </div>
             
-            <span class="px-2 py-1 text-xs font-medium rounded-full {% if service.category == 'WHITE' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{% else %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% endif %}">
-                {{ service.category }}
-            </span>
+            <div class="flex-shrink-0">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-800 dark:text-primary-200">
+                    {{ service.get_category_display }}
+                </span>
+            </div>
         </div>
-    </div>
-    
-    <div class="px-6 pb-4">
-        <div class="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+        
+        <div class="mt-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
             <div class="text-sm">
                 <span class="text-primary-600 dark:text-primary-400 font-medium">Línea de negocio:</span>
                 <span class="text-primary-900 dark:text-primary-100 ml-1 font-semibold">
@@ -52,13 +51,13 @@
             </div>
         </div>
         
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4 mt-4">
             <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <div class="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    {{ service.current_amount|format_currency:"€" }}
+                    {{ service.price|format_currency:"€" }}
                 </div>
                 <div class="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                    Precio Actual
+                    Precio Base
                 </div>
             </div>
             
@@ -113,19 +112,22 @@
                     </span>
                 </div>
                 {% endif %}
-                {% if service.client.notes %}
-                <div class="col-span-2">
-                    <span class="text-gray-600 dark:text-gray-400">Notas:</span>
-                    <p class="text-gray-900 dark:text-white mt-1 text-xs">
-                        {{ service.client.notes|truncatewords:15 }}
-                    </p>
-                </div>
-                {% endif %}
             </div>
+            
+            {% if service.client.notes %}
+            <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                    Notas:
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    {{ service.client.notes|truncatewords:15 }}
+                </p>
+            </div>
+            {% endif %}
         </div>
         
-        {% if show_remanentes and service.category == 'BLACK' %}
-        <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+        {% if service.remanentes %}
+        <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
             <div class="flex items-center justify-between mb-2">
                 <h4 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
                     Remanentes
@@ -181,32 +183,20 @@
         {% endif %}
     </div>
     
-    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-        <div class="flex justify-between items-center">
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-                <div>Creado: {{ service.created|date:"d M Y" }}</div>
+    <div class="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+        <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+            <div class="flex items-center space-x-4">
+                <span>Creado: {{ service.created|date:"d M Y" }}</span>
                 {% if service.updated != service.created %}
-                <div>Actualizado: {{ service.updated|date:"d M Y" }}</div>
+                <span>Actualizado: {{ service.updated|date:"d M Y" }}</span>
                 {% endif %}
             </div>
             
-            <div class="flex space-x-2">
-                <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
-                   class="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-md transition-colors font-medium flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                    </svg>
+            <div class="flex items-center space-x-2">
+                <a href="{% url 'accounting:service-edit' line_path=line_path category=current_category service_id=service.id %}"
+                   class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
                     Editar
                 </a>
-                
-                <button type="button" 
-                        onclick="if(confirm('¿Estás seguro de que deseas eliminar este servicio para {{ service.client.full_name }}?')) { window.location.href = '#eliminar-service-{{ service.id }}'; }"
-                        class="px-3 py-1 text-sm bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-300 rounded-md transition-colors font-medium flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                    Eliminar
-                </button>
             </div>
         </div>
     </div>

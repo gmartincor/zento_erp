@@ -108,3 +108,27 @@ NAVIGATION_ITEMS = {
         ]
     }
 }
+
+CATEGORY_CONFIG = {
+    'WHITE': {
+        'name': 'Servicios Blancos',
+        'color': 'green',
+        'icon': 'check-circle',
+        'badge_class': 'bg-blue-100 text-blue-800',
+        'bg_class': 'bg-emerald-100 dark:bg-emerald-900',
+        'text_class': 'text-emerald-600 dark:text-emerald-300'
+    },
+    'BLACK': {
+        'name': 'Servicios Negros',
+        'color': 'purple',
+        'icon': 'exclamation-circle',
+        'badge_class': 'bg-gray-100 text-gray-800',
+        'bg_class': 'bg-purple-100 dark:bg-purple-900',
+        'text_class': 'text-purple-600 dark:text-purple-300'
+    }
+}
+
+CATEGORY_DEFAULTS = {
+    'DEFAULT_CATEGORY': 'WHITE',
+    'VALID_CATEGORIES': ['WHITE', 'BLACK']
+}

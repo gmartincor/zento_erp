@@ -103,7 +103,16 @@ class BusinessLinePermissionMixin:
     def enforce_business_line_permission(self, business_line):
         pass
 
-class BusinessLineHierarchyMixin:
+class CategoryNormalizationMixin:
+    @staticmethod
+    def normalize_category_for_url(category):
+        return category.lower() if category else None
+    
+    @staticmethod
+    def normalize_category_for_comparison(category):
+        return category.upper() if category else None
+
+class BusinessLineHierarchyMixin(CategoryNormalizationMixin):
     def resolve_business_line_from_path(self, line_path):
         from apps.business_lines.models import BusinessLine
         
@@ -184,14 +193,14 @@ class BusinessLineHierarchyMixin:
                 'business_line': business_line,
                 'hierarchy_path': self.get_hierarchy_path(business_line),
                 'breadcrumb_path': self.get_breadcrumb_path(business_line, category),
-                'current_category': category,
+                'current_category': self.normalize_category_for_url(category),
                 'line_path': line_path,
                 'has_permission': True
             })
         
         return context
 
-class ServiceCategoryMixin:
+class ServiceCategoryMixin(CategoryNormalizationMixin):
     def get_services_by_category(self, business_line, category):
         from apps.accounting.models import ClientService
         
@@ -245,7 +254,7 @@ class ServiceCategoryMixin:
         
         return {
             'services': services,
-            'current_category': category,
+            'current_category': self.normalize_category_for_url(category),
             'category_display': self.get_category_display_name(category),
             'category_stats': stats,
             'has_remanentes': category == 'BLACK' and business_line.has_remanente,

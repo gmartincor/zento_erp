@@ -9,7 +9,7 @@ from apps.accounting.models import Client, ClientService
 from apps.accounting.forms.service_forms import ClientServiceCreateForm, ClientServiceUpdateForm
 from apps.accounting.services.presentation_service import PresentationService
 from apps.accounting.services.revenue_analytics_service import RevenueAnalyticsService
-from apps.accounting.services.service_info_service import ServiceInfoService
+from apps.accounting.services.service_flow_manager import ServiceFlowManager, ServiceContextBuilder
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
     BusinessLineHierarchyMixin,
@@ -73,6 +73,7 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         context.update(self.get_base_context())
         context.update(self.get_service_category_context(business_line, category))
         context.update(self.get_category_counts(business_line))
+        context.update(ServiceFlowManager.get_navigation_context(line_path, category))
         
         presentation_service = PresentationService()
         period_type = self.request.GET.get('period', RevenueAnalyticsService.PeriodType.ALL_TIME)
@@ -82,8 +83,6 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         )
         
         context.update({
-            'create_url': reverse('accounting:service-create', 
-                                kwargs={'line_path': line_path, 'category': category.lower()}),
             'line_detail_url': reverse('accounting:business-lines-path', 
                                      kwargs={'line_path': line_path}),
             'revenue_summary': revenue_summary,
@@ -115,14 +114,8 @@ class ServiceEditView(BaseServiceView, UpdateView):
         )
         
         self.check_business_line_permission(service.business_line)
-        
         business_line, line_path, category = self.get_business_line_data()
-        
-        if service.business_line != business_line:
-            raise Http404("Servicio no encontrado en esta línea de negocio.")
-        
-        if service.category != category:
-            raise Http404("Servicio no encontrado en esta categoría.")
+        ServiceFlowManager.validate_service_access(service, business_line, category)
         
         return service
     
@@ -131,8 +124,7 @@ class ServiceEditView(BaseServiceView, UpdateView):
         service = self.get_object()
         
         context.update(self.get_base_context())
-        context.update(ServiceInfoService.get_service_context_data(service))
-        context['client'] = service.client
+        context.update(ServiceContextBuilder(service).build_edit_context())
         
         return context
     
@@ -144,10 +136,7 @@ class ServiceEditView(BaseServiceView, UpdateView):
     def form_valid(self, form):
         try:
             self.object = form.save()
-            messages.success(
-                self.request,
-                ACCOUNTING_SUCCESS_MESSAGES.get('SERVICE_UPDATED', 'Servicio actualizado correctamente.')
-            )
+            ServiceFlowManager.handle_service_update_success(self.request, self.object)
             return redirect(self.get_success_url())
         except Exception as e:
             form.add_error(None, f'Error al actualizar el servicio: {str(e)}')
@@ -177,16 +166,7 @@ class ServiceCreateView(BaseServiceView, CreateView):
         
         try:
             self.object = form.save()
-            messages.success(
-                self.request,
-                ACCOUNTING_SUCCESS_MESSAGES.get('SERVICE_CREATED', 'Servicio creado correctamente para {client}').format(
-                    client=self.object.client.full_name
-                )
-            )
-            messages.info(
-                self.request,
-                'Ahora puedes agregar el primer pago para activar el servicio.'
-            )
+            ServiceFlowManager.handle_service_creation_success(self.request, self.object)
             return redirect(self.get_success_url())
         except Exception as e:
             form.add_error(None, f'Error al crear el servicio: {str(e)}')
@@ -198,7 +178,12 @@ class ServiceCreateView(BaseServiceView, CreateView):
     
     def get_success_url(self):
         if hasattr(self, 'object') and self.object:
-            return reverse('accounting:payment_create', kwargs={'service_id': self.object.id})
+            _, line_path, category = self.get_business_line_data()
+            return reverse('accounting:service-edit', kwargs={
+                'line_path': line_path, 
+                'category': category.lower(),
+                'service_id': self.object.id
+            })
         
         _, line_path, category = self.get_business_line_data()
         return reverse('accounting:category-services', 

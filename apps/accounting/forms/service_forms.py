@@ -19,17 +19,40 @@ class ClientServiceFormValidator:
         
         if not client_name:
             errors['client_name'] = 'El nombre es obligatorio'
+        elif len(client_name) < 2:
+            errors['client_name'] = 'El nombre debe tener al menos 2 caracteres'
         
         if not client_dni:
             errors['client_dni'] = 'El DNI es obligatorio'
         elif len(client_dni) != 9:
             errors['client_dni'] = 'El DNI debe tener 9 caracteres'
+        elif not client_dni[:-1].isdigit() or not client_dni[-1].isalpha():
+            errors['client_dni'] = 'Formato de DNI inválido (8 dígitos + 1 letra)'
         
         if not client_gender:
             errors['client_gender'] = 'El género es obligatorio'
         
         if client_email and '@' not in client_email:
             errors['client_email'] = 'Formato de email inválido'
+        
+        if errors:
+            raise ValidationError(errors)
+        
+        return cleaned_data
+    
+    @staticmethod
+    def validate_service_data(cleaned_data):
+        price = cleaned_data.get('price')
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        
+        errors = {}
+        
+        if price is not None and price < 0:
+            errors['price'] = 'El precio no puede ser negativo'
+        
+        if start_date and end_date and start_date > end_date:
+            errors['end_date'] = 'La fecha de fin no puede ser anterior a la fecha de inicio'
         
         if errors:
             raise ValidationError(errors)
@@ -189,6 +212,7 @@ class ClientServiceCreateForm(BaseClientServiceForm):
         cleaned_data = super().clean()
         
         ClientServiceFormValidator.validate_client_data(cleaned_data)
+        ClientServiceFormValidator.validate_service_data(cleaned_data)
         
         dni = cleaned_data.get('client_dni', '').strip().upper()
         if dni and Client.objects.filter(dni=dni, is_deleted=False).exists():
@@ -305,6 +329,7 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
         cleaned_data = super().clean()
         
         ClientServiceFormValidator.validate_client_data(cleaned_data)
+        ClientServiceFormValidator.validate_service_data(cleaned_data)
         
         if self.instance and self.instance.pk:
             new_dni = cleaned_data.get('client_dni', '').strip().upper()

@@ -37,14 +37,12 @@
             </div>
             
             <div class="space-y-2">
-                {% if service.current_amount %}
                 <div class="flex items-center text-sm">
-                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Precio actual:</span>
+                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Precio base:</span>
                     <span class="text-primary-900 dark:text-primary-100 font-semibold">
-                        {{ service.current_amount|currency_format }}
+                        {{ service.price|currency_format }}
                     </span>
                 </div>
-                {% endif %}
                 
                 {% if service.current_start_date and service.current_end_date %}
                 <div class="flex items-center text-sm">

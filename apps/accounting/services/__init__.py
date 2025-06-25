@@ -5,8 +5,8 @@ from .client_service_transaction import ClientServiceTransactionManager
 from .navigation_service import HierarchicalNavigationService
 from .presentation_service import PresentationService
 from .revenue_analytics_service import RevenueAnalyticsService
-from .service_info_service import ServiceInfoService
 from .template_service import TemplateDataService
+from .service_flow_manager import ServiceFlowManager, ServiceContextBuilder
 
 __all__ = [
     'BusinessLineService', 
@@ -16,6 +16,7 @@ __all__ = [
     'HierarchicalNavigationService',
     'PresentationService',
     'RevenueAnalyticsService',
-    'ServiceInfoService',
-    'TemplateDataService'
+    'TemplateDataService',
+    'ServiceFlowManager',
+    'ServiceContextBuilder'
 ]

@@ -12,6 +12,7 @@ from apps.accounting.models import ClientService, ServicePayment
 from apps.accounting.forms import RenewalForm, PaymentCreateForm, PaymentUpdateForm, PaymentFilterForm
 from apps.accounting.services.payment_service import PaymentService
 from apps.accounting.services.business_line_service import BusinessLineService
+from apps.accounting.services.service_flow_manager import ServiceContextBuilder
 
 
 @login_required
@@ -128,7 +129,7 @@ def service_renewal(request, service_id: int):
                     f'Renovación procesada exitosamente. '
                     f'Servicio activo hasta {payment.period_end.strftime("%d/%m/%Y")}.'
                 )
-                return redirect('accounting:payment_detail', payment_id=payment.id)
+                return redirect('accounting:payment-detail', payment_id=payment.id)
             except Exception as e:
                 messages.error(request, f'Error al procesar la renovación: {str(e)}')
     else:
@@ -160,16 +161,18 @@ def payment_create(request, service_id: int):
             try:
                 payment = form.save()
                 messages.success(request, 'Pago creado exitosamente.')
-                return redirect('accounting:payment_detail', payment_id=payment.id)
+                return redirect('accounting:payment-detail', payment_id=payment.id)
             except Exception as e:
                 messages.error(request, f'Error al crear el pago: {str(e)}')
     else:
         form = PaymentCreateForm(client_service=client_service)
     
-    context = {
+    context_builder = ServiceContextBuilder(client_service)
+    context = context_builder.build_base_context()
+    context.update({
         'form': form,
-        'client_service': client_service,
-    }
+        'page_title': f'Nuevo Pago - {client_service.client.full_name}'
+    })
     
     return render(request, 'accounting/payments/payment_create.html', context)
 
@@ -197,7 +200,7 @@ def payment_update(request, payment_id: int):
             try:
                 form.save()
                 messages.success(request, 'Pago actualizado exitosamente.')
-                return redirect('accounting:payment_detail', payment_id=payment.id)
+                return redirect('accounting:payment-detail', payment_id=payment.id)
             except Exception as e:
                 messages.error(request, f'Error al actualizar el pago: {str(e)}')
     else:
@@ -280,14 +283,11 @@ def service_payment_history(request, service_id: int):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    context = {
-        'client_service': client_service,
+    context_builder = ServiceContextBuilder(client_service)
+    context = context_builder.build_payment_context()
+    context.update({
         'page_obj': page_obj,
-        'total_paid': client_service.total_paid,
-        'payment_count': client_service.payment_count,
-        'current_status': client_service.current_status,
-        'active_until': client_service.active_until,
-    }
+    })
     
     return render(request, 'accounting/payments/service_history.html', context)
 

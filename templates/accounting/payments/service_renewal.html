@@ -134,7 +134,7 @@
             {% endif %}
 
             <div class="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-600">
-                <a href="{% url 'accounting:service_payment_history' client_service.id %}" 
+                <a href="{% url 'accounting:service-payment-history' service_id=client_service.id %}" 
                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                     Ver historial
                 </a>

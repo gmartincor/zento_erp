@@ -8,6 +8,7 @@ from django.template.loader import render_to_string
 from apps.accounting.models import ClientService
 from apps.accounting.services.statistics_service import StatisticsService
 from apps.accounting.services.business_line_service import BusinessLineService
+from apps.core.constants import CATEGORY_CONFIG, CATEGORY_DEFAULTS
 from apps.accounting.services.template_service import TemplateDataService
 
 register = template.Library()
@@ -51,11 +52,8 @@ def get_business_line_children(business_line, user_permissions=None):
 
 @register.filter
 def category_badge_class(category):
-    classes = {
-        'WHITE': 'bg-blue-100 text-blue-800',
-        'BLACK': 'bg-gray-100 text-gray-800'
-    }
-    return classes.get(category, 'bg-gray-100 text-gray-800')
+    normalized_category = normalize_category(category)
+    return CATEGORY_CONFIG[normalized_category]['badge_class']
 
 @register.filter
 def payment_method_icon(method):
@@ -161,3 +159,6 @@ def percentage_of(part, total):
         return (float(part) / float(total)) * 100
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
+
+def normalize_category(category):
+    return category.upper() if category else CATEGORY_DEFAULTS['DEFAULT_CATEGORY']

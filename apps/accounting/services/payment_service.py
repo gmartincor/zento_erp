@@ -138,9 +138,12 @@ class PaymentService:
     
     @classmethod
     def get_service_total_paid(cls, service: ClientService) -> Decimal:
+        from django.db import models
         total = service.payments.filter(
             status=ServicePayment.StatusChoices.PAID
-        ).aggregate(total=models.Sum('amount'))['total']
+        ).aggregate(
+            total=models.Sum('amount')
+        )['total']
         return total or Decimal('0.00')
     
     @classmethod
@@ -217,12 +220,13 @@ class PaymentService:
         return count
 
     @classmethod
+    @classmethod
     def get_payment_history(
         cls, 
         client_service: ClientService,
         status_filter: Optional[str] = None
     ) -> List[ServicePayment]:
-        queryset = client_service.payments.all()
+        queryset = client_service.payments.filter(status=ServicePayment.StatusChoices.PAID)
         
         if status_filter:
             queryset = queryset.filter(status=status_filter)

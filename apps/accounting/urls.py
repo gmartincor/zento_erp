@@ -74,19 +74,19 @@ urlpatterns = [
     ),
     
     # Payment History
-    path('payments/history/', payment_history_view, name='payment_history'),
+    path('payments/history/', payment_history_view, name='payment-history'),
     
     # Payment URLs
     path('payments/', payment_list, name='payments'),
-    path('payments/<int:payment_id>/', payment_detail, name='payment_detail'),
-    path('payments/<int:payment_id>/edit/', payment_update, name='payment_update'),
-    path('payments/<int:payment_id>/mark-paid/', payment_mark_paid, name='payment_mark_paid'),
-    path('payments/<int:payment_id>/cancel/', payment_cancel, name='payment_cancel'),
+    path('payments/<int:payment_id>/', payment_detail, name='payment-detail'),
+    path('payments/<int:payment_id>/edit/', payment_update, name='payment-edit'),
+    path('payments/<int:payment_id>/mark-paid/', payment_mark_paid, name='payment-mark-paid'),
+    path('payments/<int:payment_id>/cancel/', payment_cancel, name='payment-cancel'),
     
     # Service payment management
-    path('services/<int:service_id>/payments/', service_payment_history, name='service_payment_history'),
-    path('services/<int:service_id>/renew/', service_renewal, name='service_renewal'),
-    path('services/<int:service_id>/payments/create/', payment_create, name='payment_create'),
+    path('services/<int:service_id>/payments/', service_payment_history, name='service-payment-history'),
+    path('services/<int:service_id>/renew/', service_renewal, name='service-renewal'),
+    path('services/<int:service_id>/payments/create/', payment_create, name='payment-create'),
     
     # Expiring services
     path('expiring-services/', expiring_services, name='expiring_services'),
