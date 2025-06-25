@@ -14,6 +14,10 @@ from .service import (
     ServiceEditView,
     ServiceCreateView
 )
+from .client_service_history import (
+    ClientServiceHistoryView,
+    ClientServiceDetailView
+)
 from .reports import (
     CategorySummaryView,
     ClientRevenueView
@@ -32,12 +36,17 @@ from .payment import (
 
 __all__ = [
     'AccountingDashboardView',
-    'BusinessLineDetailView',
     'BusinessLineListView', 
     'BusinessLineHierarchyView',
+    'BusinessLineCreateView',
+    'BusinessLineUpdateView',
+    'BusinessLineDeleteView',
+    'BusinessLineManagementDetailView',
     'ServiceCategoryListView',
     'ServiceEditView',
     'ServiceCreateView',
+    'ClientServiceHistoryView',
+    'ClientServiceDetailView',
     'CategorySummaryView',
     'ClientRevenueView',
     'payment_list',

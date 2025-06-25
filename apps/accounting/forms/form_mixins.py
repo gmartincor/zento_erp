@@ -189,21 +189,4 @@ class ServiceFieldsMixin:
                 'business_line': 'La línea de negocio no tiene configurado el tipo de remanente.'
             })
         
-        if not existing_service:
-            client_name = cleaned_data.get('client_name')
-            if client_name:
-                existing_client = Client.objects.filter(
-                    full_name__iexact=client_name.strip()
-                ).first()
-                
-                if existing_client and ClientService.objects.filter(
-                    client=existing_client,
-                    business_line=business_line,
-                    category=category,
-                    is_active=True
-                ).exists():
-                    raise ValidationError({
-                        'client_name': f'El cliente ya tiene un servicio {category} activo en {business_line.name}'
-                    })
-        
         return cleaned_data

@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load presentation_tags %}
+
+{% block title %}{{ page_title }} - Nutrition Pro CRM{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="{% url 'accounting:dashboard' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <a href="{% url 'accounting:client-service-history' client_id=service.client.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">
+                    {{ service.client.full_name }}
+                </a>
+            </div>
+        </li>
+        <li aria-current="page">
+            <div class="flex items-center">
+                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">Servicio {{ service.get_category_display }}</span>
+            </div>
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <div class="flex items-center space-x-3 mb-2">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                    Servicio {{ service.get_category_display }}
+                </h1>
+                {% category_badge service.category %}
+                {% with status=service.current_status %}
+                    {% if status == "ACTIVE" %}
+                        <span class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
+                            Activo
+                        </span>
+                    {% elif status == "EXPIRED_RECENT" %}
+                        <span class="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">
+                            Vencido reciente
+                        </span>
+                    {% elif status == "EXPIRED" %}
+                        <span class="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full">
+                            Vencido
+                        </span>
+                    {% else %}
+                        <span class="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 rounded-full">
+                            Inactivo
+                        </span>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <p class="text-gray-600 dark:text-gray-400">
+                <span class="font-medium">{{ service.client.full_name }}</span>
+                • {{ service.business_line.name }}
+                • Creado el {{ service.created|date:"d/m/Y" }}
+            </p>
+        </div>
+        
+        <div class="mt-4 lg:mt-0 flex flex-col sm:flex-row gap-3">
+            <a href="{{ back_url }}" 
+               class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium flex items-center justify-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Volver al Historial
+            </a>
+            
+            {% if service.is_active %}
+            <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
+               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium flex items-center justify-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Editar Servicio
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Información Principal -->
+    <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Detalles del Servicio -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Detalles del Servicio</h2>
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    ID: {{ service.id }}
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente</label>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                <span class="text-sm font-bold text-blue-600 dark:text-blue-400">
+                                    {{ service.client.full_name|first|upper }}
+                                </span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ service.client.full_name }}
+                                </div>
+                                {% if service.client.email %}
+                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                    {{ service.client.email }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Línea de Negocio</label>
+                        <div class="text-sm text-gray-900 dark:text-white">
+                            {{ service.business_line.name }}
+                            <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">(Nivel {{ service.business_line.level }})</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
+                        <div class="flex items-center space-x-2">
+                            {% category_badge service.category %}
+                            <span class="text-sm text-gray-900 dark:text-white">{{ service.get_category_display }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha de Creación</label>
+                        <div class="text-sm text-gray-900 dark:text-white">
+                            {{ service.created|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Última Modificación</label>
+                        <div class="text-sm text-gray-900 dark:text-white">
+                            {{ service.modified|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
+                        <div class="text-sm text-gray-900 dark:text-white">
+                            {% if service.is_active %}
+                                <span class="text-green-600">Activo</span>
+                            {% else %}
+                                <span class="text-red-600">Inactivo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if service.category == "BLACK" and service.remanentes %}
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Remanentes</label>
+                <div class="text-lg font-semibold text-amber-600">
+                    {{ service.remanentes|format_currency:"€" }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Información de Pagos -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Información de Pagos</h2>
+                {% if not service.payments.exists %}
+                <a href="{% url 'accounting:payment-create' service_id=service.id %}" 
+                   class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm">
+                    Crear Pago
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if service.payments.exists %}
+            <div class="space-y-4">
+                {% for payment in service.payments.all %}
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="text-lg font-semibold text-gray-900 dark:text-white">
+                                {{ payment.amount|format_currency:"€" }}
+                            </div>
+                            {% if payment.was_paid_on_time %}
+                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
+                                    En plazo
+                                </span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full">
+                                    Tardío
+                                </span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'accounting:payment-detail' payment_id=payment.id %}" 
+                           class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            Ver detalle
+                        </a>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600 dark:text-gray-400">Fecha de pago:</span>
+                            <div class="font-medium text-gray-900 dark:text-white">
+                                {{ payment.payment_date|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-gray-600 dark:text-gray-400">Período:</span>
+                            <div class="font-medium text-gray-900 dark:text-white">
+                                {{ payment.period_start|date:"d/m/Y" }} - {{ payment.period_end|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if payment.days_paid_late > 0 %}
+                    <div class="mt-2 text-sm text-red-600">
+                        Pagado con {{ payment.days_paid_late }} días de retraso
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Pagado:</span>
+                        <span class="text-lg font-semibold text-green-600">
+                            {{ payment_analysis.total_paid|format_currency:"€" }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Número de Pagos:</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">
+                            {{ payment_analysis.payment_count }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 0h8a2 2 0 002-2v-2a2 2 0 00-2-2H9.5m0 0V7a2 2 0 012-2h2a2 2 0 012 2v2M15 9l-3-3-3 3"></path>
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Sin pagos registrados</h3>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Este servicio aún no tiene pagos asociados.
+                </p>
+                <div class="mt-4">
+                    <a href="{% url 'accounting:payment-create' service_id=service.id %}" 
+                       class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Crear Primer Pago
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Panel Lateral -->
+    <div class="space-y-6">
+        
+        <!-- Acciones Rápidas -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acciones Rápidas</h3>
+            <div class="space-y-3">
+                {% if service.is_active %}
+                <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
+                   class="w-full flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Editar Servicio
+                </a>
+                {% endif %}
+                
+                {% if not service.payments.exists %}
+                <a href="{% url 'accounting:payment-create' service_id=service.id %}" 
+                   class="w-full flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Crear Pago
+                </a>
+                {% endif %}
+                
+                {% if can_renew %}
+                <a href="{% url 'accounting:service-create' line_path=service.get_line_path category=service.category|lower %}?renew_from={{ service.id }}" 
+                   class="w-full flex items-center justify-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Renovar Servicio
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Servicios Relacionados -->
+        {% if related_services %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Servicios Relacionados</h3>
+            <div class="space-y-3">
+                {% for related in related_services %}
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            {% category_badge related.category %}
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                {{ related.get_category_display }}
+                            </span>
+                        </div>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ related.created|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ related.business_line.name }}
+                    </div>
+                    <div class="mt-2">
+                        <a href="{% url 'accounting:client-service-detail' service_id=related.id %}" 
+                           class="text-xs text-blue-600 hover:text-blue-800">
+                            Ver detalle →
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Información de Renovación -->
+        {% if renewal_info %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Información de Renovación</h3>
+            <div class="space-y-3">
+                {% if next_payment_date %}
+                <div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Próximo pago esperado:</span>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                        {{ next_payment_date|date:"d/m/Y" }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if renewal_info.suggested_date %}
+                <div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Fecha sugerida de renovación:</span>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                        {{ renewal_info.suggested_date|date:"d/m/Y" }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if renewal_info.can_renew %}
+                <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <a href="{% url 'accounting:service-create' line_path=service.get_line_path category=service.category|lower %}?renew_from={{ service.id }}" 
+                       class="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                        Crear renovación →
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

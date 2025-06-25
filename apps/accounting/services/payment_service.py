@@ -61,7 +61,7 @@ class PaymentService:
             status=ServicePayment.StatusChoices.PAID
         ).order_by('-period_end').first()
 
-        if latest_payment and latest_payment.period_end >= payment_date:
+        if latest_payment:
             period_start = latest_payment.period_end + timedelta(days=1)
         else:
             period_start = payment_date

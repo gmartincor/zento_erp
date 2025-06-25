@@ -150,10 +150,10 @@ class ClientService(TimeStampedModel):
         db_table = 'client_services'
         verbose_name = "Servicio de cliente"
         verbose_name_plural = "Servicios de clientes"
-        unique_together = [['client', 'business_line', 'category']]
         indexes = [
             models.Index(fields=['client', 'is_active']),
             models.Index(fields=['business_line', 'category']),
+            models.Index(fields=['client', 'business_line', 'category', 'created']),
         ]
 
     def clean(self):
@@ -451,6 +451,46 @@ class ServicePayment(TimeStampedModel):
             return None
         today = timezone.now().date()
         return (self.period_end - today).days
+
+    @property
+    def days_until_due(self):
+        if self.status == self.StatusChoices.PAID:
+            return None
+        today = timezone.now().date()
+        return (self.period_end - today).days
+
+    @property
+    def is_payment_overdue(self):
+        if self.status == self.StatusChoices.PAID:
+            return False
+        return timezone.now().date() > self.period_end
+
+    @property
+    def was_paid_on_time(self):
+        if self.status != self.StatusChoices.PAID:
+            return None
+        return self.payment_date <= self.period_end
+
+    @property
+    def days_paid_late(self):
+        if not self.was_paid_on_time:
+            return 0
+        return (self.payment_date - self.period_end).days
+
+    @property
+    def payment_status_detailed(self):
+        if self.status == self.StatusChoices.PAID:
+            return "PAID_ON_TIME" if self.was_paid_on_time else "PAID_LATE"
+        
+        days_left = self.days_until_due
+        if days_left is None:
+            return "UNKNOWN"
+        elif days_left > 7:
+            return "PENDING_OK"
+        elif days_left > 0:
+            return "PENDING_SOON"
+        else:
+            return "OVERDUE"
 
     def mark_as_paid(self, payment_date=None, payment_method=None, reference_number=None):
         self.status = self.StatusChoices.PAID

@@ -5,18 +5,15 @@ from django.contrib import messages
 from django.urls import reverse
 from django.http import Http404
 
-from apps.accounting.models import Client, ClientService
-from apps.accounting.forms.service_forms import ClientServiceCreateForm, ClientServiceUpdateForm
-from apps.accounting.services.presentation_service import PresentationService
-from apps.accounting.services.revenue_analytics_service import RevenueAnalyticsService
+from apps.accounting.models import ClientService
+from apps.accounting.forms.service_form_factory import ServiceFormFactory
+from apps.accounting.services.service_context_manager import ServiceContextManager
 from apps.accounting.services.service_workflow_manager import ServiceWorkflowManager
-from apps.accounting.services.service_flow_manager import ServiceFlowManager, ServiceContextBuilder
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
     BusinessLineHierarchyMixin,
     ServiceCategoryMixin
 )
-from apps.core.constants import ACCOUNTING_SUCCESS_MESSAGES
 
 
 class BaseServiceView(
@@ -72,40 +69,24 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         business_line, line_path, category = self.get_business_line_data()
         
         context.update(self.get_base_context())
-        context.update(self.get_service_category_context(business_line, category))
-        context.update(self.get_category_counts(business_line))
-        context.update(ServiceFlowManager.get_navigation_context(line_path, category))
-        
-        presentation_service = PresentationService()
-        period_type = self.request.GET.get('period', RevenueAnalyticsService.PeriodType.ALL_TIME)
-        
-        revenue_summary = presentation_service.prepare_category_revenue_summary(
-            business_line, category, period_type
-        )
+        context.update(ServiceContextManager.get_service_creation_context(business_line, category))
         
         context.update({
             'line_detail_url': reverse('accounting:business-lines-path', 
                                      kwargs={'line_path': line_path}),
-            'revenue_summary': revenue_summary,
-            'available_periods': [
-                ('all_time', 'Histórico total'),
-                ('current_month', 'Mes actual'),
-                ('last_month', 'Mes anterior'),
-                ('current_year', 'Año actual'),
-                ('last_year', 'Año anterior'),
-                ('last_3_months', 'Últimos 3 meses'),
-                ('last_6_months', 'Últimos 6 meses'),
-                ('last_12_months', 'Últimos 12 meses'),
-            ],
-            'selected_period': period_type,
+            'create_url': reverse('accounting:service-create',
+                                kwargs={'line_path': line_path, 'category': category.lower()}),
         })
         
         return context
 
 
 class ServiceEditView(BaseServiceView, UpdateView):
-    form_class = ClientServiceUpdateForm
     template_name = 'accounting/service_edit.html'
+    
+    def get_form_class(self):
+        business_line, _, category = self.get_business_line_data()
+        return ServiceFormFactory.get_update_form(category)
     
     def get_object(self):
         service = get_object_or_404(
@@ -115,8 +96,11 @@ class ServiceEditView(BaseServiceView, UpdateView):
         )
         
         self.check_business_line_permission(service.business_line)
-        business_line, line_path, category = self.get_business_line_data()
-        ServiceFlowManager.validate_service_access(service, business_line, category)
+        business_line, _, category = self.get_business_line_data()
+        
+        if service.business_line != business_line or service.category != category:
+            messages.error(self.request, 'Servicio no encontrado')
+            raise Http404("Servicio no encontrado")
         
         return service
     
@@ -125,8 +109,7 @@ class ServiceEditView(BaseServiceView, UpdateView):
         service = self.get_object()
         
         context.update(self.get_base_context())
-        context.update(ServiceContextBuilder(service).build_edit_context())
-        context.update(ServiceWorkflowManager.get_service_next_steps_context(service))
+        context.update(ServiceContextManager.get_service_edit_context(service))
         
         return context
     
@@ -152,12 +135,19 @@ class ServiceEditView(BaseServiceView, UpdateView):
 
 
 class ServiceCreateView(BaseServiceView, CreateView):
-    form_class = ClientServiceCreateForm
     template_name = 'accounting/service_create.html'
+    
+    def get_form_class(self):
+        business_line, _, category = self.get_business_line_data()
+        return ServiceFormFactory.get_create_form(category)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        business_line, _, category = self.get_business_line_data()
+        
         context.update(self.get_base_context())
+        context.update(ServiceContextManager.get_service_creation_context(business_line, category))
+        
         return context
     
     def form_valid(self, form):

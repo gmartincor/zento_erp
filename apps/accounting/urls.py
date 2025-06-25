@@ -22,6 +22,8 @@ from .views import (
     expiring_services
 )
 from .views.payment_history import payment_history_view
+from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
+from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
 
 app_name = 'accounting'
 
@@ -76,6 +78,10 @@ urlpatterns = [
     # Payment History
     path('payments/history/', payment_history_view, name='payment-history'),
     
+    # Client Service History
+    path('clients/<int:client_id>/services/', ClientServiceHistoryView.as_view(), name='client-service-history'),
+    path('services/<int:service_id>/detail/', ClientServiceDetailView.as_view(), name='client-service-detail'),
+    
     # Payment URLs
     path('payments/', payment_list, name='payments'),
     path('payments/<int:payment_id>/', payment_detail, name='payment-detail'),
@@ -97,4 +103,8 @@ urlpatterns = [
         payment_list,
         name='business_line_payments'
     ),
+    
+    # Client service history
+    path('clients/<int:client_id>/services/', ClientServiceHistoryView.as_view(), name='client-service-history'),
+    path('clients/<int:client_id>/services/<int:service_id>/', ClientServiceDetailView.as_view(), name='client-service-detail'),
 ]

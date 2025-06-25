@@ -8,6 +8,8 @@ from django.core.exceptions import ValidationError
 from apps.accounting.models import ClientService, ServicePayment
 from apps.accounting.services.client_service_transaction import ClientServiceTransactionManager
 from apps.accounting.services.payment_service import PaymentService
+from apps.accounting.services.service_renewal_manager import ServiceRenewalManager
+from apps.accounting.services.service_renewal_manager import ServiceRenewalManager
 
 
 class ServiceWorkflowManager:
@@ -27,6 +29,23 @@ class ServiceWorkflowManager:
             
             redirect_url = reverse('accounting:payment-create', kwargs={'service_id': service.id})
             return service, redirect_url
+    
+    @staticmethod
+    def handle_service_renewal_flow(request, original_service_id: int, form_data: Dict[str, Any]) -> Tuple[ClientService, str]:
+        original_service = ClientService.objects.get(id=original_service_id)
+        
+        with transaction.atomic():
+            new_service, redirect_url = ServiceRenewalManager.create_renewal_service(
+                original_service, form_data
+            )
+            
+            messages.success(
+                request,
+                f'Servicio renovado exitosamente para {new_service.client.full_name}. '
+                'Ahora puedes configurar el pago del nuevo período.'
+            )
+            
+            return new_service, redirect_url
     
     @staticmethod
     def handle_service_update_flow(request, service_instance: ClientService, form_data: Dict[str, Any]) -> Tuple[ClientService, str]:

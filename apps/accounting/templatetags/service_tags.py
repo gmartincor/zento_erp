@@ -1,108 +1,76 @@
 from django import template
-from django.utils.safestring import mark_safe
-from apps.accounting.models import ServicePayment
+from django.utils.html import format_html
 
 register = template.Library()
 
 
 @register.filter
-def payment_status_badge(status):
-    """Genera un badge HTML para el estado del pago"""
+def service_status_badge(status):
     status_classes = {
-        'PAID': 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
-        'PENDING': 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
-        'OVERDUE': 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
-        'CANCELLED': 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200',
-        'REFUNDED': 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
+        'active': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+        'inactive': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+        'completed': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+        'suspended': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+        'cancelled': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
     }
     
-    status_labels = {
-        'PAID': 'Pagado',
-        'PENDING': 'Pendiente',
-        'OVERDUE': 'Vencido',
-        'CANCELLED': 'Cancelado',
-        'REFUNDED': 'Reembolsado'
+    status_display = {
+        'active': 'Activo',
+        'inactive': 'Inactivo',
+        'completed': 'Completado',
+        'suspended': 'Suspendido',
+        'cancelled': 'Cancelado'
     }
     
-    css_class = status_classes.get(status, status_classes['PENDING'])
-    label = status_labels.get(status, status)
+    css_class = status_classes.get(status, status_classes['inactive'])
+    display_text = status_display.get(status, status.title())
     
-    return mark_safe(
-        f'<span class="px-2 py-1 {css_class} text-xs rounded-full">{label}</span>'
+    return format_html(
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {}">{}</span>',
+        css_class, display_text
     )
 
 
 @register.filter
-def service_status_badge(status):
-    """Genera un badge HTML para el estado del servicio"""
-    status_classes = {
-        'ACTIVE': 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
-        'EXPIRED': 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
-        'INACTIVE': 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200',
-        'SUSPENDED': 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-    }
-    
-    status_labels = {
-        'ACTIVE': 'Activo',
-        'EXPIRED': 'Expirado',
-        'INACTIVE': 'Inactivo',
-        'SUSPENDED': 'Suspendido'
-    }
-    
-    css_class = status_classes.get(status, status_classes['INACTIVE'])
-    label = status_labels.get(status, status)
-    
-    return mark_safe(
-        f'<span class="px-2 py-1 {css_class} text-xs rounded-full">{label}</span>'
-    )
+def currency_format(value):
+    try:
+        return f"€{float(value):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+    except (ValueError, TypeError):
+        return "€0,00"
 
 
 @register.filter
 def payment_method_display(method):
-    """Convierte el método de pago a su representación legible"""
-    if not method:
-        return "No definido"
-    
-    method_choices = dict(ServicePayment.PaymentMethodChoices.choices)
-    return method_choices.get(method, method)
+    method_display = {
+        'cash': 'Efectivo',
+        'transfer': 'Transferencia',
+        'card': 'Tarjeta',
+        'bizum': 'Bizum',
+        'check': 'Cheque'
+    }
+    return method_display.get(method, method.title())
 
 
 @register.filter
-def currency_format(amount):
-    """Formatea un monto como moneda"""
-    if amount is None:
-        return "0,00€"
-    
-    try:
-        return f"{float(amount):,.2f}€".replace(',', '.')
-    except (ValueError, TypeError):
-        return "0,00€"
-
-
-@register.inclusion_tag('accounting/components/service_status_indicator.html')
-def service_status_indicator(service):
-    """Muestra un indicador visual del estado del servicio"""
-    return {
-        'service': service,
-        'status': service.current_status,
-        'active_until': service.active_until
+def payment_status_badge(status):
+    status_classes = {
+        'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+        'paid': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+        'overdue': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+        'partial': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
     }
-
-
-@register.inclusion_tag('accounting/components/payment_info_card.html')
-def payment_info_card(service):
-    """Muestra una tarjeta con información de pagos del servicio"""
-    payment_method_display = None
-    if service.current_payment_method:
-        method_choices = dict(ServicePayment.PaymentMethodChoices.choices)
-        payment_method_display = method_choices.get(service.current_payment_method, service.current_payment_method)
     
-    return {
-        'service': service,
-        'has_payments': service.payment_count > 0,
-        'current_amount': service.price,
-        'payment_method': service.current_payment_method,
-        'payment_method_display': payment_method_display,
-        'start_date': service.current_start_date,
-        'end_date': service.current_end_date
+    status_display = {
+        'pending': 'Pendiente',
+        'paid': 'Pagado',
+        'overdue': 'Vencido',
+        'partial': 'Parcial'
     }
+    
+    css_class = status_classes.get(status, status_classes['pending'])
+    display_text = status_display.get(status, status.title())
+    
+    return format_html(
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {}">{}</span>',
+        css_class, display_text
+    )

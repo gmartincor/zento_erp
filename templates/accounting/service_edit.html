@@ -42,7 +42,13 @@
                 {% include 'accounting/components/form_errors.html' %}
                 
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Información del Cliente</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Información del Cliente</h2>
+                        <a href="{% url 'accounting:client-service-history' client_id=service.client.id %}" 
+                           class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                            Ver historial →
+                        </a>
+                    </div>
                     {% include 'accounting/components/client_form_fields.html' %}
                 </div>
                 

@@ -329,4 +329,21 @@ class ClientServiceManager(models.Manager):
                       if service.business_line_id in business_lines.values_list('id', flat=True)]
         
         return self.get_queryset().filter(id__in=service_ids).with_client_data()
-        return monthly_data
+
+    def get_service_history_for_client(
+        self,
+        client,
+        business_line=None,
+        category=None,
+        active_only=True
+    ) -> QuerySet:
+        queryset = self.get_queryset().filter(client=client)
+        
+        if business_line:
+            queryset = queryset.filter(business_line=business_line)
+        if category:
+            queryset = queryset.filter(category=category)
+        if active_only:
+            queryset = queryset.active()
+            
+        return queryset.with_client_data().order_by('-created')

@@ -7,6 +7,10 @@ from .presentation_service import PresentationService
 from .revenue_analytics_service import RevenueAnalyticsService
 from .template_service import TemplateDataService
 from .service_flow_manager import ServiceFlowManager, ServiceContextBuilder
+from .service_history_manager import ServiceHistoryManager
+from .service_renewal_manager import ServiceRenewalManager
+from .service_workflow_manager import ServiceWorkflowManager
+from .service_context_manager import ServiceContextManager
 
 __all__ = [
     'BusinessLineService', 
@@ -18,5 +22,9 @@ __all__ = [
     'RevenueAnalyticsService',
     'TemplateDataService',
     'ServiceFlowManager',
-    'ServiceContextBuilder'
+    'ServiceContextBuilder',
+    'ServiceHistoryManager',
+    'ServiceRenewalManager',
+    'ServiceWorkflowManager',
+    'ServiceContextManager',
 ]

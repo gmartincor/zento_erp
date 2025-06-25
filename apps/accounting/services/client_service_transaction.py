@@ -104,15 +104,5 @@ class ClientServiceTransactionManager:
             is_active=True
         )
         
-        if ClientService.objects.filter(
-            client=client,
-            business_line=business_line,
-            category=category,
-            is_active=True
-        ).exists():
-            raise ValidationError(
-                f"El cliente ya tiene un servicio {category} activo en {business_line.name}"
-            )
-        
         service.save()
         return service
