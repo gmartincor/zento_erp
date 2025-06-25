@@ -73,12 +73,11 @@
         </div>
         
         <div class="grid grid-cols-2 gap-4 mt-4">
-            <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ service.get_payment_method_display }}
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Método de Pago
+            <div class="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                {% load service_tags %}
+                {{ service.current_status|service_status_badge }}
+                <div class="text-xs text-purple-700 dark:text-purple-300 mt-2">
+                    Estado del Servicio
                 </div>
             </div>
             

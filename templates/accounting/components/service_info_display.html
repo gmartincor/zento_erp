@@ -46,15 +46,6 @@
                 </div>
                 {% endif %}
                 
-                {% if service.current_payment_method %}
-                <div class="flex items-center text-sm">
-                    <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Método de pago:</span>
-                    <span class="text-primary-900 dark:text-primary-100 font-semibold">
-                        {{ service.current_payment_method|payment_method_display }}
-                    </span>
-                </div>
-                {% endif %}
-                
                 {% if service.current_start_date and service.current_end_date %}
                 <div class="flex items-center text-sm">
                     <span class="text-primary-600 dark:text-primary-400 font-medium w-24">Período:</span>
