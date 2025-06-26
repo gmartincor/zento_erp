@@ -1,0 +1,22 @@
+{% if service.client.notes or service.notes %}
+<div class="space-y-1">
+    {% if service.client.notes %}
+    <div class="text-xs">
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            Cliente
+        </span>
+        <span class="ml-1 truncate block">{{ service.client.notes|truncatewords:5 }}</span>
+    </div>
+    {% endif %}
+    {% if service.notes %}
+    <div class="text-xs">
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+            Servicio
+        </span>
+        <span class="ml-1 truncate block">{{ service.notes|truncatewords:5 }}</span>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<span class="text-gray-400 dark:text-gray-600 text-xs">Sin notas</span>
+{% endif %}
