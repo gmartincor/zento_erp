@@ -13,37 +13,30 @@ class RenewalContextBuilder:
     
     def __init__(self, service: ClientService):
         self.service = service
-        self._cache = {}
     
     def build_form_context(self) -> Dict[str, Any]:
-        if 'form_context' not in self._cache:
-            options = self._get_renewal_options()
-            
-            self._cache['form_context'] = {
-                'default_amount': self.service.price,
-                'suggested_start_date': options['suggested_start_date'],
-                'default_payment_method': options['last_payment_method'],
-                'available_actions': self._get_available_actions(options),
-                'validation_requirements': self._get_validation_requirements(options)
-            }
+        options = self._get_renewal_options()
         
-        return self._cache['form_context']
+        return {
+            'default_amount': self.service.price,
+            'suggested_start_date': options['suggested_start_date'],
+            'default_payment_method': options['last_payment_method'],
+            'available_actions': self._get_available_actions(options),
+            'validation_requirements': self._get_validation_requirements(options)
+        }
     
     def build_view_context(self, back_url_kwargs: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        if 'view_context' not in self._cache:
-            options = self._get_renewal_options()
-            status_data = ServiceStateManager.get_status_display_data(self.service)
-            
-            self._cache['view_context'] = {
-                'service': self.service,
-                'options': options,
-                'status_data': status_data,
-                'page_title': f'Gestionar Servicio - {self.service.client.full_name}',
-                'back_url': self._build_back_url(back_url_kwargs),
-                'display_info': self._build_display_info(options, status_data)
-            }
+        options = self._get_renewal_options()
+        status_data = ServiceStateManager.get_status_display_data(self.service)
         
-        return self._cache['view_context']
+        return {
+            'service': self.service,
+            'options': options,
+            'status_data': status_data,
+            'page_title': f'Gestionar Servicio - {self.service.client.full_name}',
+            'back_url': self._build_back_url(back_url_kwargs),
+            'display_info': self._build_display_info(options, status_data)
+        }
     
     def build_complete_context(self, back_url_kwargs: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         form_context = self.build_form_context()
@@ -79,22 +72,19 @@ class RenewalContextBuilder:
         return defaults
     
     def _get_renewal_options(self) -> Dict[str, Any]:
-        if 'renewal_options' not in self._cache:
-            status_data = ServiceStateManager.get_status_display_data(self.service)
-            active_until = PaymentService.get_service_active_until(self.service)
-            
-            self._cache['renewal_options'] = {
-                'can_extend': status_data['status'] == 'ACTIVE',
-                'can_renew': status_data['status'] in ['ACTIVE', 'EXPIRED'],
-                'needs_renewal': status_data['needs_renewal'],
-                'is_expired': status_data['status'] == 'EXPIRED',
-                'current_active_until': active_until,
-                'suggested_start_date': self._calculate_suggested_start_date(active_until),
-                'suggested_amount': self.service.price,
-                'last_payment_method': PaymentService.get_service_current_payment_method(self.service)
-            }
+        status_data = ServiceStateManager.get_status_display_data(self.service)
+        active_until = PaymentService.get_service_active_until(self.service)
         
-        return self._cache['renewal_options']
+        return {
+            'can_extend': status_data['status'] == 'ACTIVE',
+            'can_renew': status_data['status'] in ['ACTIVE', 'EXPIRED'],
+            'needs_renewal': status_data['needs_renewal'],
+            'is_expired': status_data['status'] == 'EXPIRED',
+            'current_active_until': active_until,
+            'suggested_start_date': self._calculate_suggested_start_date(active_until),
+            'suggested_amount': self.service.price,
+            'last_payment_method': PaymentService.get_service_current_payment_method(self.service)
+        }
     
     def _calculate_suggested_start_date(self, active_until: Optional[date]) -> date:
         if active_until:
@@ -120,7 +110,7 @@ class RenewalContextBuilder:
     
     def _get_validation_requirements(self, options: Dict[str, Any]) -> Dict[str, Any]:
         return {
-            'extend_requires_payment': True,
+            'extend_requires_payment': False,
             'renew_requires_start_date': True,
             'amount_required_for_extend_renew': True,
             'payment_method_required_when_payment_now': True
@@ -181,9 +171,15 @@ class RenewalFormContextMixin:
 
 class RenewalViewContextMixin:
     
+    def _refresh_service(self):
+        if hasattr(self, 'service'):
+            self.service.get_fresh_service_data()
+    
     def get_renewal_context_data(self, **kwargs):
         if not hasattr(self, 'service'):
             raise ValueError("View must have a 'service' attribute to use RenewalViewContextMixin")
+        
+        self._refresh_service()
         
         context_builder = RenewalContextBuilder(self.service)
         

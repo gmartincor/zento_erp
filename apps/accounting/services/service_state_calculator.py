@@ -10,16 +10,18 @@ class ServiceStateCalculator:
     
     @classmethod
     def get_service_active_until(cls, service: ClientService) -> Optional[date]:
-        if hasattr(service, '_active_until_cache'):
-            return service._active_until_cache
-        
         latest_payment = service.payments.filter(
             status=ServicePayment.StatusChoices.PAID
         ).order_by('-period_end').first()
         
-        active_until = latest_payment.period_end if latest_payment else service.end_date
-        service._active_until_cache = active_until
-        return active_until
+        service_end_date = service.end_date
+        
+        if latest_payment and service_end_date:
+            return max(latest_payment.period_end, service_end_date)
+        elif latest_payment:
+            return latest_payment.period_end
+        else:
+            return service_end_date
     
     @classmethod
     def is_service_active(cls, service: ClientService) -> bool:

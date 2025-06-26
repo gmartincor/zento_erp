@@ -21,18 +21,72 @@ class ServiceRenewalService:
         reference_number: Optional[str] = None,
         notes: Optional[str] = None
     ) -> ServicePayment:
+        from .service_state_calculator import ServiceStateCalculator
+        from .date_calculator import DateCalculator
+        from .payment_manager import PaymentManager
+        
         if payment_date is None:
             payment_date = timezone.now().date()
         
-        return PaymentService.create_payment_and_extend_service(
-            client_service=service,
-            amount=amount,
-            payment_method=payment_method,
-            payment_date=payment_date,
-            reference_number=reference_number,
-            notes=notes,
-            extend_months=duration_months
-        )
+        with transaction.atomic():
+            current_active_until = ServiceStateCalculator.get_service_active_until(service)
+            
+            if current_active_until:
+                period_start = current_active_until + timedelta(days=1)
+                period_end = DateCalculator.add_months_to_date(current_active_until, duration_months)
+            else:
+                period_start = payment_date
+                period_end = DateCalculator.add_months_to_date(payment_date, duration_months)
+            
+            payment = PaymentManager.create_payment(
+                service=service,
+                amount=amount,
+                payment_method=payment_method,
+                period_start=period_start,
+                period_end=period_end,
+                payment_date=payment_date,
+                reference_number=reference_number,
+                notes=notes
+            )
+            
+            if not service.is_active:
+                service.is_active = True
+                service.save()
+            
+            service.get_fresh_service_data()
+        
+        return payment
+
+    @classmethod
+    def extend_service_without_payment(
+        cls,
+        service: ClientService,
+        duration_months: int = 1,
+        notes: Optional[str] = None
+    ) -> date:
+        from .service_state_calculator import ServiceStateCalculator
+        from .date_calculator import DateCalculator
+        
+        with transaction.atomic():
+            current_active_until = ServiceStateCalculator.get_service_active_until(service)
+            
+            if current_active_until:
+                new_end_date = DateCalculator.add_months_to_date(current_active_until, duration_months)
+            else:
+                new_end_date = DateCalculator.add_months_to_date(service.end_date or timezone.now().date(), duration_months)
+            
+            service.end_date = new_end_date
+            service.status = ClientService.StatusChoices.ACTIVE
+            service.is_active = True
+            
+            if notes:
+                existing_notes = service.notes or ""
+                service.notes = f"{existing_notes}\nExtensión sin pago: {notes}".strip()
+            service.save()
+            
+            service.get_fresh_service_data()
+        
+        return new_end_date
 
     @classmethod
     def create_manual_renewal(
@@ -68,17 +122,17 @@ class ServiceRenewalService:
             
             payment = None
             if payment_date and payment_method:
-                payment = PaymentService.create_payment_and_extend_service(
-                    client_service=new_service,
+                from .payment_manager import PaymentManager
+                payment = PaymentManager.create_payment(
+                    service=new_service,
                     amount=amount,
                     payment_method=payment_method,
+                    period_start=start_date,
+                    period_end=end_date,
                     payment_date=payment_date,
                     reference_number=reference_number,
-                    notes=notes,
-                    extend_months=duration_months
+                    notes=notes
                 )
-            else:
-                PaymentService._update_service_active_until(new_service, start_date - timedelta(days=1))
 
         return new_service, payment
 
@@ -99,6 +153,36 @@ class ServiceRenewalService:
         service.save()
         
         return True
+
+    @classmethod
+    def extend_service_flexible(
+        cls,
+        service: ClientService,
+        amount: Decimal,
+        duration_months: int = 1,
+        payment_date: Optional[date] = None,
+        payment_method: Optional[str] = None,
+        reference_number: Optional[str] = None,
+        notes: Optional[str] = None
+    ) -> Tuple[Optional[ServicePayment], date]:
+        if payment_method and payment_date:
+            payment = cls.extend_current_service(
+                service=service,
+                amount=amount,
+                payment_method=payment_method,
+                duration_months=duration_months,
+                payment_date=payment_date,
+                reference_number=reference_number,
+                notes=notes
+            )
+            return payment, payment.period_end
+        else:
+            new_end_date = cls.extend_service_without_payment(
+                service=service,
+                duration_months=duration_months,
+                notes=notes
+            )
+            return None, new_end_date
 
     @classmethod
     def _calculate_end_date(cls, start_date: date, months: int) -> date:

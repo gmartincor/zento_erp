@@ -273,11 +273,13 @@ class ClientService(TimeStampedModel):
     @property
     def active_until(self):
         from .services.payment_service import PaymentService
+        self.invalidate_payment_cache()
         return PaymentService.get_service_active_until(self)
 
     @property
     def total_paid(self):
         from .services.payment_service import PaymentService
+        self.invalidate_payment_cache()
         return PaymentService.get_service_total_paid(self)
 
     @property
@@ -312,6 +314,15 @@ class ClientService(TimeStampedModel):
             path = self.business_line.get_url_path()
             return path if path else 'default'
         return 'default'
+
+    def invalidate_payment_cache(self):
+        if hasattr(self, '_prefetched_objects_cache'):
+            self._prefetched_objects_cache.pop('payments', None)
+
+    def get_fresh_service_data(self):
+        self.invalidate_payment_cache()
+        self.refresh_from_db()
+        return self
 
 
 class ServicePayment(TimeStampedModel):

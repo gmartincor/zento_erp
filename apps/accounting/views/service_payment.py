@@ -74,8 +74,12 @@ class ServiceRenewalView(LoginRequiredMixin, BusinessLinePermissionMixin, Renewa
         self.check_business_line_permission(self.service.business_line)
         return super().dispatch(request, *args, **kwargs)
     
+    def _refresh_service(self):
+        self.service.get_fresh_service_data()
+    
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
+        self._refresh_service()
         kwargs['service'] = self.service
         return kwargs
     
@@ -87,6 +91,8 @@ class ServiceRenewalView(LoginRequiredMixin, BusinessLinePermissionMixin, Renewa
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        self._refresh_service()
         
         renewal_context = self.get_renewal_context_data()
         context.update(renewal_context)
@@ -117,24 +123,31 @@ class ServiceRenewalView(LoginRequiredMixin, BusinessLinePermissionMixin, Renewa
             payment_date = form.cleaned_data['payment_date']
             payment_method = form.cleaned_data['payment_method']
             reference_number = form.cleaned_data['reference_number']
-        else:
-            messages.error(self.request, 'Para extender un servicio, debe registrar el pago.')
+        
+        try:
+            payment, end_date = ServiceRenewalService.extend_service_flexible(
+                service=self.service,
+                amount=form.cleaned_data['amount'],
+                payment_method=payment_method,
+                duration_months=form.cleaned_data['duration_months'],
+                payment_date=payment_date,
+                reference_number=reference_number,
+                notes=form.cleaned_data['notes']
+            )
+            
+            if payment:
+                messages.success(
+                    self.request,
+                    f'Servicio extendido exitosamente con pago. Activo hasta {end_date.strftime("%d/%m/%Y")}.'
+                )
+            else:
+                messages.success(
+                    self.request,
+                    f'Servicio extendido exitosamente sin pago. Vigente hasta {end_date.strftime("%d/%m/%Y")}. Pendiente de pago.'
+                )
+        except Exception as e:
+            messages.error(self.request, f'Error al extender el servicio: {str(e)}')
             return self.form_invalid(form)
-        
-        payment = ServiceRenewalService.extend_current_service(
-            service=self.service,
-            amount=form.cleaned_data['amount'],
-            payment_method=payment_method,
-            duration_months=form.cleaned_data['duration_months'],
-            payment_date=payment_date,
-            reference_number=reference_number,
-            notes=form.cleaned_data['notes']
-        )
-        
-        messages.success(
-            self.request,
-            f'Servicio extendido exitosamente. Activo hasta {payment.period_end.strftime("%d/%m/%Y")}.'
-        )
         
         return redirect('accounting:category-services', 
                       line_path=self.service.get_line_path(),

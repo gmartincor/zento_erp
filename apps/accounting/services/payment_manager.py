@@ -19,9 +19,10 @@ class PaymentManager:
         period_end: date,
         payment_date: Optional[date] = None,
         reference_number: Optional[str] = None,
-        notes: Optional[str] = None
+        notes: Optional[str] = None,
+        status: str = ServicePayment.StatusChoices.PAID
     ) -> ServicePayment:
-        if payment_date is None:
+        if payment_date is None and status == ServicePayment.StatusChoices.PAID:
             payment_date = timezone.now().date()
 
         return ServicePayment.objects.create(
@@ -31,7 +32,7 @@ class PaymentManager:
             payment_method=payment_method,
             reference_number=reference_number or '',
             notes=notes or '',
-            status=ServicePayment.StatusChoices.PAID,
+            status=status,
             period_start=period_start,
             period_end=period_end
         )
