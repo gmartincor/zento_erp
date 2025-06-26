@@ -3,8 +3,8 @@ from django import forms
 
 from apps.accounting.models import ClientService, Client
 from apps.accounting.forms.form_mixins import ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMixin
-from apps.accounting.services.service_workflow_manager import ServiceWorkflowManager
-from apps.accounting.services.service_renewal_manager import ServiceRenewalManager
+from apps.accounting.services.service_renewal_service import ServiceRenewalService
+from apps.accounting.services.context_builder import RenewalContextBuilder
 
 
 class ServiceFormFactory:
@@ -74,11 +74,7 @@ class ClientServiceCreateForm(BaseClientServiceForm):
         if not commit:
             return super().save(commit=False)
         
-        return ServiceWorkflowManager.handle_service_creation_flow(
-            None, self.cleaned_data, 
-            self.cleaned_data['business_line'], 
-            self.cleaned_data['category']
-        )[0]
+        return super().save(commit=True)
 
 
 class ClientServiceUpdateForm(BaseClientServiceForm):
@@ -108,9 +104,7 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
         if not commit:
             return super().save(commit=False)
         
-        return ServiceWorkflowManager.handle_service_update_flow(
-            None, self.instance, self.cleaned_data
-        )[0]
+        return super().save(commit=True)
 
 
 class ServiceRenewalForm(BaseClientServiceForm):
@@ -122,7 +116,8 @@ class ServiceRenewalForm(BaseClientServiceForm):
             self._prefill_from_original()
     
     def _prefill_from_original(self):
-        suggestions = ServiceRenewalManager.get_renewal_suggestions(self.original_service)
+        context_builder = RenewalContextBuilder(self.original_service)
+        suggestions = context_builder._get_renewal_options()
         self.fields['price'].initial = suggestions['suggested_price']
     
     def clean(self):
@@ -134,7 +129,7 @@ class ServiceRenewalForm(BaseClientServiceForm):
         if not commit:
             return super().save(commit=False)
         
-        return ServiceRenewalManager.create_renewal_service(
+        return ServiceRenewalService.create_manual_renewal(
             self.original_service, self.cleaned_data
         )[0]
 

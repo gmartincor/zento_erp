@@ -12,6 +12,8 @@ from decimal import Decimal
 from apps.business_lines.models import BusinessLine
 from apps.accounting.models import Client, ClientService
 from apps.accounting.utils import BusinessLineNavigator, ServiceStatisticsCalculator
+from apps.accounting.services.service_state_manager import ServiceStateManager
+from apps.accounting.services.payment_service import PaymentService
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
     BusinessLineHierarchyMixin,
@@ -33,18 +35,80 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         accessible_lines = self.get_allowed_business_lines()
-        overall_stats = ServiceStatisticsCalculator.get_revenue_summary_by_period(
-            accessible_lines
-        )
+        
+        overall_stats = self._get_simplified_stats(accessible_lines)
         dashboard_cards = self._prepare_dashboard_cards(overall_stats)
+        expiring_services = self._get_expiring_services(accessible_lines)
+        service_stats = self._get_service_status_stats(accessible_lines)
+        
         user_context = self._prepare_user_context()
+        
         context.update({
             'page_title': 'Gestión de Ingresos',
             'overall_stats': overall_stats,
             'dashboard_cards': dashboard_cards,
+            'expiring_services': expiring_services,
+            'service_stats': service_stats,
             'user_context': user_context,
         })
         return context
+    
+    def _get_simplified_stats(self, accessible_lines):
+        services = ClientService.services.filter(business_line__in=accessible_lines)
+        
+        total_revenue = PaymentService.calculate_service_revenue(
+            services.first() if services.exists() else None
+        ) if services.exists() else Decimal('0')
+        
+        if services.exists():
+            total_revenue = sum(
+                PaymentService.get_service_total_paid(service) for service in services
+            )
+        
+        active_services = []
+        unique_clients = set()
+        
+        for service in services:
+            if ServiceStateManager.is_service_active(service):
+                active_services.append(service)
+                unique_clients.add(service.client.id)
+        
+        return {
+            'total_revenue': total_revenue,
+            'total_services': len(active_services),
+            'unique_clients': len(unique_clients),
+            'total_lines': accessible_lines.count()
+        }
+    
+    def _get_expiring_services(self, accessible_lines):
+        services = ClientService.services.filter(business_line__in=accessible_lines)
+        expiring = []
+        
+        for service in services:
+            if ServiceStateManager.needs_renewal(service):
+                expiring.append(service)
+        
+        return expiring[:10]
+    
+    def _get_service_status_stats(self, accessible_lines):
+        services = ClientService.services.filter(business_line__in=accessible_lines)
+        
+        stats = {
+            'active': 0,
+            'expired': 0,
+            'inactive': 0
+        }
+        
+        for service in services:
+            status = ServiceStateManager.get_service_status(service)
+            if status == 'ACTIVE':
+                stats['active'] += 1
+            elif status == 'EXPIRED':
+                stats['expired'] += 1
+            else:
+                stats['inactive'] += 1
+        
+        return stats
     
     def _prepare_dashboard_cards(self, stats):
         return [
@@ -53,14 +117,14 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
                 'value': f"€{stats.get('total_revenue', 0):,.2f}",
                 'icon': 'currency',
                 'color': 'green',
-                'description': 'Total de ingresos del período'
+                'description': 'Total de ingresos acumulados'
             },
             {
                 'title': 'Servicios Activos', 
                 'value': stats.get('total_services', 0),
                 'icon': 'services',
                 'color': 'blue',
-                'description': 'Servicios actualmente en funcionamiento'
+                'description': 'Servicios actualmente activos'
             },
             {
                 'title': 'Clientes Únicos',
@@ -71,10 +135,10 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
             },
             {
                 'title': 'Líneas de Negocio',
-                'value': self.get_allowed_business_lines().count(),
+                'value': stats.get('total_lines', 0),
                 'icon': 'building',
                 'color': 'indigo',
-                'description': 'Líneas de negocio accesibles'
+                'description': 'Líneas de negocio disponibles'
             }
         ]
     

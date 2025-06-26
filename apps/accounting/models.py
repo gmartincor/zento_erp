@@ -4,6 +4,7 @@ from django.utils import timezone
 from apps.core.models import TimeStampedModel, SoftDeleteModel
 from apps.business_lines.models import BusinessLine
 from .managers.client_service_manager import ClientServiceManager
+from .managers.service_manager import ServiceManager
 
 
 class Client(TimeStampedModel, SoftDeleteModel):
@@ -145,6 +146,7 @@ class ClientService(TimeStampedModel):
     )
 
     objects = ClientServiceManager()
+    services = ServiceManager()
 
     class Meta:
         db_table = 'client_services'
@@ -250,54 +252,47 @@ class ClientService(TimeStampedModel):
     
     @property
     def is_expired(self):
-        if not self.end_date:
-            return False
-        return timezone.now().date() > self.end_date
+        from .services.service_state_manager import ServiceStateManager
+        return ServiceStateManager.is_service_expired(self)
     
     @property
     def days_until_expiry(self):
-        if not self.end_date:
-            return None
-        today = timezone.now().date()
-        if today > self.end_date:
-            return 0
-        return (self.end_date - today).days
+        from .services.service_state_manager import ServiceStateManager
+        return ServiceStateManager.days_until_expiry(self)
     
     @property
     def needs_renewal(self):
-        if not self.end_date:
-            return False
-        days_left = self.days_until_expiry
-        return days_left is not None and days_left <= 30
+        from .services.service_state_manager import ServiceStateManager
+        return ServiceStateManager.needs_renewal(self)
 
     @property
     def current_status(self):
-        from apps.accounting.services.payment_service import PaymentService
-        return PaymentService.get_service_payment_status(self)
+        from .services.service_state_manager import ServiceStateManager
+        return ServiceStateManager.get_service_status(self)
 
     @property
     def active_until(self):
-        from apps.accounting.services.payment_service import PaymentService
+        from .services.payment_service import PaymentService
         return PaymentService.get_service_active_until(self)
 
     @property
     def total_paid(self):
-        from apps.accounting.services.payment_service import PaymentService
+        from .services.payment_service import PaymentService
         return PaymentService.get_service_total_paid(self)
 
     @property
     def payment_count(self):
-        from apps.accounting.services.payment_service import PaymentService
+        from .services.payment_service import PaymentService
         return PaymentService.get_service_payment_count(self)
 
     @property
     def current_amount(self):
-        from apps.accounting.services.payment_service import PaymentService
+        from .services.payment_service import PaymentService
         return PaymentService.get_service_current_amount(self)
 
     @property
     def current_payment_method(self):
-        from apps.accounting.services.payment_service import PaymentService
+        from .services.payment_service import PaymentService
         return PaymentService.get_service_current_payment_method(self)
 
     def get_payment_method_display(self):
@@ -305,21 +300,8 @@ class ClientService(TimeStampedModel):
         if not method:
             return "No definido"
         
-        from apps.accounting.models import ServicePayment
         payment_choices = dict(ServicePayment.PaymentMethodChoices.choices)
         return payment_choices.get(method, method)
-
-    @property
-    def current_start_date(self):
-        from apps.accounting.services.payment_service import PaymentService
-        dates = PaymentService.get_service_current_dates(self)
-        return dates['start_date']
-
-    @property
-    def current_end_date(self):
-        from apps.accounting.services.payment_service import PaymentService
-        dates = PaymentService.get_service_current_dates(self)
-        return dates['end_date']
 
     def get_line_path(self):
         """

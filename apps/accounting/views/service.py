@@ -7,8 +7,6 @@ from django.http import Http404
 
 from apps.accounting.models import ClientService
 from apps.accounting.forms.service_form_factory import ServiceFormFactory
-from apps.accounting.services.service_context_manager import ServiceContextManager
-from apps.accounting.services.service_workflow_manager import ServiceWorkflowManager
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
     BusinessLineHierarchyMixin,
@@ -63,7 +61,19 @@ class ServiceCategoryListView(BaseServiceView, ListView):
     
     def get_queryset(self):
         business_line, _, category = self.get_business_line_data()
-        return self.get_services_by_category(business_line, category)
+        
+        status_filter = self.request.GET.get('status')
+        client_filter = self.request.GET.get('client')
+        
+        queryset = ClientService.services.by_business_line(business_line).by_category(category)
+        
+        if status_filter:
+            queryset = queryset.with_status(status_filter)
+        
+        if client_filter:
+            queryset = queryset.filter(client__full_name__icontains=client_filter)
+        
+        return queryset.select_related('client', 'business_line').prefetch_related('payments')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -74,7 +84,11 @@ class ServiceCategoryListView(BaseServiceView, ListView):
             view_mode = 'grid'
         
         context.update(self.get_base_context())
-        context.update(ServiceContextManager.get_service_creation_context(business_line, category))
+        context.update({
+            'business_line': business_line,
+            'category': category,
+            'page_title': f'Servicios - {business_line.name}'
+        })
         
         context.update({
             'line_detail_url': reverse('accounting:business-lines-path', 
@@ -115,7 +129,10 @@ class ServiceEditView(BaseServiceView, UpdateView):
         service = self.get_object()
         
         context.update(self.get_base_context())
-        context.update(ServiceContextManager.get_service_edit_context(service))
+        context.update({
+            'service': service,
+            'page_title': f'Editar Servicio - {service.client.full_name}'
+        })
         
         return context
     
@@ -126,11 +143,9 @@ class ServiceEditView(BaseServiceView, UpdateView):
     
     def form_valid(self, form):
         try:
-            service, redirect_url = ServiceWorkflowManager.handle_service_update_flow(
-                self.request, self.object, form.cleaned_data
-            )
+            service = form.save()
             self.object = service
-            return redirect(redirect_url)
+            return redirect(self.get_success_url())
         except Exception as e:
             form.add_error(None, f'Error al actualizar el servicio: {str(e)}')
             return self.form_invalid(form)
@@ -152,7 +167,11 @@ class ServiceCreateView(BaseServiceView, CreateView):
         business_line, _, category = self.get_business_line_data()
         
         context.update(self.get_base_context())
-        context.update(ServiceContextManager.get_service_creation_context(business_line, category))
+        context.update({
+            'business_line': business_line,
+            'category': category,
+            'page_title': f'Crear Servicio - {business_line.name}'
+        })
         
         return context
     
@@ -161,19 +180,13 @@ class ServiceCreateView(BaseServiceView, CreateView):
         
         self.validate_category(category)
         
-        if not ServiceWorkflowManager.validate_service_creation_permissions(self.request.user, business_line):
-            messages.error(self.request, 'No tienes permisos para crear servicios en esta línea de negocio.')
-            return self.form_invalid(form)
-        
-        form.cleaned_data['business_line'] = business_line
-        form.cleaned_data['category'] = category
+        form.instance.business_line = business_line
+        form.instance.category = category
         
         try:
-            service, redirect_url = ServiceWorkflowManager.handle_service_creation_flow(
-                self.request, form.cleaned_data, business_line, category
-            )
+            service = form.save()
             self.object = service
-            return redirect(redirect_url)
+            return redirect(self.get_success_url())
         except Exception as e:
             form.add_error(None, f'Error al crear el servicio: {str(e)}')
             return self.form_invalid(form)

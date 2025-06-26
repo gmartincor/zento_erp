@@ -6,8 +6,8 @@ from django.http import Http404
 from django.contrib import messages
 
 from apps.accounting.models import Client, ClientService
-from apps.accounting.services.service_context_manager import ServiceContextManager
-from apps.accounting.services.service_history_manager import ServiceHistoryManager
+from apps.accounting.services.service_state_manager import ServiceStateManager
+from apps.accounting.services.payment_service import PaymentService
 from apps.core.mixins import BusinessLinePermissionMixin
 
 
@@ -29,36 +29,49 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
         
         accessible_lines = self.get_allowed_business_lines()
         
+        queryset = ClientService.services.filter(
+            client=client,
+            business_line__in=accessible_lines
+        ).select_related('client', 'business_line').prefetch_related('payments')
+        
         if business_line_id:
             try:
                 business_line = accessible_lines.get(id=business_line_id)
+                queryset = queryset.filter(business_line=business_line)
             except:
-                business_line = None
-        else:
-            business_line = None
+                pass
+                
+        if category:
+            queryset = queryset.filter(category=category)
             
-        return ServiceHistoryManager.get_client_service_history(
-            client=client,
-            business_line=business_line,
-            category=category,
-            accessible_lines=accessible_lines
-        )
+        return queryset.order_by('-created_at')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         client = self.get_client()
         accessible_lines = self.get_allowed_business_lines()
         
-        history_context = ServiceContextManager.get_client_history_context(
-            client=client,
-            services=self.get_queryset(),
-            accessible_lines=accessible_lines,
-            request=self.request
-        )
+        services_with_status = []
+        for service in context['services']:
+            service_status = ServiceStateManager.get_service_status(service)
+            active_until = PaymentService.get_service_active_until(service)
+            services_with_status.append({
+                'service': service,
+                'status': service_status,
+                'status_display': ServiceStateManager.get_status_display(service_status),
+                'active_until': active_until
+            })
         
-        context.update(history_context)
+        categories = ClientService.CATEGORY_CHOICES
+        business_line_options = [(bl.id, bl.name) for bl in accessible_lines]
+        
         context.update({
             'client': client,
+            'services_with_status': services_with_status,
+            'categories': categories,
+            'business_line_options': business_line_options,
+            'selected_business_line': self.request.GET.get('business_line'),
+            'selected_category': self.request.GET.get('category'),
             'page_title': f'Historial de Servicios - {client.full_name}',
             'page_subtitle': f'Servicios contratados por {client.full_name}',
         })
@@ -85,13 +98,15 @@ class ClientServiceDetailView(LoginRequiredMixin, BusinessLinePermissionMixin, D
         context = super().get_context_data(**kwargs)
         service = self.object
         
-        detail_context = ServiceContextManager.get_service_detail_context(
-            service=service,
-            request=self.request
-        )
+        service_status = ServiceStateManager.get_service_status(service)
+        active_until = PaymentService.get_service_active_until(service)
+        payments = service.payments.order_by('-payment_date')
         
-        context.update(detail_context)
         context.update({
+            'service_status': service_status,
+            'status_display': ServiceStateManager.get_status_display(service_status),
+            'active_until': active_until,
+            'payments': payments,
             'page_title': f'Detalle del Servicio - {service.client.full_name}',
             'page_subtitle': f'{service.business_line.name} • {service.get_category_display()}',
             'back_url': reverse('accounting:client-service-history', 

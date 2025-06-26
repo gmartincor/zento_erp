@@ -11,19 +11,12 @@ from .views import (
     BusinessLineUpdateView,
     BusinessLineDeleteView,
     BusinessLineManagementDetailView,
-    payment_list,
-    payment_detail,
-    payment_update,
-    payment_mark_paid,
-    payment_cancel,
-    service_payment_history,
-    service_renewal,
-    payment_create,
-    expiring_services
+    PaymentManagementView,
+    ExpiringServicesView
 )
 from .views.payment_history import payment_history_view
 from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
-from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
+from .views.service_payment import ServicePaymentView, ServiceRenewalView
 
 app_name = 'accounting'
 
@@ -75,36 +68,19 @@ urlpatterns = [
         name='business-lines-path'
     ),
     
-    # Payment History
+    # Payment Management
+    path('payments/', PaymentManagementView.as_view(), name='payments'),
+    path('payments/history/', payment_history_view, name='payment-history'),
+    path('expiring-services/', ExpiringServicesView.as_view(), name='expiring_services'),
+    
+    # Client Service History
     path('payments/history/', payment_history_view, name='payment-history'),
     
     # Client Service History
     path('clients/<int:client_id>/services/', ClientServiceHistoryView.as_view(), name='client-service-history'),
     path('services/<int:service_id>/detail/', ClientServiceDetailView.as_view(), name='client-service-detail'),
     
-    # Payment URLs
-    path('payments/', payment_list, name='payments'),
-    path('payments/<int:payment_id>/', payment_detail, name='payment-detail'),
-    path('payments/<int:payment_id>/edit/', payment_update, name='payment-edit'),
-    path('payments/<int:payment_id>/mark-paid/', payment_mark_paid, name='payment-mark-paid'),
-    path('payments/<int:payment_id>/cancel/', payment_cancel, name='payment-cancel'),
-    
-    # Service payment management
-    path('services/<int:service_id>/payments/', service_payment_history, name='service-payment-history'),
-    path('services/<int:service_id>/renew/', service_renewal, name='service-renewal'),
-    path('services/<int:service_id>/payments/create/', payment_create, name='payment-create'),
-    
-    # Expiring services
-    path('expiring-services/', expiring_services, name='expiring_services'),
-    
-    # Business line specific payments
-    re_path(
-        r'^business-lines/(?P<business_line_path>[\w-]+(?:/[\w-]+)*)/payments/$',
-        payment_list,
-        name='business_line_payments'
-    ),
-    
-    # Client service history
-    path('clients/<int:client_id>/services/', ClientServiceHistoryView.as_view(), name='client-service-history'),
-    path('clients/<int:client_id>/services/<int:service_id>/', ClientServiceDetailView.as_view(), name='client-service-detail'),
+    # Service Payment and Renewal URLs
+    path('services/<int:service_id>/payment/', ServicePaymentView.as_view(), name='service-payment'),
+    path('services/<int:service_id>/renewal/', ServiceRenewalView.as_view(), name='service-renewal'),
 ]

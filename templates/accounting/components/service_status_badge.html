@@ -1,0 +1,12 @@
+{% load service_status_tags %}
+
+<div class="flex items-center space-x-2">
+    {% service_status_icon service %}
+    {% service_status_badge service %}
+</div>
+
+{% if service|service_needs_renewal %}
+    <div class="mt-1 text-xs text-orange-600">
+        {% service_expiry_info service %}
+    </div>
+{% endif %}

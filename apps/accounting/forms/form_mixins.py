@@ -3,7 +3,6 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from apps.accounting.models import Client, ClientService
-from apps.accounting.services.service_workflow_manager import ServiceWorkflowManager
 
 
 class ServiceFormMixin:
