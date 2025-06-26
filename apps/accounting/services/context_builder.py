@@ -166,16 +166,16 @@ class RenewalFormContextMixin:
     def _apply_form_context(self):
         context = self.context_builder.build_form_context()
         
-        if hasattr(self.fields, 'amount') and context['default_amount']:
+        if 'amount' in self.fields and context['default_amount']:
             self.fields['amount'].initial = context['default_amount']
         
-        if hasattr(self.fields, 'start_date') and context['suggested_start_date']:
+        if 'start_date' in self.fields and context['suggested_start_date']:
             self.fields['start_date'].initial = context['suggested_start_date']
         
-        if hasattr(self.fields, 'payment_method') and context['default_payment_method']:
+        if 'payment_method' in self.fields and context['default_payment_method']:
             self.fields['payment_method'].initial = context['default_payment_method']
         
-        if hasattr(self.fields, 'action_type'):
+        if 'action_type' in self.fields:
             self.fields['action_type'].choices = context['available_actions']
 
 
