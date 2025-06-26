@@ -8,7 +8,7 @@ from .presentation_service import PresentationService
 from .revenue_analytics_service import RevenueAnalyticsService
 from .template_service import TemplateDataService
 from .service_state_manager import ServiceStateManager
-from .service_date_manager import ServiceDateManager
+from .date_calculator import DateCalculator
 
 __all__ = [
     'BusinessLineService', 
@@ -21,5 +21,5 @@ __all__ = [
     'RevenueAnalyticsService',
     'TemplateDataService',
     'ServiceStateManager',
-    'ServiceDateManager',
+    'DateCalculator',
 ]

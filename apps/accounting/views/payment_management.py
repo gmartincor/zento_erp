@@ -67,20 +67,20 @@ class ExpiringServicesView(LoginRequiredMixin, BusinessLinePermissionMixin, List
         accessible_lines = self.get_allowed_business_lines()
         days = int(self.request.GET.get('days', 30))
         
-        services = []
         all_services = ClientService.services.filter(
             business_line__in=accessible_lines,
             is_active=True
         ).select_related('client', 'business_line').prefetch_related('payments')
         
+        expiring_services = []
         for service in all_services:
             active_until = PaymentService.get_service_active_until(service)
             if active_until:
                 days_left = (active_until - timezone.now().date()).days
                 if 0 <= days_left <= days:
-                    services.append(service.pk)
+                    expiring_services.append(service.id)
         
-        return all_services.filter(pk__in=services).order_by('created')
+        return all_services.filter(id__in=expiring_services).order_by('created')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

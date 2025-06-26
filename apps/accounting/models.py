@@ -530,5 +530,5 @@ class ServicePayment(TimeStampedModel):
             self.save()
 
     def get_payment_timing_analysis(self):
-        from .services.service_date_manager import ServiceDateManager
-        return ServiceDateManager.analyze_payment_timing(self)
+        from .services.payment_service import PaymentService
+        return PaymentService.analyze_payment_timing(self)

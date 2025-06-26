@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import date
 from django.utils import timezone
 
 from ..models import ClientService
+from .date_calculator import DateCalculator
 
 
 class ServiceManager:
@@ -10,6 +11,22 @@ class ServiceManager:
     @classmethod
     def can_edit_service_dates(cls, service: ClientService) -> bool:
         return not cls._has_overlapping_payments(service)
+    
+    @classmethod
+    def get_date_edit_restrictions(cls, service: ClientService) -> Dict[str, Any]:
+        
+        can_edit = cls.can_edit_service_dates(service)
+        
+        if not can_edit:
+            return {
+                'can_edit_dates': False,
+                'restriction_reason': 'No se pueden modificar las fechas porque el servicio tiene pagos asociados que se superponen con el período actual.'
+            }
+        
+        return {
+            'can_edit_dates': True,
+            'restriction_reason': None
+        }
     
     @classmethod
     def update_service_dates(
@@ -51,23 +68,6 @@ class ServiceManager:
         )
     
     @classmethod
-    def get_date_edit_restrictions(cls, service: ClientService) -> dict:
-        from ..models import ServicePayment
-        
-        has_payments = service.payments.filter(
-            status=ServicePayment.StatusChoices.PAID
-        ).exists()
-        
-        has_overlapping = cls._has_overlapping_payments(service)
-        
-        return {
-            'can_edit_dates': not has_overlapping,
-            'has_payments': has_payments,
-            'has_overlapping_payments': has_overlapping,
-            'restriction_reason': cls._get_restriction_reason(has_payments, has_overlapping)
-        }
-    
-    @classmethod
     def _has_overlapping_payments(cls, service: ClientService) -> bool:
         from ..models import ServicePayment
         
@@ -76,11 +76,3 @@ class ServiceManager:
             period_start__lte=service.end_date or timezone.now().date(),
             period_end__gte=service.start_date or timezone.now().date()
         ).exists()
-    
-    @classmethod
-    def _get_restriction_reason(cls, has_payments: bool, has_overlapping: bool) -> Optional[str]:
-        if has_overlapping:
-            return "No se pueden editar las fechas porque hay pagos que se solapan con el período del servicio"
-        elif has_payments:
-            return "Edita con cuidado: hay pagos registrados para este servicio"
-        return None

@@ -3,7 +3,7 @@ from datetime import date
 from django.utils import timezone
 
 from ..models import ClientService
-from ..services.service_date_manager import ServiceDateManager
+from ..services.service_manager import ServiceManager
 
 
 class ServiceDateEditForm(forms.ModelForm):
@@ -15,7 +15,7 @@ class ServiceDateEditForm(forms.ModelForm):
             self._setup_date_fields()
     
     def _setup_date_fields(self):
-        restrictions = ServiceDateManager.get_date_edit_restrictions(self.instance)
+        restrictions = ServiceManager.get_date_edit_restrictions(self.instance)
         
         if not restrictions['can_edit_dates']:
             self._disable_date_fields(restrictions['restriction_reason'])
@@ -50,7 +50,7 @@ class ServiceDateEditForm(forms.ModelForm):
                     'end_date': 'La fecha de finalización debe ser posterior a la fecha de inicio.'
                 })
             
-            restrictions = ServiceDateManager.get_date_edit_restrictions(self.instance)
+            restrictions = ServiceManager.get_date_edit_restrictions(self.instance)
             if not restrictions['can_edit_dates']:
                 if start_date != self.instance.start_date or end_date != self.instance.end_date:
                     reason = restrictions.get('restriction_reason', 'No se pueden modificar las fechas')

@@ -5,6 +5,7 @@ from django.db import transaction, models
 from django.utils import timezone
 
 from ..models import ClientService, ServicePayment
+from .date_calculator import DateCalculator
 
 
 class PaymentService:
@@ -32,7 +33,7 @@ class PaymentService:
         else:
             period_start = payment_date
         
-        period_end = cls._add_months_to_date(period_start, extend_months)
+        period_end = DateCalculator.add_months_to_date(period_start, extend_months)
         
         payment = ServicePayment.objects.create(
             client_service=client_service,
@@ -65,8 +66,8 @@ class PaymentService:
         notes: Optional[str] = None
     ) -> ClientService:
         
-        current_end = client_service.end_date or timezone.now().date()
-        new_end = cls._add_months_to_date(current_end, extend_months)
+        current_end = client_service.end_date or DateCalculator.get_today()
+        new_end = DateCalculator.add_months_to_date(current_end, extend_months)
         
         client_service.end_date = new_end
         client_service.status = ClientService.StatusChoices.ACTIVE
@@ -168,18 +169,3 @@ class PaymentService:
             'on_time_payments': on_time_payments,
             'has_late_payments': len(late_payments) > 0
         }
-    
-    @classmethod
-    def _add_months_to_date(cls, base_date: date, months: int) -> date:
-        year = base_date.year
-        month = base_date.month + months
-        day = base_date.day
-        
-        while month > 12:
-            month -= 12
-            year += 1
-        
-        try:
-            return date(year, month, day)
-        except ValueError:
-            return date(year, month + 1, 1) - timedelta(days=1)

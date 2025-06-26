@@ -69,14 +69,14 @@ def service_expiry_info(service):
     
     days_left = status_data.get('days_left', 0)
     
-    if days_left <= 0:
+    if days_left < 0:
         days_overdue = abs(days_left)
-        if days_overdue == 0:
-            return "Vence hoy"
-        elif days_overdue == 1:
+        if days_overdue == 1:
             return "Vencido hace 1 día"
         else:
             return f"Vencido hace {days_overdue} días"
+    elif days_left == 0:
+        return "Vence hoy"
     elif days_left == 1:
         return "Vence mañana"
     elif days_left <= 7:
