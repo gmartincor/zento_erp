@@ -74,11 +74,9 @@ class ClientService(TimeStampedModel):
         WHITE = 'white', 'Blanco'
         BLACK = 'black', 'Negro'
     
-    class StatusChoices(models.TextChoices):
-        ACTIVE = 'ACTIVE', 'Activo'
-        INACTIVE = 'INACTIVE', 'Inactivo'
-        SUSPENDED = 'SUSPENDED', 'Suspendido'
-        EXPIRED = 'EXPIRED', 'Expirado'
+    class AdminStatusChoices(models.TextChoices):
+        ENABLED = 'ENABLED', 'Habilitado'
+        DISABLED = 'DISABLED', 'Deshabilitado administrativamente'
     
     client = models.ForeignKey(
         Client,
@@ -119,11 +117,12 @@ class ClientService(TimeStampedModel):
         verbose_name="Fecha de finalización"
     )
     
-    status = models.CharField(
+    admin_status = models.CharField(
         max_length=15,
-        choices=StatusChoices.choices,
-        default=StatusChoices.INACTIVE,
-        verbose_name="Estado del servicio"
+        choices=AdminStatusChoices.choices,
+        default=AdminStatusChoices.ENABLED,
+        verbose_name="Estado administrativo",
+        help_text="Control administrativo independiente del estado operacional"
     )
     
     notes = models.TextField(
@@ -268,6 +267,15 @@ class ClientService(TimeStampedModel):
     def current_status(self):
         from .services.service_state_manager import ServiceStateManager
         return ServiceStateManager.get_service_status(self)
+
+    @property
+    def status_display_data(self):
+        from .services.service_state_manager import ServiceStateManager
+        return ServiceStateManager.get_status_display_data(self)
+
+    def get_status_display(self):
+        from .services.service_state_manager import ServiceStateManager
+        return ServiceStateManager.get_status_display(self.current_status)
 
     def get_payment_timing_analysis(self):
         from .services.payment_service import PaymentService

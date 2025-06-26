@@ -55,11 +55,11 @@ class ClientServiceTransactionManager:
             raise ValidationError(f"Ya existe otro cliente con el DNI {client.dni}")
     
     @staticmethod
-    def _update_service_data(service: ClientService, form_data: Dict[str, Any]) -> None:
+    def _update_service_data(service, form_data: Dict[str, Any]) -> None:
         service.price = form_data.get('price', service.price)
         service.start_date = form_data.get('start_date', service.start_date)
         service.end_date = form_data.get('end_date', service.end_date)
-        service.status = form_data.get('status', service.status)
+        service.admin_status = form_data.get('admin_status', service.admin_status)
         service.notes = form_data.get('notes', service.notes or '').strip()
         
         if 'remanentes' in form_data:
@@ -90,7 +90,7 @@ class ClientServiceTransactionManager:
         return client
     
     @staticmethod
-    def _create_service_from_data(client: Client, form_data: Dict[str, Any], business_line, category) -> ClientService:
+    def _create_service_from_data(client, form_data: Dict[str, Any], business_line, category):
         service = ClientService(
             client=client,
             business_line=business_line,
@@ -98,7 +98,7 @@ class ClientServiceTransactionManager:
             price=form_data.get('price', 0.00),
             start_date=form_data.get('start_date'),
             end_date=form_data.get('end_date'),
-            status=form_data.get('status', ClientService.StatusChoices.INACTIVE),
+            admin_status=form_data.get('admin_status', 'ENABLED'),
             notes=form_data.get('notes', '').strip(),
             remanentes=form_data.get('remanentes', {}),
             is_active=True

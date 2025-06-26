@@ -51,16 +51,11 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
         client = self.get_client()
         accessible_lines = self.get_allowed_business_lines()
         
-        services_with_status = []
-        for service in context['services']:
-            service_status = ServiceStateManager.get_service_status(service)
-            active_until = service.end_date
-            services_with_status.append({
-                'service': service,
-                'status': service_status,
-                'status_display': ServiceStateManager.get_status_display(service_status),
-                'active_until': active_until
-            })
+        from ..services.service_status_utility import ServiceStatusUtility
+        services_with_status = ServiceStatusUtility.get_services_with_status_data(context['services'])
+        
+        for service_data in services_with_status:
+            service_data['active_until'] = service_data['service'].end_date
         
         categories = ClientService.CATEGORY_CHOICES
         business_line_options = [(bl.id, bl.name) for bl in accessible_lines]

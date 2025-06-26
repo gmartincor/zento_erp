@@ -142,27 +142,11 @@ class ClientServiceAdmin(admin.ModelAdmin):
     client_name_display.admin_order_field = 'client__full_name'
 
     def current_status_display(self, obj):
-        status = obj.current_status
-        status_colors = {
-            'ACTIVE': 'green',
-            'EXPIRED_RECENT': 'orange',
-            'EXPIRED': 'red',
-            'INACTIVE': 'gray'
-        }
-        status_labels = {
-            'ACTIVE': 'Activo',
-            'EXPIRED_RECENT': 'Vencido reciente',
-            'EXPIRED': 'Vencido',
-            'INACTIVE': 'Inactivo'
-        }
-        
-        color = status_colors.get(status, 'black')
-        label = status_labels.get(status, status)
-        
+        status_data = obj.status_display_data
         return format_html(
             '<span style="color: {}; font-weight: bold;">{}</span>',
-            color,
-            label
+            status_data['color'],
+            status_data['label']
         )
     
     current_status_display.short_description = 'Estado actual'

@@ -41,14 +41,40 @@ class ServiceQuerySet(models.QuerySet):
         return self.filter(pk__in=services)
     
     def with_status(self, status):
-        from ..services.service_state_manager import ServiceStateManager
+        from django.utils import timezone
+        from datetime import timedelta
+        today = timezone.now().date()
         
-        services = []
-        for service in self:
-            if ServiceStateManager.get_service_status(service) == status:
-                services.append(service.pk)
+        base_filter = models.Q(is_active=True)
         
-        return self.filter(pk__in=services)
+        if status == 'inactive':
+            return self.filter(is_active=False)
+        elif status == 'disabled':
+            return self.filter(base_filter, admin_status='DISABLED')
+        elif status == 'expired':
+            return self.filter(base_filter, admin_status='ENABLED', end_date__lt=today)
+        elif status == 'active':
+            return self.filter(
+                base_filter & 
+                models.Q(admin_status='ENABLED') &
+                (models.Q(end_date__isnull=True) | models.Q(end_date__gte=today + timedelta(days=30)))
+            )
+        elif status == 'renewal_due':
+            return self.filter(
+                base_filter,
+                admin_status='ENABLED', 
+                end_date__gte=today + timedelta(days=7),
+                end_date__lt=today + timedelta(days=30)
+            )
+        elif status == 'expiring_soon':
+            return self.filter(
+                base_filter,
+                admin_status='ENABLED',
+                end_date__gte=today,
+                end_date__lt=today + timedelta(days=7)
+            )
+        
+        return self.none()
 
 
 class ServiceManager(models.Manager):

@@ -9,19 +9,10 @@
         <div class="flex justify-between items-center">
             <span class="text-sm text-gray-600 dark:text-gray-400">Estado:</span>
             <div class="flex items-center">
-                {% if service.status == 'ACTIVE' %}
-                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    <span class="text-sm font-medium text-green-600">Activo</span>
-                {% elif service.status == 'INACTIVE' %}
-                    <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-                    <span class="text-sm font-medium text-gray-600">Inactivo</span>
-                {% elif service.status == 'SUSPENDED' %}
-                    <div class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
-                    <span class="text-sm font-medium text-yellow-600">Suspendido</span>
-                {% else %}
-                    <div class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                    <span class="text-sm font-medium text-red-600">{{ service.get_status_display }}</span>
-                {% endif %}
+                {% with status_data=service.status_display_data %}
+                    <div class="w-2 h-2 rounded-full mr-2" style="background-color: {{ status_data.color }}"></div>
+                    <span class="text-sm font-medium" style="color: {{ status_data.color }}">{{ status_data.label }}</span>
+                {% endwith %}
             </div>
         </div>
         
@@ -62,7 +53,7 @@
         {% if service.end_date %}
         <div class="flex justify-between items-center">
             <span class="text-sm text-gray-600 dark:text-gray-400">Vigente Hasta:</span>
-            <span class="text-sm font-medium {% if service.status == 'ACTIVE' %}text-blue-600{% else %}text-gray-900 dark:text-white{% endif %}">
+            <span class="text-sm font-medium {% with status_data=service.status_display_data %}{% if status_data.status == 'active' %}text-blue-600{% else %}text-gray-900 dark:text-white{% endif %}{% endwith %}">
                 {{ service.end_date|date:"d/m/Y" }}
             </span>
         </div>

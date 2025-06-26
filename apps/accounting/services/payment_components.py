@@ -96,10 +96,10 @@ class ServiceExtensionManager:
     
     @staticmethod
     @transaction.atomic
-    def extend_service_to_date(service: ClientService, new_end_date: date) -> ClientService:
+    def extend_service_to_date(service, new_end_date: date):
         if not service.end_date or new_end_date > service.end_date:
             service.end_date = new_end_date
-            service.status = ClientService.StatusChoices.ACTIVE
+            service.admin_status = 'ENABLED'
             service.is_active = True
             service.save()
         
@@ -107,7 +107,7 @@ class ServiceExtensionManager:
     
     @staticmethod
     @transaction.atomic
-    def extend_service_by_months(service: ClientService, months: int) -> ClientService:
+    def extend_service_by_months(service, months: int):
         current_end = service.end_date or DateCalculator.get_today()
         new_end = DateCalculator.add_months_to_date(current_end, months)
         return ServiceExtensionManager.extend_service_to_date(service, new_end)

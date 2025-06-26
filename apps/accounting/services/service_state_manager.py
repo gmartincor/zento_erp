@@ -11,8 +11,11 @@ class ServiceStateManager:
     EXPIRING_SOON_DAYS = 7
     
     @classmethod
-    def is_service_active(cls, service: ClientService) -> bool:
+    def is_service_active(cls, service) -> bool:
         if not service.is_active:
+            return False
+        
+        if service.admin_status == 'DISABLED':
             return False
         
         active_until = service.end_date
@@ -52,9 +55,12 @@ class ServiceStateManager:
         return days_until_expiry <= cls.RENEWAL_WARNING_DAYS
     
     @classmethod
-    def get_service_status(cls, service: ClientService) -> str:
+    def get_service_status(cls, service) -> str:
         if not service.is_active:
             return 'inactive'
+        
+        if service.admin_status == 'DISABLED':
+            return 'disabled'
         
         if cls.is_service_expired(service):
             return 'expired'
@@ -103,6 +109,12 @@ class ServiceStateManager:
                 'class': 'badge-secondary',
                 'icon': 'pause-circle',
                 'color': 'gray'
+            },
+            'disabled': {
+                'label': 'Deshabilitado',
+                'class': 'badge-dark',
+                'icon': 'ban',
+                'color': 'black'
             }
         }
         
@@ -142,7 +154,8 @@ class ServiceStateManager:
             'renewal_due': 'Renovar Pronto',
             'expiring_soon': 'Vence Pronto',
             'expired': 'Vencido',
-            'inactive': 'Inactivo'
+            'inactive': 'Inactivo',
+            'disabled': 'Deshabilitado'
         }
         return status_labels.get(status, 'Desconocido')
     
@@ -152,8 +165,9 @@ class ServiceStateManager:
             'expired': 1,
             'expiring_soon': 2,
             'renewal_due': 3,
-            'inactive': 4,
-            'active': 5,
+            'disabled': 4,
+            'inactive': 5,
+            'active': 6,
         }
         return priorities.get(status, 0)
     

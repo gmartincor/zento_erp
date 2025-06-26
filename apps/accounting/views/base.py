@@ -91,22 +91,8 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
         return expiring[:10]
     
     def _get_service_status_stats(self, accessible_lines):
-        services = ClientService.services.filter(business_line__in=accessible_lines)
-        
-        stats = {
-            'active': 0,
-            'expired': 0,
-            'inactive': 0
-        }
-        
-        for service in services:
-            status = ServiceStateManager.get_service_status(service)
-            if status == 'ACTIVE':
-                stats['active'] += 1
-            elif status == 'EXPIRED':
-                stats['expired'] += 1
-            else:
-                stats['inactive'] += 1
+        from ..services.service_status_utility import ServiceStatusUtility
+        return ServiceStatusUtility.get_status_counts(accessible_lines)
         
         return stats
     

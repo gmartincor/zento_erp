@@ -15,9 +15,12 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado del Servicio</label>
             <select name="status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                 <option value="">Todos los estados</option>
-                <option value="ACTIVE" {% if request.GET.status == 'ACTIVE' %}selected{% endif %}>Activos</option>
-                <option value="EXPIRED" {% if request.GET.status == 'EXPIRED' %}selected{% endif %}>Vencidos</option>
-                <option value="INACTIVE" {% if request.GET.status == 'INACTIVE' %}selected{% endif %}>Inactivos</option>
+                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Activos</option>
+                <option value="expiring_soon" {% if request.GET.status == 'expiring_soon' %}selected{% endif %}>Vencen Pronto</option>
+                <option value="renewal_due" {% if request.GET.status == 'renewal_due' %}selected{% endif %}>Renovar Pronto</option>
+                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Vencidos</option>
+                <option value="disabled" {% if request.GET.status == 'disabled' %}selected{% endif %}>Deshabilitados</option>
+                <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactivos</option>
             </select>
         </div>
     </div>
