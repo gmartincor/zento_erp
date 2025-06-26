@@ -32,7 +32,7 @@
             </div>
         </div>
         
-        <!-- Paso 3: Primer pago -->
+        <!-- Paso 3: Estado de pagos -->
         {% if has_payments %}
         <div class="flex items-center">
             <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
@@ -41,8 +41,8 @@
                 </svg>
             </div>
             <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900 dark:text-white">Primer Pago Registrado</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">{{ service.total_paid|floatformat:2 }}€ total</p>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Pagos Registrados</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ service.total_paid|floatformat:2 }}€ total ({{ service.payment_count }} pagos)</p>
             </div>
         </div>
         {% else %}
@@ -59,7 +59,7 @@
         </div>
         {% endif %}
         
-        <!-- Paso 4: Activación del servicio -->
+        <!-- Paso 4: Estado del servicio -->
         {% if is_active %}
         <div class="flex items-center">
             <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
@@ -69,8 +69,8 @@
             </div>
             <div class="ml-3">
                 <p class="text-sm font-medium text-gray-900 dark:text-white">Servicio Activo</p>
-                {% if service.active_until %}
-                <p class="text-sm text-gray-600 dark:text-gray-400">Hasta {{ service.active_until|date:"d/m/Y" }}</p>
+                {% if service.end_date %}
+                <p class="text-sm text-gray-600 dark:text-gray-400">Vigente hasta {{ service.end_date|date:"d/m/Y" }}</p>
                 {% endif %}
             </div>
         </div>
@@ -78,18 +78,18 @@
         <div class="flex items-center">
             <div class="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full">
                 <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </div>
             <div class="ml-3">
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Servicio Inactivo</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Requiere pago para activarse</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Requiere atención</p>
             </div>
         </div>
         {% endif %}
     </div>
     
-    {% if needs_payment %}
+    {% if next_step_message %}
     <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
             <div class="flex items-center">
@@ -97,7 +97,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <div>
-                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">Acción Requerida</h4>
+                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">Próximo Paso</h4>
                     <p class="text-sm text-blue-700 dark:text-blue-400">{{ next_step_message }}</p>
                 </div>
             </div>

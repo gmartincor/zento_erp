@@ -1,33 +1,5 @@
-{% if next_step_message %}
-<div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-4">
-    <div class="flex items-center justify-between">
-        <div class="flex items-center">
-            <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">
-                    Próximo Paso
-                </h4>
-                <p class="text-sm text-blue-700 dark:text-blue-400">
-                    {{ next_step_message }}
-                </p>
-            </div>
-        </div>
-        {% if needs_payment %}
-        <div class="flex space-x-2">
-            <a href="{{ payment_create_url }}" 
-               class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors font-medium">
-                Registrar Pago
-            </a>
-        </div>
-        {% endif %}
-    </div>
-</div>
-{% endif %}
-
 <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between mb-3">
         <div class="flex items-center">
             <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
@@ -37,18 +9,18 @@
                     Gestión de Pagos
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Historial y gestión de pagos del servicio.
+                    Gestionar pagos del servicio
                 </p>
             </div>
         </div>
         <div class="flex space-x-2">
             {% if service %}
-            <a href="{{ payment_history_url }}" 
+            <a href="{% url 'accounting:payment-history' service_id=service.id %}" 
                class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors">
                 Ver Historial
             </a>
-            {% if not needs_payment %}
-            <a href="{{ payment_create_url }}" 
+            {% if not has_payments or needs_payment %}
+            <a href="{% url 'accounting:service-payment' service_id=service.id %}" 
                class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors">
                 Nuevo Pago
             </a>
@@ -56,4 +28,35 @@
             {% endif %}
         </div>
     </div>
+    
+    {% if next_step_message %}
+    <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3 mb-3">
+        <div class="flex items-center">
+            <svg class="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+                <h5 class="text-xs font-medium text-blue-800 dark:text-blue-300">Próximo Paso</h5>
+                <p class="text-xs text-blue-700 dark:text-blue-400">{{ next_step_message }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if service.total_paid %}
+    <div class="grid grid-cols-2 gap-4 text-xs">
+        <div>
+            <span class="text-gray-600 dark:text-gray-400">Total Pagado:</span>
+            <div class="font-medium text-green-600">{{ service.total_paid|floatformat:2 }}€</div>
+        </div>
+        <div>
+            <span class="text-gray-600 dark:text-gray-400">Pagos:</span>
+            <div class="font-medium text-gray-900 dark:text-white">{{ service.payment_count }}</div>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-xs text-orange-600 dark:text-orange-400">
+        Sin pagos registrados. Registre el primer pago para activar el servicio.
+    </p>
+    {% endif %}
 </div>

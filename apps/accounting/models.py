@@ -269,11 +269,6 @@ class ClientService(TimeStampedModel):
         from .services.service_state_manager import ServiceStateManager
         return ServiceStateManager.get_service_status(self)
 
-    @property
-    def current_status(self):
-        from .services.service_state_manager import ServiceStateManager
-        return ServiceStateManager.get_service_status(self)
-
     def get_payment_timing_analysis(self):
         from .services.payment_service import PaymentService
         return PaymentService.analyze_payment_timing(self)

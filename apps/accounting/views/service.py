@@ -129,11 +129,15 @@ class ServiceEditView(BaseServiceView, UpdateView):
         context = super().get_context_data(**kwargs)
         service = self.get_object()
         
+        from ..services.service_progress_service import ServiceProgressService
+        progress_data = ServiceProgressService.get_service_progress_data(service)
+        
         context.update(self.get_base_context())
         context.update({
             'service': service,
             'page_title': f'Editar Servicio - {service.client.full_name}'
         })
+        context.update(progress_data)
         
         return context
     
