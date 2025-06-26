@@ -47,6 +47,25 @@
             {% csrf_token %}
             
             <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        {{ form.payment_type.label }}
+                    </label>
+                    <div class="space-y-3">
+                        {% for choice in form.payment_type %}
+                            <div class="flex items-center">
+                                {{ choice.tag }}
+                                <label for="{{ choice.id_for_label }}" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                    {{ choice.choice_label }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if form.payment_type.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.payment_type.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -60,6 +79,28 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ form.payment_method.label }}
+                        </label>
+                        {{ form.payment_method }}
+                        {% if form.payment_method.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.payment_method.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ form.payment_date.label }}
+                    </label>
+                    {{ form.payment_date }}
+                    {% if form.payment_date.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.payment_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div id="extend-options" class="extend-payment-option">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             {{ form.extend_months.label }}
                         </label>
                         {{ form.extend_months }}
@@ -68,26 +109,28 @@
                         {% endif %}
                     </div>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {{ form.payment_method.label }}
-                        </label>
-                        {{ form.payment_method }}
-                        {% if form.payment_method.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.payment_method.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {{ form.payment_date.label }}
-                        </label>
-                        {{ form.payment_date }}
-                        {% if form.payment_date.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.payment_date.errors.0 }}</p>
-                        {% endif %}
+
+                <div id="period-options" class="period-payment-option" style="display: none;">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {{ form.period_start.label }}
+                            </label>
+                            {{ form.period_start }}
+                            {% if form.period_start.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.period_start.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {{ form.period_end.label }}
+                            </label>
+                            {{ form.period_end }}
+                            {% if form.period_end.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.period_end.errors.0 }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 
@@ -125,4 +168,30 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentTypeRadios = document.querySelectorAll('input[name="payment_type"]');
+    const extendOptions = document.getElementById('extend-options');
+    const periodOptions = document.getElementById('period-options');
+
+    function toggleOptions() {
+        const selectedType = document.querySelector('input[name="payment_type"]:checked')?.value;
+        
+        if (selectedType === 'extend') {
+            extendOptions.style.display = 'block';
+            periodOptions.style.display = 'none';
+        } else if (selectedType === 'custom_period' || selectedType === 'no_extension') {
+            extendOptions.style.display = 'none';
+            periodOptions.style.display = 'block';
+        }
+    }
+
+    paymentTypeRadios.forEach(radio => {
+        radio.addEventListener('change', toggleOptions);
+    });
+
+    toggleOptions();
+});
+</script>
 {% endblock %}

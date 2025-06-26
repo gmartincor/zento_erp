@@ -6,6 +6,11 @@ from django.utils import timezone
 
 from ..models import ClientService, ServicePayment
 from .date_calculator import DateCalculator
+from .payment_components import (
+    PaymentPeriodCalculator, 
+    PaymentCreator, 
+    ServiceExtensionManager
+)
 
 
 class PaymentService:
@@ -24,39 +29,51 @@ class PaymentService:
     ) -> ServicePayment:
         
         if payment_date is None:
-            payment_date = timezone.now().date()
+            payment_date = DateCalculator.get_today()
 
-        current_active_until = cls.get_service_active_until(client_service)
-        
-        if current_active_until and current_active_until >= payment_date:
-            period_start = current_active_until + timedelta(days=1)
-        else:
-            period_start = payment_date
-        
-        period_end = DateCalculator.add_months_to_date(period_start, extend_months)
-        
-        payment = ServicePayment.objects.create(
-            client_service=client_service,
-            amount=amount,
-            payment_date=payment_date,
-            payment_method=payment_method,
-            reference_number=reference_number or '',
-            notes=notes or '',
-            status=ServicePayment.StatusChoices.PAID,
-            period_start=period_start,
-            period_end=period_end
+        period_start, period_end = PaymentPeriodCalculator.calculate_payment_period(
+            client_service, payment_date, extend_months
         )
         
-        if not client_service.is_active:
-            client_service.is_active = True
-            client_service.save()
+        payment = PaymentCreator.create_payment(
+            service=client_service,
+            amount=amount,
+            payment_method=payment_method,
+            period_start=period_start,
+            period_end=period_end,
+            payment_date=payment_date,
+            reference_number=reference_number,
+            notes=notes
+        )
         
-        if period_end > client_service.end_date:
-            client_service.end_date = period_end
-            client_service.status = ClientService.StatusChoices.ACTIVE
-            client_service.save()
-
+        ServiceExtensionManager.extend_service_to_date(client_service, period_end)
+        
         return payment
+    
+    @classmethod
+    @transaction.atomic
+    def create_payment_without_extension(
+        cls,
+        client_service: ClientService,
+        amount: Decimal,
+        payment_method: str,
+        period_start: date,
+        period_end: date,
+        payment_date: Optional[date] = None,
+        reference_number: Optional[str] = None,
+        notes: Optional[str] = None
+    ) -> ServicePayment:
+        
+        return PaymentCreator.create_payment(
+            service=client_service,
+            amount=amount,
+            payment_method=payment_method,
+            period_start=period_start,
+            period_end=period_end,
+            payment_date=payment_date,
+            reference_number=reference_number,
+            notes=notes
+        )
     
     @classmethod
     def extend_service_without_payment(
@@ -66,19 +83,14 @@ class PaymentService:
         notes: Optional[str] = None
     ) -> ClientService:
         
-        current_end = client_service.end_date or DateCalculator.get_today()
-        new_end = DateCalculator.add_months_to_date(current_end, extend_months)
-        
-        client_service.end_date = new_end
-        client_service.status = ClientService.StatusChoices.ACTIVE
-        client_service.is_active = True
+        service = ServiceExtensionManager.extend_service_by_months(client_service, extend_months)
         
         if notes:
-            existing_notes = client_service.notes or ""
-            client_service.notes = f"{existing_notes}\nExtensión: {notes}".strip()
+            existing_notes = service.notes or ""
+            service.notes = f"{existing_notes}\nExtensión: {notes}".strip()
+            service.save()
         
-        client_service.save()
-        return client_service
+        return service
     
     @classmethod
     def create_standalone_payment(
@@ -93,16 +105,15 @@ class PaymentService:
         notes: Optional[str] = None
     ) -> ServicePayment:
         
-        return ServicePayment.objects.create(
-            client_service=client_service,
+        return PaymentCreator.create_payment(
+            service=client_service,
             amount=amount,
-            payment_date=payment_date or timezone.now().date(),
             payment_method=payment_method,
-            reference_number=reference_number or '',
-            notes=notes or '',
-            status=ServicePayment.StatusChoices.PAID,
             period_start=coverage_start,
-            period_end=coverage_end
+            period_end=coverage_end,
+            payment_date=payment_date,
+            reference_number=reference_number,
+            notes=notes
         )
     
     @classmethod

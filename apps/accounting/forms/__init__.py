@@ -7,7 +7,7 @@ from .service_form_factory import (
     ClientServiceFilterForm
 )
 from .client_forms import ClientForm, ClientCreateForm, ClientUpdateForm
-from .payment_form import ServicePaymentForm
+from .flexible_payment_form import FlexiblePaymentForm
 from .renewal_form import ServiceActionForm
 from .form_mixins import ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMixin
 
@@ -21,7 +21,7 @@ __all__ = [
     'ClientForm',
     'ClientCreateForm',
     'ClientUpdateForm',
-    'ServicePaymentForm',
+    'FlexiblePaymentForm',
     'ServiceActionForm',
     'ServiceFormMixin',
     'ClientFieldsMixin',

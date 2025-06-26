@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.urls import reverse
 
 from ..models import ClientService
-from ..forms.payment_form import ServicePaymentForm
+from ..forms.flexible_payment_form import FlexiblePaymentForm
 from ..forms.renewal_form import ServiceActionForm
 from ..services.payment_service import PaymentService
 from ..services.service_manager import ServiceManager
@@ -14,7 +14,7 @@ from apps.core.mixins import BusinessLinePermissionMixin
 
 class ServicePaymentView(LoginRequiredMixin, BusinessLinePermissionMixin, FormView):
     template_name = 'accounting/service_payment.html'
-    form_class = ServicePaymentForm
+    form_class = FlexiblePaymentForm
     
     def dispatch(self, request, *args, **kwargs):
         self.service = get_object_or_404(ClientService, id=kwargs['service_id'])
@@ -40,20 +40,46 @@ class ServicePaymentView(LoginRequiredMixin, BusinessLinePermissionMixin, FormVi
     
     def form_valid(self, form):
         try:
-            payment = PaymentService.create_payment_and_extend_service(
-                client_service=self.service,
-                amount=form.cleaned_data['amount'],
-                payment_method=form.cleaned_data['payment_method'],
-                payment_date=form.cleaned_data['payment_date'],
-                reference_number=form.cleaned_data['reference_number'],
-                notes=form.cleaned_data['notes'],
-                extend_months=form.cleaned_data['extend_months']
-            )
+            payment_type, payment_data = form.get_payment_data()
             
-            messages.success(
-                self.request,
-                f'Pago registrado exitosamente. Servicio activo hasta {payment.period_end.strftime("%d/%m/%Y")}.'
-            )
+            if payment_type == 'extend':
+                payment = PaymentService.create_payment_and_extend_service(
+                    client_service=self.service,
+                    **payment_data
+                )
+                messages.success(
+                    self.request,
+                    f'Pago registrado exitosamente. Servicio activo hasta {payment.period_end.strftime("%d/%m/%Y")}.'
+                )
+            
+            elif payment_type == 'custom_period':
+                payment = PaymentService.create_payment_without_extension(
+                    client_service=self.service,
+                    **payment_data
+                )
+                
+                if payment_data['extend_service']:
+                    from ..services.payment_components import ServiceExtensionManager
+                    ServiceExtensionManager.extend_service_to_date(self.service, payment.period_end)
+                    messages.success(
+                        self.request,
+                        f'Pago registrado exitosamente. Servicio extendido hasta {payment.period_end.strftime("%d/%m/%Y")}.'
+                    )
+                else:
+                    messages.success(
+                        self.request,
+                        f'Pago registrado exitosamente para el período {payment.period_start.strftime("%d/%m/%Y")} - {payment.period_end.strftime("%d/%m/%Y")}.'
+                    )
+            
+            elif payment_type == 'no_extension':
+                payment = PaymentService.create_payment_without_extension(
+                    client_service=self.service,
+                    **payment_data
+                )
+                messages.success(
+                    self.request,
+                    f'Pago registrado exitosamente para el período {payment.period_start.strftime("%d/%m/%Y")} - {payment.period_end.strftime("%d/%m/%Y")}.'
+                )
             
             return redirect('accounting:category-services', 
                           line_path=self.service.get_line_path(),

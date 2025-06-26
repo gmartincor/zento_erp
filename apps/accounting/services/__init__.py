@@ -9,6 +9,12 @@ from .revenue_analytics_service import RevenueAnalyticsService
 from .template_service import TemplateDataService
 from .service_state_manager import ServiceStateManager
 from .date_calculator import DateCalculator
+from .payment_components import (
+    PaymentPeriodCalculator,
+    PaymentValidator,
+    ServiceExtensionManager,
+    PaymentCreator
+)
 
 __all__ = [
     'BusinessLineService', 
@@ -22,4 +28,8 @@ __all__ = [
     'TemplateDataService',
     'ServiceStateManager',
     'DateCalculator',
+    'PaymentPeriodCalculator',
+    'PaymentValidator',
+    'ServiceExtensionManager',
+    'PaymentCreator',
 ]
