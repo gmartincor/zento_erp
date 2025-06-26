@@ -12,13 +12,13 @@
     </div>
 
     <div>
-        <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            {{ form.status.label }}
+        <label for="{{ form.admin_status.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {{ form.admin_status.label }}
         </label>
-        {{ form.status }}
-        {% if form.status.errors %}
+        {{ form.admin_status }}
+        {% if form.admin_status.errors %}
             <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                {{ form.status.errors|first }}
+                {{ form.admin_status.errors|first }}
             </div>
         {% endif %}
     </div>
