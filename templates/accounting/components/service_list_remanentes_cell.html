@@ -1,0 +1,9 @@
+{% load presentation_tags %}
+
+{% if service.remanentes %}
+    {% for key, value in service.remanentes.items %}
+        <div class="text-xs">{{ key }}: {{ value|format_currency:"€" }}</div>
+    {% endfor %}
+{% else %}
+    <span class="text-gray-400">Sin remanentes</span>
+{% endif %}
