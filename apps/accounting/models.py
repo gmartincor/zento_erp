@@ -270,12 +270,6 @@ class ClientService(TimeStampedModel):
         return ServiceStateManager.get_service_status(self)
 
     @property
-    def active_until(self):
-        from .services.payment_service import PaymentService
-        self.invalidate_payment_cache()
-        return PaymentService.get_service_active_until(self)
-
-    @property
     def current_status(self):
         from .services.service_state_manager import ServiceStateManager
         return ServiceStateManager.get_service_status(self)

@@ -54,7 +54,7 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
         services_with_status = []
         for service in context['services']:
             service_status = ServiceStateManager.get_service_status(service)
-            active_until = PaymentService.get_service_active_until(service)
+            active_until = service.end_date
             services_with_status.append({
                 'service': service,
                 'status': service_status,
@@ -99,7 +99,7 @@ class ClientServiceDetailView(LoginRequiredMixin, BusinessLinePermissionMixin, D
         service = self.object
         
         service_status = ServiceStateManager.get_service_status(service)
-        active_until = PaymentService.get_service_active_until(service)
+        active_until = service.end_date
         payments = service.payments.order_by('-payment_date')
         
         context.update({

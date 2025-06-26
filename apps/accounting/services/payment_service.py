@@ -32,9 +32,11 @@ class PaymentService:
         period.status = ServicePayment.StatusChoices.PAID
         
         if notes:
-            existing_notes = period.notes or ""
-            separator = " | " if existing_notes else ""
-            period.notes = f"{existing_notes}{separator}Pago: {notes}"
+            from .notes_manager import ServiceNotesManager
+            period.notes = ServiceNotesManager.add_note(
+                period.notes, 
+                f"Pago: {notes}"
+            )
         
         period.save()
         
@@ -191,10 +193,6 @@ class PaymentService:
             'payment_frequency': frequency,
             'last_payment_days_ago': days_since_last
         }
-    
-    @staticmethod
-    def get_service_active_until(client_service: ClientService) -> Optional[date]:
-        return client_service.end_date
     
     @staticmethod
     def get_service_current_amount(client_service: ClientService) -> Optional[Decimal]:

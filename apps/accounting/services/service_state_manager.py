@@ -15,7 +15,7 @@ class ServiceStateManager:
         if not service.is_active:
             return False
         
-        active_until = cls._get_service_active_until(service)
+        active_until = service.end_date
         if not active_until:
             return service.is_active
         
@@ -26,7 +26,7 @@ class ServiceStateManager:
         if not service.is_active:
             return True
             
-        active_until = cls._get_service_active_until(service)
+        active_until = service.end_date
         if not active_until:
             return False
             
@@ -34,7 +34,7 @@ class ServiceStateManager:
     
     @classmethod
     def days_until_expiry(cls, service: ClientService) -> int:
-        active_until = cls._get_service_active_until(service)
+        active_until = service.end_date
         if not active_until:
             return 0
         
@@ -71,7 +71,7 @@ class ServiceStateManager:
     def get_status_display_data(cls, service: ClientService) -> Dict[str, Any]:
         status = cls.get_service_status(service)
         days_left = cls.days_until_expiry(service)
-        active_until = cls._get_service_active_until(service)
+        active_until = service.end_date
         
         status_map = {
             'active': {
@@ -136,21 +136,6 @@ class ServiceStateManager:
             return 'Vencido'
     
     @classmethod
-    def _get_service_active_until(cls, service: ClientService) -> Optional[date]:
-        latest_payment = service.payments.filter(
-            status=ServicePayment.StatusChoices.PAID
-        ).order_by('-period_end').first()
-        
-        service_end_date = service.end_date
-        
-        if latest_payment and service_end_date:
-            return max(latest_payment.period_end, service_end_date)
-        elif latest_payment:
-            return latest_payment.period_end
-        else:
-            return service_end_date
-    
-    @classmethod
     def get_status_display(cls, status: str) -> str:
         status_labels = {
             'active': 'Activo',
@@ -176,7 +161,7 @@ class ServiceStateManager:
     def get_service_summary(cls, service: ClientService) -> Dict[str, Any]:
         status = cls.get_service_status(service)
         days_left = cls.days_until_expiry(service)
-        active_until = cls._get_service_active_until(service)
+        active_until = service.end_date
         
         return {
             'status': status,

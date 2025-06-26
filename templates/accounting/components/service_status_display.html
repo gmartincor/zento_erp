@@ -1,4 +1,4 @@
-{% load service_tags %}
+{% load service_tags text_filters %}
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -50,15 +50,6 @@
         </div>
         {% endif %}
         
-        {% if service.active_until %}
-        <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Activo Hasta:</span>
-            <span class="text-sm font-medium text-blue-600">
-                {{ service.active_until|date:"d/m/Y" }}
-            </span>
-        </div>
-        {% endif %}
-        
         {% if service.start_date %}
         <div class="flex justify-between items-center">
             <span class="text-sm text-gray-600 dark:text-gray-400">Fecha de Inicio:</span>
@@ -70,10 +61,8 @@
         
         {% if service.end_date %}
         <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">
-                {% if service.end_date != service.active_until %}Fecha Base:{% else %}Fecha de Fin:{% endif %}
-            </span>
-            <span class="text-sm {% if service.end_date != service.active_until %}text-gray-500{% else %}text-gray-900{% endif %} dark:text-gray-400">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Vigente Hasta:</span>
+            <span class="text-sm font-medium {% if service.status == 'ACTIVE' %}text-blue-600{% else %}text-gray-900 dark:text-white{% endif %}">
                 {{ service.end_date|date:"d/m/Y" }}
             </span>
         </div>
@@ -83,7 +72,13 @@
     {% if service.notes %}
     <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Notas:</h4>
-        <p class="text-sm text-gray-600 dark:text-gray-400">{{ service.notes }}</p>
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+            {% with formatted_notes=service.notes|format_service_notes %}
+                {% if formatted_notes %}
+                    <pre class="whitespace-pre-wrap font-sans">{{ formatted_notes }}</pre>
+                {% endif %}
+            {% endwith %}
+        </div>
     </div>
     {% endif %}
     
