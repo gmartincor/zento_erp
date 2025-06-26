@@ -1,182 +1,209 @@
-from typing import Optional, Tuple
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
-from django.db import transaction, models
+from typing import Optional, Dict, Any, List
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.db import models
 
 from ..models import ClientService, ServicePayment
-from .date_calculator import DateCalculator
-from .payment_components import (
-    PaymentPeriodCalculator, 
-    PaymentCreator, 
-    ServiceExtensionManager
-)
 
 
 class PaymentService:
-    
-    @classmethod
-    @transaction.atomic
-    def create_payment_and_extend_service(
-        cls,
-        client_service: ClientService,
+    @staticmethod
+    def process_payment(
+        period: ServicePayment,
         amount: Decimal,
+        payment_date: date,
         payment_method: str,
-        payment_date: Optional[date] = None,
-        reference_number: Optional[str] = None,
-        notes: Optional[str] = None,
-        extend_months: int = 1
+        reference_number: str = "",
+        notes: str = ""
     ) -> ServicePayment:
+        if not period.can_be_paid:
+            raise ValidationError(
+                f"El período con estado '{period.get_status_display()}' no puede recibir pagos"
+            )
         
-        if payment_date is None:
-            payment_date = DateCalculator.get_today()
-
-        period_start, period_end = PaymentPeriodCalculator.calculate_payment_period(
-            client_service, payment_date, extend_months
-        )
+        PaymentService._validate_payment_data(amount, payment_date, payment_method)
         
-        payment = PaymentCreator.create_payment(
-            service=client_service,
-            amount=amount,
-            payment_method=payment_method,
-            period_start=period_start,
-            period_end=period_end,
-            payment_date=payment_date,
-            reference_number=reference_number,
-            notes=notes
-        )
+        period.amount = amount
+        period.payment_date = payment_date
+        period.payment_method = payment_method
+        period.reference_number = reference_number
+        period.status = ServicePayment.StatusChoices.PAID
         
-        ServiceExtensionManager.extend_service_to_date(client_service, period_end)
+        if notes:
+            existing_notes = period.notes or ""
+            separator = " | " if existing_notes else ""
+            period.notes = f"{existing_notes}{separator}Pago: {notes}"
         
-        return payment
+        period.save()
+        
+        return period
     
-    @classmethod
-    @transaction.atomic
-    def create_payment_without_extension(
-        cls,
+    @staticmethod
+    def create_payment_with_period(
         client_service: ClientService,
         amount: Decimal,
+        payment_date: date,
         payment_method: str,
         period_start: date,
         period_end: date,
-        payment_date: Optional[date] = None,
-        reference_number: Optional[str] = None,
-        notes: Optional[str] = None
+        reference_number: str = "",
+        notes: str = ""
     ) -> ServicePayment:
+        PaymentService._validate_payment_data(amount, payment_date, payment_method)
         
-        return PaymentCreator.create_payment(
-            service=client_service,
+        if period_start >= period_end:
+            raise ValidationError("La fecha de inicio debe ser anterior a la fecha de fin")
+        
+        payment_period = ServicePayment.objects.create(
+            client_service=client_service,
             amount=amount,
+            payment_date=payment_date,
             payment_method=payment_method,
+            reference_number=reference_number,
             period_start=period_start,
             period_end=period_end,
-            payment_date=payment_date,
-            reference_number=reference_number,
+            status=ServicePayment.StatusChoices.PAID,
             notes=notes
         )
+        
+        return payment_period
     
-    @classmethod
-    def extend_service_without_payment(
-        cls,
-        client_service: ClientService,
-        extend_months: int,
-        notes: Optional[str] = None
-    ) -> ClientService:
+    @staticmethod
+    def get_payment_options_for_service(client_service: ClientService) -> Dict[str, Any]:
+        from .period_service import ServicePeriodManager
         
-        service = ServiceExtensionManager.extend_service_by_months(client_service, extend_months)
+        pending_periods = ServicePeriodManager.get_pending_periods(client_service)
         
-        if notes:
-            existing_notes = service.notes or ""
-            service.notes = f"{existing_notes}\nExtensión: {notes}".strip()
-            service.save()
-        
-        return service
+        return {
+            'pending_periods': [
+                {
+                    'id': period.id,
+                    'period_start': period.period_start,
+                    'period_end': period.period_end,
+                    'duration_days': period.duration_days,
+                    'status': period.status,
+                    'display_text': f"{period.period_start} - {period.period_end} ({period.duration_days} días)"
+                }
+                for period in pending_periods
+            ],
+            'has_pending': pending_periods.exists(),
+            'total_pending': pending_periods.count()
+        }
     
-    @classmethod
-    def create_standalone_payment(
-        cls,
-        client_service: ClientService,
-        amount: Decimal,
-        payment_method: str,
-        coverage_start: date,
-        coverage_end: date,
-        payment_date: Optional[date] = None,
-        reference_number: Optional[str] = None,
-        notes: Optional[str] = None
-    ) -> ServicePayment:
+    @staticmethod
+    def calculate_suggested_amount(period: ServicePayment, client_service: ClientService) -> Optional[Decimal]:
+        last_payment = client_service.payments.filter(
+            status=ServicePayment.StatusChoices.PAID,
+            amount__isnull=False
+        ).order_by('-payment_date').first()
         
-        return PaymentCreator.create_payment(
-            service=client_service,
-            amount=amount,
-            payment_method=payment_method,
-            period_start=coverage_start,
-            period_end=coverage_end,
-            payment_date=payment_date,
-            reference_number=reference_number,
-            notes=notes
-        )
+        if not last_payment:
+            return None
+        
+        if last_payment.duration_days > 0:
+            daily_rate = last_payment.amount / last_payment.duration_days
+            suggested_amount = daily_rate * period.duration_days
+            return round(suggested_amount, 2)
+        
+        return last_payment.amount
     
-    @classmethod
-    def get_service_active_until(cls, service: ClientService) -> Optional[date]:
-        latest_payment = service.payments.filter(
+    @staticmethod
+    def get_payment_history(client_service: ClientService) -> List[ServicePayment]:
+        return client_service.payments.filter(
             status=ServicePayment.StatusChoices.PAID
-        ).order_by('-period_end').first()
-        
-        service_end_date = service.end_date
-        
-        if latest_payment and service_end_date:
-            return max(latest_payment.period_end, service_end_date)
-        elif latest_payment:
-            return latest_payment.period_end
-        else:
-            return service_end_date
+        ).order_by('-payment_date', '-period_start')
     
-    @classmethod
-    def get_service_total_paid(cls, service: ClientService) -> Decimal:
-        total = service.payments.filter(
-            status=ServicePayment.StatusChoices.PAID
+    @staticmethod
+    def _validate_payment_data(amount: Decimal, payment_date: date, payment_method: str) -> None:
+        if amount <= 0:
+            raise ValidationError("El monto debe ser mayor a cero")
+        
+        if payment_date > timezone.now().date():
+            raise ValidationError("La fecha de pago no puede ser futura")
+        
+        valid_methods = [choice[0] for choice in ServicePayment.PaymentMethodChoices.choices]
+        if payment_method not in valid_methods:
+            raise ValidationError(f"Método de pago inválido: {payment_method}")
+    
+    @staticmethod
+    def get_service_total_paid(client_service: ClientService) -> Decimal:
+        total = client_service.payments.filter(
+            status=ServicePayment.StatusChoices.PAID,
+            amount__isnull=False
         ).aggregate(total=models.Sum('amount'))['total']
         return total or Decimal('0.00')
     
-    @classmethod
-    def get_service_payment_count(cls, service: ClientService) -> int:
-        return service.payments.filter(status=ServicePayment.StatusChoices.PAID).count()
-    
-    @classmethod
-    def get_service_current_amount(cls, service: ClientService) -> Decimal:
-        latest_payment = service.payments.filter(
+    @staticmethod
+    def get_service_payment_count(client_service: ClientService) -> int:
+        return client_service.payments.filter(
             status=ServicePayment.StatusChoices.PAID
+        ).count()
+    
+    @staticmethod
+    def get_current_amount(client_service: ClientService) -> Optional[Decimal]:
+        latest_payment = client_service.payments.filter(
+            status=ServicePayment.StatusChoices.PAID,
+            amount__isnull=False
         ).order_by('-payment_date').first()
-        return latest_payment.amount if latest_payment else service.price
+        return latest_payment.amount if latest_payment else None
     
-    @classmethod
-    def get_service_current_payment_method(cls, service: ClientService) -> Optional[str]:
-        latest_payment = service.payments.filter(
+    @staticmethod
+    def analyze_payment_timing(client_service: ClientService) -> Dict[str, Any]:
+        payments = client_service.payments.filter(
             status=ServicePayment.StatusChoices.PAID
-        ).order_by('-payment_date').first()
-        return latest_payment.payment_method if latest_payment else None
-    
-    @classmethod
-    def analyze_payment_timing(cls, service: ClientService) -> dict:
-        payments = service.payments.filter(
-            status=ServicePayment.StatusChoices.PAID
-        ).order_by('period_start')
+        ).order_by('payment_date')
         
-        late_payments = []
-        on_time_payments = []
+        if not payments.exists():
+            return {
+                'average_days_between_payments': None,
+                'payment_frequency': 'No payments',
+                'last_payment_days_ago': None
+            }
         
-        for payment in payments:
-            if payment.payment_date > payment.period_end:
-                late_payments.append({
-                    'payment': payment,
-                    'days_late': (payment.payment_date - payment.period_end).days
-                })
-            else:
-                on_time_payments.append(payment)
+        if payments.count() == 1:
+            last_payment = payments.first()
+            days_since_last = (timezone.now().date() - last_payment.payment_date).days
+            return {
+                'average_days_between_payments': None,
+                'payment_frequency': 'Single payment',
+                'last_payment_days_ago': days_since_last
+            }
+        
+        payment_dates = [p.payment_date for p in payments]
+        intervals = [(payment_dates[i] - payment_dates[i-1]).days 
+                    for i in range(1, len(payment_dates))]
+        avg_interval = sum(intervals) / len(intervals)
+        
+        last_payment = payments.last()
+        days_since_last = (timezone.now().date() - last_payment.payment_date).days
+        
+        if avg_interval <= 40:
+            frequency = 'Monthly'
+        elif avg_interval <= 100:
+            frequency = 'Quarterly'
+        else:
+            frequency = 'Irregular'
         
         return {
-            'total_payments': payments.count(),
-            'late_payments': late_payments,
-            'on_time_payments': on_time_payments,
-            'has_late_payments': len(late_payments) > 0
+            'average_days_between_payments': round(avg_interval, 1),
+            'payment_frequency': frequency,
+            'last_payment_days_ago': days_since_last
         }
+    
+    @staticmethod
+    def get_service_active_until(client_service: ClientService) -> Optional[date]:
+        return client_service.end_date
+    
+    @staticmethod
+    def get_service_current_amount(client_service: ClientService) -> Optional[Decimal]:
+        return PaymentService.get_current_amount(client_service)
+    
+    @staticmethod
+    def get_service_current_payment_method(client_service: ClientService) -> Optional[str]:
+        latest_payment = client_service.payments.filter(
+            status=ServicePayment.StatusChoices.PAID,
+            payment_method__isnull=False
+        ).order_by('-payment_date').first()
+        return latest_payment.payment_method if latest_payment else None

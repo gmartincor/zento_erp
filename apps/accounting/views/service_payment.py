@@ -1,209 +1,233 @@
-from django.shortcuts import get_object_or_404, redirect
-from django.views.generic import FormView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.core.exceptions import ValidationError
 
-from ..models import ClientService
-from ..forms.flexible_payment_form import FlexiblePaymentForm
-from ..forms.renewal_form import ServiceActionForm
+from ..models import ClientService, ServicePayment
+from ..forms.service_payment_form import ServicePaymentForm, BulkPaymentForm
 from ..services.payment_service import PaymentService
-from ..services.service_manager import ServiceManager
-from apps.core.mixins import BusinessLinePermissionMixin
+from ..services.period_service import ServicePeriodManager
 
 
-class ServicePaymentView(LoginRequiredMixin, BusinessLinePermissionMixin, FormView):
-    template_name = 'accounting/service_payment.html'
-    form_class = FlexiblePaymentForm
+@login_required
+@require_http_methods(["GET", "POST"])
+def service_payment_view(request, service_id):
+    client_service = get_object_or_404(ClientService, id=service_id)
     
-    def dispatch(self, request, *args, **kwargs):
-        self.service = get_object_or_404(ClientService, id=kwargs['service_id'])
-        self.check_business_line_permission(self.service.business_line)
-        return super().dispatch(request, *args, **kwargs)
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['service'] = self.service
-        return kwargs
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'service': self.service,
-            'page_title': f'Registrar Pago - {self.service.client.full_name}',
-            'back_url': reverse('accounting:category-services', kwargs={
-                'line_path': self.service.get_line_path(),
-                'category': self.service.category
-            })
-        })
-        return context
-    
-    def form_valid(self, form):
-        try:
-            payment_type, payment_data = form.get_payment_data()
-            
-            if payment_type == 'extend':
-                payment = PaymentService.create_payment_and_extend_service(
-                    client_service=self.service,
-                    **payment_data
-                )
+    if request.method == 'POST':
+        form = ServicePaymentForm(client_service=client_service, data=request.POST)
+        
+        if form.is_valid():
+            try:
+                updated_period = form.save()
+                
                 messages.success(
-                    self.request,
-                    f'Pago registrado exitosamente. Servicio activo hasta {payment.period_end.strftime("%d/%m/%Y")}.'
-                )
-            
-            elif payment_type == 'custom_period':
-                payment = PaymentService.create_payment_without_extension(
-                    client_service=self.service,
-                    **payment_data
+                    request,
+                    f"Pago procesado exitosamente. "
+                    f"Período {updated_period.period_start} - {updated_period.period_end} "
+                    f"marcado como pagado por {updated_period.amount}€"
                 )
                 
-                if payment_data['extend_service']:
-                    from ..services.payment_components import ServiceExtensionManager
-                    ServiceExtensionManager.extend_service_to_date(self.service, payment.period_end)
-                    messages.success(
-                        self.request,
-                        f'Pago registrado exitosamente. Servicio extendido hasta {payment.period_end.strftime("%d/%m/%Y")}.'
-                    )
+                return redirect('accounting:client_service_detail', service_id=service_id)
+                
+            except ValidationError as e:
+                if hasattr(e, 'message_dict'):
+                    for field, errors in e.message_dict.items():
+                        for error in errors:
+                            messages.error(request, f"{field}: {error}")
                 else:
-                    messages.success(
-                        self.request,
-                        f'Pago registrado exitosamente para el período {payment.period_start.strftime("%d/%m/%Y")} - {payment.period_end.strftime("%d/%m/%Y")}.'
-                    )
-            
-            elif payment_type == 'no_extension':
-                payment = PaymentService.create_payment_without_extension(
-                    client_service=self.service,
-                    **payment_data
-                )
+                    messages.error(request, str(e))
+            except Exception as e:
+                messages.error(request, f"Error inesperado: {str(e)}")
+    else:
+        form = ServicePaymentForm(client_service=client_service)
+    
+
+    pending_summary = ServicePeriodManager.get_unpaid_periods_summary(client_service)
+    payment_history = PaymentService.get_payment_history(client_service)
+    
+    context = {
+        'form': form,
+        'client_service': client_service,
+        'client': client_service.client,
+        'pending_periods_summary': pending_summary,
+        'payment_history': payment_history[:5],
+        'has_pending_periods': pending_summary['count'] > 0
+    }
+    
+    return render(request, 'accounting/service_payment_v2.html', context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def bulk_payment_view(request, service_id):
+    """
+    Vista para procesar múltiples pagos de forma masiva.
+    """
+    client_service = get_object_or_404(ClientService, id=service_id)
+    
+    if request.method == 'POST':
+        form = BulkPaymentForm(client_service=client_service, data=request.POST)
+        
+        if form.is_valid():
+            try:
+                updated_periods = form.save()
+                
                 messages.success(
-                    self.request,
-                    f'Pago registrado exitosamente para el período {payment.period_start.strftime("%d/%m/%Y")} - {payment.period_end.strftime("%d/%m/%Y")}.'
+                    request,
+                    f"Procesados {len(updated_periods)} pagos exitosamente. "
+                    f"Total de períodos actualizados: {len(updated_periods)}"
                 )
-            
-            return redirect('accounting:category-services', 
-                          line_path=self.service.get_line_path(),
-                          category=self.service.category)
-        
-        except Exception as e:
-            messages.error(self.request, f'Error al registrar el pago: {str(e)}')
-            return self.form_invalid(form)
+                
+                return redirect('accounting:client_service_detail', service_id=service_id)
+                
+            except ValidationError as e:
+                messages.error(request, str(e))
+            except Exception as e:
+                messages.error(request, f"Error inesperado: {str(e)}")
+    else:
+        form = BulkPaymentForm(client_service=client_service)
+    
+    pending_summary = ServicePeriodManager.get_unpaid_periods_summary(client_service)
+    
+    context = {
+        'form': form,
+        'client_service': client_service,
+        'client': client_service.client,
+        'pending_periods_summary': pending_summary
+    }
+    
+    return render(request, 'accounting/bulk_payment.html', context)
 
 
-class ServiceRenewalView(LoginRequiredMixin, BusinessLinePermissionMixin, FormView):
-    template_name = 'accounting/service_renewal.html'
-    form_class = ServiceActionForm
+@login_required
+@require_http_methods(["POST"])
+def ajax_get_suggested_amount(request, service_id, period_id):
+    """
+    Vista AJAX para obtener monto sugerido para un período específico.
+    """
+    client_service = get_object_or_404(ClientService, id=service_id)
+    period = get_object_or_404(ServicePayment, id=period_id, client_service=client_service)
     
-    def dispatch(self, request, *args, **kwargs):
-        self.service = get_object_or_404(ClientService, id=kwargs['service_id'])
-        self.check_business_line_permission(self.service.business_line)
-        return super().dispatch(request, *args, **kwargs)
-    
-    def _refresh_service(self):
-        self.service.get_fresh_service_data()
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        self._refresh_service()
-        kwargs['service'] = self.service
-        return kwargs
-    
-    def get_back_url_kwargs(self):
-        return {
-            'line_path': self.service.get_line_path(),
-            'category': self.service.category
-        }
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    try:
+        suggested_amount = PaymentService.calculate_suggested_amount(period, client_service)
         
-        self._refresh_service()
-        
-        context.update({
-            'service': self.service,
-            'page_title': f'Gestionar Servicio - {self.service.client.full_name}',
-            'back_url': reverse('accounting:category-services', kwargs={
-                'line_path': self.service.get_line_path(),
-                'category': self.service.category
-            })
+        return JsonResponse({
+            'success': True,
+            'suggested_amount': float(suggested_amount) if suggested_amount else None,
+            'period_info': {
+                'start': period.period_start.isoformat(),
+                'end': period.period_end.isoformat(),
+                'duration_days': period.duration_days,
+                'status': period.status
+            }
         })
         
-        return context
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def payment_options_view(request, service_id):
+    """
+    Vista para mostrar opciones de pago disponibles.
+    """
+    client_service = get_object_or_404(ClientService, id=service_id)
     
-    def form_valid(self, form):
-        action_type = form.cleaned_data['action_type']
+    payment_options = PaymentService.get_payment_options_for_service(client_service)
+    pending_summary = ServicePeriodManager.get_unpaid_periods_summary(client_service)
+    
+    context = {
+        'client_service': client_service,
+        'client': client_service.client,
+        'payment_options': payment_options,
+        'pending_summary': pending_summary
+    }
+    
+    return render(request, 'accounting/payment_options.html', context)
+
+
+@login_required
+@require_http_methods(["GET"])
+def payment_history_view(request, service_id):
+    """
+    Vista para mostrar el historial completo de pagos.
+    """
+    client_service = get_object_or_404(ClientService, id=service_id)
+    
+    payment_history = PaymentService.get_payment_history(client_service)
+    pending_periods = ServicePeriodManager.get_pending_periods(client_service)
+    
+
+    total_paid = sum(payment.amount for payment in payment_history if payment.amount)
+    avg_payment = total_paid / len(payment_history) if payment_history else 0
+    
+    context = {
+        'client_service': client_service,
+        'client': client_service.client,
+        'payment_history': payment_history,
+        'pending_periods': pending_periods,
+        'stats': {
+            'total_payments': len(payment_history),
+            'total_paid': total_paid,
+            'average_payment': avg_payment,
+            'pending_count': pending_periods.count()
+        }
+    }
+    
+    return render(request, 'accounting/payment_history_v2.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def cancel_period_view(request, service_id, period_id):
+    """
+    Vista para cancelar un período pendiente.
+    """
+    client_service = get_object_or_404(ClientService, id=service_id)
+    period = get_object_or_404(
+        ServicePayment, 
+        id=period_id, 
+        client_service=client_service,
+        status__in=[
+            ServicePayment.StatusChoices.PERIOD_CREATED,
+            ServicePayment.StatusChoices.PENDING
+        ]
+    )
+    
+    try:
+        period.status = ServicePayment.StatusChoices.CANCELLED
+        period.save(update_fields=['status', 'modified'])
         
-        try:
-            if action_type == 'extend':
-                return self._handle_extend_service(form)
-            elif action_type == 'renew':
-                return self._handle_renew_service(form)
-            elif action_type == 'no_renew':
-                return self._handle_no_renew(form)
-            
-        except Exception as e:
-            messages.error(self.request, f'Error al procesar la acción: {str(e)}')
-            return self.form_invalid(form)
-    
-    def _handle_extend_service(self, form):
-        try:
-            if form.cleaned_data['payment_now']:
-                payment = PaymentService.create_payment_and_extend_service(
-                    client_service=self.service,
-                    amount=form.cleaned_data['amount'],
-                    payment_method=form.cleaned_data['payment_method'],
-                    payment_date=form.cleaned_data['payment_date'],
-                    reference_number=form.cleaned_data.get('reference_number'),
-                    notes=form.cleaned_data.get('notes'),
-                    extend_months=form.cleaned_data['duration_months']
-                )
-                messages.success(
-                    self.request,
-                    f'Servicio extendido con pago. Activo hasta {payment.period_end.strftime("%d/%m/%Y")}.'
-                )
-            else:
-                ServiceManager.extend_service_without_payment(
-                    service=self.service,
-                    extension_months=form.cleaned_data['duration_months'],
-                    notes=form.cleaned_data.get('notes')
-                )
-                messages.success(
-                    self.request,
-                    f'Servicio extendido sin pago por {form.cleaned_data["duration_months"]} meses.'
-                )
-        except Exception as e:
-            messages.error(self.request, f'Error al extender el servicio: {str(e)}')
-            return self.form_invalid(form)
+
+        last_active_period = client_service.payments.filter(
+            status__in=[
+                ServicePayment.StatusChoices.PAID,
+                ServicePayment.StatusChoices.PERIOD_CREATED,
+                ServicePayment.StatusChoices.PENDING
+            ]
+        ).exclude(id=period.id).order_by('-period_end').first()
         
-        return redirect('accounting:category-services', 
-                      line_path=self.service.get_line_path(),
-                      category=self.service.category)
-    
-    def _handle_renew_service(self, form):
-        messages.info(
-            self.request,
-            'La creación de nuevos servicios se ha simplificado. Use la opción "Crear Servicio" en lugar de renovar.'
+        if last_active_period:
+            client_service.end_date = last_active_period.period_end
+        else:
+
+            pass
+        
+        client_service.save(update_fields=['end_date', 'modified'])
+        
+        messages.success(
+            request,
+            f"Período {period.period_start} - {period.period_end} cancelado exitosamente"
         )
         
-        return redirect('accounting:service-create', 
-                      line_path=self.service.get_line_path(),
-                      category=self.service.category)
+    except Exception as e:
+        messages.error(request, f"Error al cancelar período: {str(e)}")
     
-    def _handle_no_renew(self, form):
-        self.service.status = self.service.StatusChoices.INACTIVE
-        
-        reason = form.cleaned_data.get('no_renew_reason', '')
-        if reason:
-            existing_notes = self.service.notes or ""
-            self.service.notes = f"{existing_notes}\nNo renovado: {reason}".strip()
-        
-        self.service.save()
-        
-        messages.info(
-            self.request,
-            f'Servicio marcado como no renovado. El cliente {self.service.client.full_name} decidió no continuar.'
-        )
-        
-        return redirect('accounting:category-services', 
-                      line_path=self.service.get_line_path(),
-                      category=self.service.category)
+    return redirect('accounting:client_service_detail', service_id=service_id)

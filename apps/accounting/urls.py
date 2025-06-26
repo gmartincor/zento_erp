@@ -16,7 +16,19 @@ from .views import (
 )
 from .views.payment_history import payment_history_view
 from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
-from .views.service_payment import ServicePaymentView, ServiceRenewalView
+from .views.service_renewal import (
+    service_renewal_view,
+    ajax_calculate_extension_dates,
+    service_extension_preview
+)
+from .views.service_payment import (
+    service_payment_view,
+    bulk_payment_view,
+    ajax_get_suggested_amount,
+    payment_options_view,
+    payment_history_view,
+    cancel_period_view
+)
 
 app_name = 'accounting'
 
@@ -80,7 +92,16 @@ urlpatterns = [
     path('clients/<int:client_id>/services/', ClientServiceHistoryView.as_view(), name='client-service-history'),
     path('services/<int:service_id>/detail/', ClientServiceDetailView.as_view(), name='client-service-detail'),
     
-    # Service Payment and Renewal URLs
-    path('services/<int:service_id>/payment/', ServicePaymentView.as_view(), name='service-payment'),
-    path('services/<int:service_id>/renewal/', ServiceRenewalView.as_view(), name='service-renewal'),
+    path('services/<int:service_id>/renewal/', service_renewal_view, name='service-renewal'),
+    path('services/<int:service_id>/renewal/preview/', service_extension_preview, name='service-extension-preview'),
+    path('services/<int:service_id>/renewal/ajax/calculate-dates/', ajax_calculate_extension_dates, name='ajax-calculate-extension-dates'),
+    
+    path('services/<int:service_id>/payment/', service_payment_view, name='service-payment'),
+    path('services/<int:service_id>/payment/bulk/', bulk_payment_view, name='bulk-payment'),
+    path('services/<int:service_id>/payment/options/', payment_options_view, name='payment-options'),
+    path('services/<int:service_id>/payment/history/', payment_history_view, name='payment-history'),
+    path('services/<int:service_id>/payment/ajax/suggested-amount/<int:period_id>/', ajax_get_suggested_amount, name='ajax-suggested-amount'),
+    
+    path('services/<int:service_id>/periods/<int:period_id>/cancel/', cancel_period_view, name='cancel-period'),
+    
 ]

@@ -1,249 +1,367 @@
 {% extends "base.html" %}
-{% load service_status_tags %}
+{% load static %}
 
-{% block title %}{{ page_title }}{% endblock %}
+{% block title %}Renovar Servicio - {{ client.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .period-info-card {
+        background: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .renewal-type-options {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .payment-fields {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        display: none;
+    }
+    
+    .payment-fields.show {
+        display: block;
+    }
+    
+    .summary-section {
+        background: #e3f2fd;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .form-section {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        background: white;
+    }
+    
+    .form-section h5 {
+        color: #495057;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-        <nav class="flex" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li>
-                    <a href="{{ back_url }}" class="text-blue-600 hover:text-blue-800">
-                        Servicios
-                    </a>
-                </li>
-                <li>
-                    <span class="text-gray-400 mx-2">/</span>
-                    <span class="text-gray-500">Gestionar Servicio</span>
-                </li>
-            </ol>
-        </nav>
-    </div>
-
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ page_title }}</h1>
-            
-            <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-medium text-gray-900 dark:text-white">{{ service.client.full_name }}</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ service.business_line.name }} - {{ service.get_category_display }}</p>
-                    </div>
-                    <div class="text-right">
-                        {% include 'accounting/components/service_status_badge.html' %}
-                        {% if service.active_until %}
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            Activo hasta: {{ service.active_until|date:"d/m/Y" }}
-                        </p>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                {% if options.needs_renewal %}
-                <div class="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-md">
-                    <p class="text-sm text-orange-800">
-                        <strong>Atención:</strong> Este servicio necesita gestión.
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Renovar Servicio</h2>
+                    <p class="text-muted">
+                        Cliente: <strong>{{ client.full_name }}</strong> | 
+                        Servicio: <strong>{{ client_service.service.name }}</strong>
                     </p>
                 </div>
+                <a href="{% url 'accounting:client-service-detail' client_service.id %}" 
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información del Servicio Actual -->
+        <div class="col-lg-4">
+            <div class="period-info-card">
+                <h5><i class="fas fa-info-circle"></i> Información Actual</h5>
+                <p><strong>Fecha de fin actual:</strong><br>{{ current_end_date|date:"d/m/Y" }}</p>
+                <p><strong>Estado:</strong> 
+                    {% if client_service.is_active %}
+                        <span class="badge bg-success">Activo</span>
+                    {% else %}
+                        <span class="badge bg-warning">Vencido</span>
+                    {% endif %}
+                </p>
+                
+                {% if pending_periods_summary.count > 0 %}
+                    <hr>
+                    <h6><i class="fas fa-exclamation-triangle text-warning"></i> Períodos Pendientes</h6>
+                    <p>
+                        <strong>{{ pending_periods_summary.count }}</strong> período(s) pendiente(s)<br>
+                        <small class="text-muted">
+                            Total: {{ pending_periods_summary.total_days }} días 
+                            (≈{{ pending_periods_summary.total_months }} meses)
+                        </small>
+                    </p>
                 {% endif %}
             </div>
         </div>
 
-        <form method="post" class="p-6">
-            {% csrf_token %}
-            
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        {{ form.action_type.label }}
-                    </label>
-                    
-                    <div class="space-y-3">
-                        {% for choice in form.action_type %}
-                            <div class="flex items-start">
+        <!-- Formulario de Renovación -->
+        <div class="col-lg-8">
+            <form method="post" id="renewalForm">
+                {% csrf_token %}
+                
+                <!-- Tipo de Renovación -->
+                <div class="form-section">
+                    <h5><i class="fas fa-cogs"></i> Tipo de Renovación</h5>
+                    <div class="renewal-type-options">
+                        {% for choice in form.renewal_type %}
+                            <div class="form-check mb-2">
                                 {{ choice.tag }}
-                                <div class="ml-3">
-                                    <label for="{{ choice.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        {{ choice.choice_label }}
-                                    </label>
-                                    {% if choice.choice_value == 'extend' %}
-                                        <p class="text-xs text-gray-500">Agrega tiempo al servicio actual sin crear uno nuevo</p>
-                                    {% elif choice.choice_value == 'renew' %}
-                                        <p class="text-xs text-gray-500">Crea un nuevo servicio independiente</p>
-                                    {% elif choice.choice_value == 'no_renew' %}
-                                        <p class="text-xs text-gray-500">Marca que el cliente decidió no continuar</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% empty %}
-                            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                                <strong>Error:</strong> No hay opciones de acción disponibles. Esto puede deberse a un problema en la configuración del formulario.
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                    {{ choice.choice_label }}
+                                </label>
+                                {% if choice.choice_value == 'period_only' %}
+                                    <small class="text-muted d-block">
+                                        Solo extiende el servicio. El pago puede procesarse después.
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted d-block">
+                                        Extiende el servicio y procesa el pago inmediatamente.
+                                    </small>
+                                {% endif %}
                             </div>
                         {% endfor %}
                     </div>
-                    {% if form.action_type.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.action_type.errors.0 }}</p>
-                    {% endif %}
                 </div>
-                
-                <div id="service-fields" class="space-y-6" style="display: none;">
-                    <div id="renew-fields" class="grid grid-cols-1 md:grid-cols-3 gap-6" style="display: none;">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ form.start_date.label }}
-                            </label>
-                            {{ form.start_date }}
-                            {% if form.start_date.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.start_date.errors.0 }}</p>
-                            {% endif %}
+
+                <!-- Configuración del Período -->
+                <div class="form-section">
+                    <h5><i class="fas fa-calendar-alt"></i> Configuración del Período</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.duration_months.id_for_label }}" class="form-label">
+                                    {{ form.duration_months.label }}
+                                </label>
+                                {{ form.duration_months }}
+                                {% if form.duration_months.help_text %}
+                                    <small class="form-text text-muted">{{ form.duration_months.help_text }}</small>
+                                {% endif %}
+                                {% if form.duration_months.errors %}
+                                    <div class="text-danger">{{ form.duration_months.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ form.duration_months.label }}
-                            </label>
-                            {{ form.duration_months }}
-                            {% if form.duration_months.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.duration_months.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ form.amount.label }}
-                            </label>
-                            {{ form.amount }}
-                            {% if form.amount.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
-                            {% endif %}
+                        <div class="col-md-6">
+                            <!-- Preview dinámico -->
+                            <div class="alert alert-info" id="datePreview">
+                                <strong>Nuevo período:</strong><br>
+                                <span id="previewDates">Seleccione duración para ver preview</span>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                        <div class="flex items-center mb-4">
-                            {{ form.payment_now }}
-                            <label for="{{ form.payment_now.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ form.payment_now.label }}
-                            </label>
-                        </div>
-                        
-                        <div id="payment-fields" class="space-y-4" style="display: none;">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        {{ form.payment_method.label }}
+                </div>
+
+                <!-- Campos de Pago (condicionales) -->
+                <div class="payment-fields" id="paymentFields">
+                    <div class="form-section">
+                        <h5><i class="fas fa-credit-card"></i> Información de Pago</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                        {{ form.amount.label }}
                                     </label>
-                                    {{ form.payment_method }}
-                                    {% if form.payment_method.errors %}
-                                        <p class="mt-1 text-sm text-red-600">{{ form.payment_method.errors.0 }}</p>
+                                    {{ form.amount }}
+                                    {% if form.amount.help_text %}
+                                        <small class="form-text text-muted">{{ form.amount.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.amount.errors %}
+                                        <div class="text-danger">{{ form.amount.errors }}</div>
                                     {% endif %}
                                 </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.payment_date.id_for_label }}" class="form-label">
                                         {{ form.payment_date.label }}
                                     </label>
                                     {{ form.payment_date }}
                                     {% if form.payment_date.errors %}
-                                        <p class="mt-1 text-sm text-red-600">{{ form.payment_date.errors.0 }}</p>
+                                        <div class="text-danger">{{ form.payment_date.errors }}</div>
                                     {% endif %}
                                 </div>
                             </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ form.reference_number.label }}
-                                </label>
-                                {{ form.reference_number }}
-                                {% if form.reference_number.errors %}
-                                    <p class="mt-1 text-sm text-red-600">{{ form.reference_number.errors.0 }}</p>
-                                {% endif %}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.payment_method.id_for_label }}" class="form-label">
+                                        {{ form.payment_method.label }}
+                                    </label>
+                                    {{ form.payment_method }}
+                                    {% if form.payment_method.errors %}
+                                        <div class="text-danger">{{ form.payment_method.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.reference_number.id_for_label }}" class="form-label">
+                                        {{ form.reference_number.label }}
+                                    </label>
+                                    {{ form.reference_number }}
+                                    {% if form.reference_number.errors %}
+                                        <div class="text-danger">{{ form.reference_number.errors }}</div>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                </div>
+
+                <!-- Notas -->
+                <div class="form-section">
+                    <h5><i class="fas fa-sticky-note"></i> Notas</h5>
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
                             {{ form.notes.label }}
                         </label>
                         {{ form.notes }}
                         {% if form.notes.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.notes.errors.0 }}</p>
+                            <div class="text-danger">{{ form.notes.errors }}</div>
                         {% endif %}
                     </div>
                 </div>
-                
-                <div id="no-renew-fields" style="display: none;">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ form.no_renew_reason.label }}
-                    </label>
-                    {{ form.no_renew_reason }}
-                    {% if form.no_renew_reason.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.no_renew_reason.errors.0 }}</p>
-                    {% endif %}
+
+                <!-- Resumen y Botones -->
+                <div class="summary-section">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6>Resumen de la Renovación</h6>
+                            <p id="summaryText" class="mb-0 text-muted">
+                                Seleccione opciones para ver resumen
+                            </p>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary me-2" 
+                                    onclick="history.back()">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sync-alt"></i> Renovar Servicio
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mt-8 flex justify-end space-x-3">
-                <a href="{{ back_url }}" 
-                   class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
-                    Cancelar
-                </a>
-                <button type="submit" 
-                        class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
-                    Ejecutar Acción
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-function toggleFields() {
-    const actionInputs = document.querySelectorAll('input[name="action_type"]');
-    const serviceFields = document.getElementById('service-fields');
-    const renewFields = document.getElementById('renew-fields');
-    const noRenewFields = document.getElementById('no-renew-fields');
+document.addEventListener('DOMContentLoaded', function() {
+    const renewalTypeInputs = document.querySelectorAll('input[name="renewal_type"]');
+    const paymentFields = document.getElementById('paymentFields');
+    const durationInput = document.getElementById('{{ form.duration_months.id_for_label }}');
+    const previewElement = document.getElementById('previewDates');
+    const summaryElement = document.getElementById('summaryText');
     
-    actionInputs.forEach(input => {
+    // Manejar cambio de tipo de renovación
+    renewalTypeInputs.forEach(input => {
         input.addEventListener('change', function() {
-            if (this.value === 'extend') {
-                serviceFields.style.display = 'block';
-                renewFields.style.display = 'none';
-                noRenewFields.style.display = 'none';
-            } else if (this.value === 'renew') {
-                serviceFields.style.display = 'block';
-                renewFields.style.display = 'block';
-                noRenewFields.style.display = 'none';
-            } else if (this.value === 'no_renew') {
-                serviceFields.style.display = 'none';
-                renewFields.style.display = 'none';
-                noRenewFields.style.display = 'block';
+            if (this.value === 'with_payment') {
+                paymentFields.classList.add('show');
+                // Hacer campos de pago requeridos
+                makePaymentFieldsRequired(true);
+            } else {
+                paymentFields.classList.remove('show');
+                // Quitar requerimiento de campos de pago
+                makePaymentFieldsRequired(false);
             }
+            updateSummary();
         });
     });
-}
-
-document.getElementById('{{ form.payment_now.id_for_label }}').addEventListener('change', function() {
-    const paymentFields = document.getElementById('payment-fields');
-    if (this.checked) {
-        paymentFields.style.display = 'block';
-    } else {
-        paymentFields.style.display = 'none';
+    
+    // Manejar cambio de duración
+    durationInput.addEventListener('change', function() {
+        updateDatePreview();
+        updateSummary();
+    });
+    
+    // Inicializar estado
+    const checkedType = document.querySelector('input[name="renewal_type"]:checked');
+    if (checkedType && checkedType.value === 'with_payment') {
+        paymentFields.classList.add('show');
+        makePaymentFieldsRequired(true);
+    }
+    
+    updateDatePreview();
+    updateSummary();
+    
+    function makePaymentFieldsRequired(required) {
+        const paymentInputs = paymentFields.querySelectorAll('input, select');
+        paymentInputs.forEach(input => {
+            if (input.name !== 'reference_number' && input.name !== 'notes') {
+                input.required = required;
+            }
+        });
+    }
+    
+    function updateDatePreview() {
+        const months = parseInt(durationInput.value) || 1;
+        
+        fetch(`{% url 'accounting:ajax-calculate-extension-dates' client_service.id %}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: `duration_months=${months}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const startDate = new Date(data.new_start).toLocaleDateString('es-ES');
+                const endDate = new Date(data.new_end).toLocaleDateString('es-ES');
+                previewElement.innerHTML = `
+                    <strong>${startDate} - ${endDate}</strong><br>
+                    <small>(${data.duration_days} días)</small>
+                `;
+                
+                // Actualizar monto sugerido si hay pago
+                if (data.suggested_amount) {
+                    const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+                    if (amountInput) {
+                        amountInput.value = data.suggested_amount;
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            previewElement.innerHTML = 'Error al calcular fechas';
+        });
+    }
+    
+    function updateSummary() {
+        const renewalType = document.querySelector('input[name="renewal_type"]:checked');
+        const months = parseInt(durationInput.value) || 1;
+        
+        if (!renewalType) return;
+        
+        let summaryText = `Extender servicio por ${months} mes(es)`;
+        
+        if (renewalType.value === 'with_payment') {
+            const amount = document.getElementById('{{ form.amount.id_for_label }}').value;
+            summaryText += ` y procesar pago${amount ? ` de ${amount}€` : ''}`;
+        } else {
+            summaryText += ' (sin pago inmediato)';
+        }
+        
+        summaryElement.textContent = summaryText;
     }
 });
-
-toggleFields();
-
-const checkedAction = document.querySelector('input[name="action_type"]:checked');
-if (checkedAction) {
-    checkedAction.dispatchEvent(new Event('change'));
-}
-
-if (document.getElementById('{{ form.payment_now.id_for_label }}').checked) {
-    document.getElementById('payment-fields').style.display = 'block';
-}
 </script>
 {% endblock %}

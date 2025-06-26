@@ -1,197 +1,350 @@
 {% extends "base.html" %}
-{% load service_status_tags %}
+{% load static %}
 
-{% block title %}{{ page_title }}{% endblock %}
+{% block title %}Procesar Pago - {{ client.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .period-info-card {
+        background: #f8f9fa;
+        border-left: 4px solid #28a745;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .payment-form-section {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .payment-form-section h5 {
+        color: #495057;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .period-selection {
+        background: #e3f2fd;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .no-periods-message {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 0.375rem;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .payment-history-preview {
+        background: #f8f9fa;
+        border-radius: 0.375rem;
+        padding: 1rem;
+    }
+    
+    .suggested-amount {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-        <nav class="flex" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li>
-                    <a href="{{ back_url }}" class="text-blue-600 hover:text-blue-800">
-                        Servicios
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Procesar Pago</h2>
+                    <p class="text-muted">
+                        Cliente: <strong>{{ client.full_name }}</strong> | 
+                        Servicio: <strong>{{ client_service.service.name }}</strong>
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'accounting:payment-options' client_service.id %}" 
+                       class="btn btn-outline-info me-2">
+                        <i class="fas fa-list"></i> Opciones de Pago
                     </a>
-                </li>
-                <li>
-                    <span class="text-gray-400 mx-2">/</span>
-                    <span class="text-gray-500">Registrar Pago</span>
-                </li>
-            </ol>
-        </nav>
-    </div>
-
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ page_title }}</h1>
-            
-            <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-medium text-gray-900 dark:text-white">{{ service.client.full_name }}</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ service.business_line.name }} - {{ service.get_category_display }}</p>
-                    </div>
-                    <div class="text-right">
-                        {% include 'accounting/components/service_status_badge.html' %}
-                        {% if service.active_until %}
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            Activo hasta: {{ service.active_until|date:"d/m/Y" }}
-                        </p>
-                        {% endif %}
-                    </div>
+                    <a href="{% url 'accounting:client-service-detail' client_service.id %}" 
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <form method="post" class="p-6">
-            {% csrf_token %}
-            
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        {{ form.payment_type.label }}
-                    </label>
-                    <div class="space-y-3">
-                        {% for choice in form.payment_type %}
-                            <div class="flex items-center">
-                                {{ choice.tag }}
-                                <label for="{{ choice.id_for_label }}" class="ml-2 block text-sm text-gray-900 dark:text-white">
-                                    {{ choice.choice_label }}
-                                </label>
+    {% if not has_pending_periods %}
+        <!-- No hay períodos pendientes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="no-periods-message">
+                    <i class="fas fa-info-circle fa-3x text-warning mb-3"></i>
+                    <h4>No hay períodos pendientes de pago</h4>
+                    <p class="text-muted mb-4">
+                        Para procesar un pago, primero debe extender el servicio y crear un período.
+                    </p>
+                    <a href="{% url 'accounting:service-renewal-v2' client_service.id %}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Extender Servicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Formulario de pago -->
+        <div class="row">
+            <!-- Información Lateral -->
+            <div class="col-lg-4">
+                <!-- Resumen de Períodos Pendientes -->
+                <div class="period-info-card">
+                    <h5><i class="fas fa-clock"></i> Períodos Pendientes</h5>
+                    <p>
+                        <strong>{{ pending_periods_summary.count }}</strong> período(s) pendiente(s)<br>
+                        <small class="text-muted">
+                            Total: {{ pending_periods_summary.total_days }} días 
+                            (≈{{ pending_periods_summary.total_months }} meses)
+                        </small>
+                    </p>
+                    
+                    {% if pending_periods_summary.earliest_start %}
+                        <hr>
+                        <p class="mb-0">
+                            <strong>Desde:</strong> {{ pending_periods_summary.earliest_start|date:"d/m/Y" }}<br>
+                            <strong>Hasta:</strong> {{ pending_periods_summary.latest_end|date:"d/m/Y" }}
+                        </p>
+                    {% endif %}
+                    
+                    {% if pending_periods_summary.count > 1 %}
+                        <hr>
+                        <a href="{% url 'accounting:bulk-payment' client_service.id %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-layer-group"></i> Pago Masivo
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Historial de Pagos (preview) -->
+                {% if payment_history %}
+                    <div class="payment-history-preview">
+                        <h6><i class="fas fa-history"></i> Últimos Pagos</h6>
+                        {% for payment in payment_history %}
+                            <div class="d-flex justify-content-between align-items-center py-1">
+                                <small>{{ payment.period_start|date:"d/m/y" }} - {{ payment.period_end|date:"d/m/y" }}</small>
+                                <span class="badge bg-success">{{ payment.amount }}€</span>
                             </div>
                         {% endfor %}
+                        <hr>
+                        <a href="{% url 'accounting:payment-history-v2' client_service.id %}" 
+                           class="btn btn-sm btn-outline-secondary">
+                            Ver Todo el Historial
+                        </a>
                     </div>
-                    {% if form.payment_type.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.payment_type.errors.0 }}</p>
-                    {% endif %}
-                </div>
+                {% endif %}
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {{ form.amount.label }}
-                        </label>
-                        {{ form.amount }}
-                        {% if form.amount.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+            <!-- Formulario Principal -->
+            <div class="col-lg-8">
+                <form method="post" id="paymentForm">
+                    {% csrf_token %}
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {{ form.payment_method.label }}
-                        </label>
-                        {{ form.payment_method }}
-                        {% if form.payment_method.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.payment_method.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ form.payment_date.label }}
-                    </label>
-                    {{ form.payment_date }}
-                    {% if form.payment_date.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.payment_date.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div id="extend-options" class="extend-payment-option">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {{ form.extend_months.label }}
-                        </label>
-                        {{ form.extend_months }}
-                        {% if form.extend_months.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.extend_months.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div id="period-options" class="period-payment-option" style="display: none;">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ form.period_start.label }}
-                            </label>
-                            {{ form.period_start }}
-                            {% if form.period_start.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.period_start.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ form.period_end.label }}
-                            </label>
-                            {{ form.period_end }}
-                            {% if form.period_end.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.period_end.errors.0 }}</p>
-                            {% endif %}
+                    <!-- Selección de Período -->
+                    <div class="payment-form-section">
+                        <h5><i class="fas fa-calendar-check"></i> Seleccionar Período</h5>
+                        <div class="period-selection">
+                            <div class="mb-3">
+                                <label for="{{ form.period.id_for_label }}" class="form-label">
+                                    {{ form.period.label }}
+                                </label>
+                                {{ form.period }}
+                                {% if form.period.help_text %}
+                                    <small class="form-text text-muted">{{ form.period.help_text }}</small>
+                                {% endif %}
+                                {% if form.period.errors %}
+                                    <div class="text-danger">{{ form.period.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Área de monto sugerido (dinámica) -->
+                            <div id="suggestedAmountArea" class="suggested-amount" style="display: none;">
+                                <i class="fas fa-lightbulb"></i>
+                                <strong>Monto sugerido:</strong> <span id="suggestedAmountValue">-</span>€
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-2" 
+                                        onclick="applySuggestedAmount()">
+                                    Aplicar
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ form.reference_number.label }}
-                    </label>
-                    {{ form.reference_number }}
-                    {% if form.reference_number.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.reference_number.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ form.notes.label }}
-                    </label>
-                    {{ form.notes }}
-                    {% if form.notes.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ form.notes.errors.0 }}</p>
-                    {% endif %}
-                </div>
+
+                    <!-- Información de Pago -->
+                    <div class="payment-form-section">
+                        <h5><i class="fas fa-credit-card"></i> Información de Pago</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.amount.id_for_label }}" class="form-label">
+                                        {{ form.amount.label }}
+                                    </label>
+                                    {{ form.amount }}
+                                    {% if form.amount.help_text %}
+                                        <small class="form-text text-muted">{{ form.amount.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.amount.errors %}
+                                        <div class="text-danger">{{ form.amount.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.payment_date.id_for_label }}" class="form-label">
+                                        {{ form.payment_date.label }}
+                                    </label>
+                                    {{ form.payment_date }}
+                                    {% if form.payment_date.errors %}
+                                        <div class="text-danger">{{ form.payment_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.payment_method.id_for_label }}" class="form-label">
+                                        {{ form.payment_method.label }}
+                                    </label>
+                                    {{ form.payment_method }}
+                                    {% if form.payment_method.errors %}
+                                        <div class="text-danger">{{ form.payment_method.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.reference_number.id_for_label }}" class="form-label">
+                                        {{ form.reference_number.label }}
+                                    </label>
+                                    {{ form.reference_number }}
+                                    {% if form.reference_number.errors %}
+                                        <div class="text-danger">{{ form.reference_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notas -->
+                    <div class="payment-form-section">
+                        <h5><i class="fas fa-sticky-note"></i> Notas</h5>
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                {{ form.notes.label }}
+                            </label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary" 
+                                    onclick="history.back()">
+                                Cancelar
+                            </button>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Procesar Pago
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
-            
-            <div class="mt-8 flex justify-end space-x-3">
-                <a href="{{ back_url }}" 
-                   class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
-                    Cancelar
-                </a>
-                <button type="submit" 
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                    Registrar Pago
-                </button>
-            </div>
-        </form>
-    </div>
+        </div>
+    {% endif %}
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const paymentTypeRadios = document.querySelectorAll('input[name="payment_type"]');
-    const extendOptions = document.getElementById('extend-options');
-    const periodOptions = document.getElementById('period-options');
-
-    function toggleOptions() {
-        const selectedType = document.querySelector('input[name="payment_type"]:checked')?.value;
-        
-        if (selectedType === 'extend') {
-            extendOptions.style.display = 'block';
-            periodOptions.style.display = 'none';
-        } else if (selectedType === 'custom_period' || selectedType === 'no_extension') {
-            extendOptions.style.display = 'none';
-            periodOptions.style.display = 'block';
+    const periodSelect = document.getElementById('{{ form.period.id_for_label }}');
+    const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+    const suggestedAmountArea = document.getElementById('suggestedAmountArea');
+    const suggestedAmountValue = document.getElementById('suggestedAmountValue');
+    
+    let suggestedAmounts = {};
+    
+    // Obtener montos sugeridos del atributo data
+    const suggestedAmountsData = amountInput.getAttribute('data-suggested-amounts');
+    if (suggestedAmountsData) {
+        try {
+            suggestedAmounts = JSON.parse(suggestedAmountsData);
+        } catch (e) {
+            console.warn('No se pudieron cargar los montos sugeridos');
         }
     }
-
-    paymentTypeRadios.forEach(radio => {
-        radio.addEventListener('change', toggleOptions);
-    });
-
-    toggleOptions();
+    
+    // Manejar cambio de período
+    if (periodSelect) {
+        periodSelect.addEventListener('change', function() {
+            updateSuggestedAmount();
+        });
+        
+        // Inicializar con el período seleccionado
+        updateSuggestedAmount();
+    }
+    
+    function updateSuggestedAmount() {
+        const selectedPeriodId = periodSelect.value;
+        
+        if (selectedPeriodId && suggestedAmounts[selectedPeriodId]) {
+            const suggestedAmount = suggestedAmounts[selectedPeriodId];
+            suggestedAmountValue.textContent = suggestedAmount.toFixed(2);
+            suggestedAmountArea.style.display = 'block';
+        } else if (selectedPeriodId) {
+            // Hacer petición AJAX para obtener monto sugerido
+            fetch(`{% url 'accounting:ajax-suggested-amount' client_service.id 0 %}`.replace('0', selectedPeriodId))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.suggested_amount) {
+                        suggestedAmountValue.textContent = data.suggested_amount.toFixed(2);
+                        suggestedAmountArea.style.display = 'block';
+                    } else {
+                        suggestedAmountArea.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error obteniendo monto sugerido:', error);
+                    suggestedAmountArea.style.display = 'none';
+                });
+        } else {
+            suggestedAmountArea.style.display = 'none';
+        }
+    }
+    
+    // Función global para aplicar monto sugerido
+    window.applySuggestedAmount = function() {
+        const suggestedAmount = parseFloat(suggestedAmountValue.textContent);
+        if (!isNaN(suggestedAmount)) {
+            amountInput.value = suggestedAmount.toFixed(2);
+            amountInput.focus();
+        }
+    };
 });
 </script>
 {% endblock %}

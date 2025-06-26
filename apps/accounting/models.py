@@ -344,6 +344,7 @@ class ClientService(TimeStampedModel):
 class ServicePayment(TimeStampedModel):
     
     class StatusChoices(models.TextChoices):
+        PERIOD_CREATED = 'PERIOD_CREATED', 'Período creado (sin pago)'
         PENDING = 'PENDING', 'Pendiente'
         PAID = 'PAID', 'Pagado'
         OVERDUE = 'OVERDUE', 'Vencido'
@@ -368,12 +369,17 @@ class ServicePayment(TimeStampedModel):
     amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name="Monto"
+        null=True,
+        blank=True,
+        verbose_name="Monto",
+        help_text="Monto del pago (opcional para períodos sin pago)"
     )
     
     payment_date = models.DateField(
-        default=timezone.now,
-        verbose_name="Fecha de pago"
+        null=True,
+        blank=True,
+        verbose_name="Fecha de pago",
+        help_text="Fecha de pago (opcional para períodos sin pago)"
     )
     
     period_start = models.DateField(
@@ -387,14 +393,17 @@ class ServicePayment(TimeStampedModel):
     status = models.CharField(
         max_length=15,
         choices=StatusChoices.choices,
-        default=StatusChoices.PENDING,
+        default=StatusChoices.PERIOD_CREATED,
         verbose_name="Estado"
     )
     
     payment_method = models.CharField(
         max_length=15,
         choices=PaymentMethodChoices.choices,
-        verbose_name="Método de pago"
+        null=True,
+        blank=True,
+        verbose_name="Método de pago",
+        help_text="Método de pago (opcional para períodos sin pago)"
     )
     
     reference_number = models.CharField(
@@ -500,6 +509,33 @@ class ServicePayment(TimeStampedModel):
             return "PENDING_SOON"
         else:
             return "OVERDUE"
+
+    @property
+    def is_period_only(self):
+        """Verifica si es solo un período creado sin información de pago"""
+        return self.status == self.StatusChoices.PERIOD_CREATED
+    
+    @property
+    def is_paid_period(self):
+        """Verifica si es un período con pago completado"""
+        return self.status == self.StatusChoices.PAID
+    
+    @property
+    def can_be_paid(self):
+        """Verifica si el período puede recibir un pago"""
+        return self.status in [
+            self.StatusChoices.PERIOD_CREATED,
+            self.StatusChoices.PENDING
+        ]
+    
+    @property
+    def has_payment_info(self):
+        """Verifica si tiene información de pago completa"""
+        return all([
+            self.amount is not None,
+            self.payment_date is not None,
+            self.payment_method is not None
+        ])
 
     def mark_as_paid(self, payment_date=None, payment_method=None, reference_number=None):
         self.status = self.StatusChoices.PAID
