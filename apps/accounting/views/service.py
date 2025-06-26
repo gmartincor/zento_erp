@@ -69,6 +69,10 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         context = super().get_context_data(**kwargs)
         business_line, line_path, category = self.get_business_line_data()
         
+        view_mode = self.request.GET.get('view', 'grid')
+        if view_mode not in ['grid', 'list']:
+            view_mode = 'grid'
+        
         context.update(self.get_base_context())
         context.update(ServiceContextManager.get_service_creation_context(business_line, category))
         
@@ -77,6 +81,7 @@ class ServiceCategoryListView(BaseServiceView, ListView):
                                      kwargs={'line_path': line_path}),
             'create_url': reverse('accounting:service-create',
                                 kwargs={'line_path': line_path, 'category': category}),
+            'view_mode': view_mode,
         })
         
         return context

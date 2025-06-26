@@ -142,10 +142,10 @@
     </div>
 </div>
 
-{% include 'accounting/components/service_view_controls.html' with services=services current_category=current_category %}
+{% include 'accounting/components/service_view_selector.html' with services=services current_category=current_category view_mode=view_mode %}
 
 {% if services %}
-    {% include 'accounting/components/service_display_container.html' with services=services has_remanentes=has_remanentes line_path=line_path current_category=current_category %}
+    {% include 'accounting/components/service_display_manager.html' with services=services has_remanentes=has_remanentes line_path=line_path current_category=current_category view_mode=view_mode %}
     
     {% if is_paginated %}
     <div class="mt-8 flex justify-center">
