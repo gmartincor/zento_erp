@@ -80,7 +80,7 @@ class ExpiringServicesView(LoginRequiredMixin, BusinessLinePermissionMixin, List
                 if 0 <= days_left <= days:
                     services.append(service.pk)
         
-        return all_services.filter(pk__in=services).order_by('created_at')
+        return all_services.filter(pk__in=services).order_by('created')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

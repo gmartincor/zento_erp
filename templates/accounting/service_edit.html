@@ -40,6 +40,7 @@
                 {% csrf_token %}
                 
                 {% include 'accounting/components/form_errors.html' %}
+                {% include 'accounting/components/service_date_edit_warning.html' %}
                 
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                     <div class="flex items-center justify-between mb-4">

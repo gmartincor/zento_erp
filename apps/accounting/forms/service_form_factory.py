@@ -3,8 +3,7 @@ from django import forms
 
 from apps.accounting.models import ClientService, Client
 from apps.accounting.forms.form_mixins import ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMixin
-from apps.accounting.services.service_renewal_service import ServiceRenewalService
-from apps.accounting.services.context_builder import RenewalContextBuilder
+from apps.accounting.forms.service_date_form import ServiceDateEditForm
 
 
 class ServiceFormFactory:
@@ -40,7 +39,7 @@ class ServiceFormFactory:
         return ClientServiceFilterForm
 
 
-class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMixin, forms.ModelForm):
+class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMixin, ServiceDateEditForm, forms.ModelForm):
     class Meta:
         model = ClientService
         fields = [
@@ -108,6 +107,10 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
 
 
 class ServiceRenewalForm(BaseClientServiceForm):
+    """
+    Formulario simplificado para renovación de servicios.
+    La lógica de renovación se maneja en service_manager.py
+    """
     
     def __init__(self, *args, **kwargs):
         self.original_service = kwargs.pop('original_service', None)
@@ -116,22 +119,27 @@ class ServiceRenewalForm(BaseClientServiceForm):
             self._prefill_from_original()
     
     def _prefill_from_original(self):
-        context_builder = RenewalContextBuilder(self.original_service)
-        suggestions = context_builder._get_renewal_options()
-        self.fields['price'].initial = suggestions['suggested_price']
-    
+        """Prefilla el formulario con datos del servicio original"""
+        if self.original_service:
+            self.fields['price'].initial = self.original_service.price
+            self.fields['business_line'].initial = self.original_service.business_line
+            self.fields['category'].initial = self.original_service.category
+            
     def clean(self):
         cleaned_data = super().clean()
         self.validate_service_data(cleaned_data)
         return cleaned_data
     
     def save(self, commit=True):
+        """
+        Guarda el nuevo servicio usando el ServiceManager.
+        La lógica de renovación está centralizada en service_manager.py
+        """
         if not commit:
             return super().save(commit=False)
         
-        return ServiceRenewalService.create_manual_renewal(
-            self.original_service, self.cleaned_data
-        )[0]
+        # Solo crear el servicio, la lógica de renovación se maneja externamente
+        return super().save(commit=True)
 
 
 class ClientServiceFilterForm(forms.Form):

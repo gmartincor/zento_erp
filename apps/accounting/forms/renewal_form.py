@@ -1,10 +1,9 @@
 from django import forms
 from django.utils import timezone
 from ..models import ServicePayment
-from ..services.context_builder import RenewalFormContextMixin
 
 
-class ServiceActionForm(RenewalFormContextMixin, forms.Form):
+class ServiceActionForm(forms.Form):
     
     action_type = forms.ChoiceField(
         choices=[],
@@ -106,28 +105,32 @@ class ServiceActionForm(RenewalFormContextMixin, forms.Form):
     )
     
     def __init__(self, *args, service=None, **kwargs):
-        super().__init__(*args, service=service, **kwargs)
+        super().__init__(*args, **kwargs)
+        
+        if service:
+            self.service = service
+            self.fields['amount'].initial = service.price
+            
+            action_choices = [
+                ('extend', 'Extender servicio sin pago'),
+                ('payment_standalone', 'Registrar pago sin extensión'),
+                ('payment_and_extend', 'Pago y extensión simultáneos'),
+            ]
+            
+            self.fields['action_type'].choices = action_choices
     
     def clean(self):
         cleaned_data = super().clean()
         action_type = cleaned_data.get('action_type')
         payment_now = cleaned_data.get('payment_now')
         payment_method = cleaned_data.get('payment_method')
-        start_date = cleaned_data.get('start_date')
         amount = cleaned_data.get('amount')
         
-        if hasattr(self, 'context_builder'):
-            context = self.context_builder.build_form_context()
-            validation_reqs = context['validation_requirements']
+        if action_type in ['payment_standalone', 'payment_and_extend']:
+            if not amount:
+                raise forms.ValidationError('El monto es requerido para acciones de pago.')
             
-            if action_type == 'renew' and validation_reqs['renew_requires_start_date'] and not start_date:
-                raise forms.ValidationError('La fecha de inicio es requerida para renovaciones.')
-            
-            if action_type in ['extend', 'renew']:
-                if validation_reqs['amount_required_for_extend_renew'] and not amount:
-                    raise forms.ValidationError('El monto es requerido para extender o renovar.')
-                
-                if payment_now and validation_reqs['payment_method_required_when_payment_now'] and not payment_method:
-                    raise forms.ValidationError('Debe seleccionar un método de pago si registra el pago ahora.')
+            if payment_now and not payment_method:
+                raise forms.ValidationError('Debe seleccionar un método de pago si registra el pago ahora.')
         
         return cleaned_data

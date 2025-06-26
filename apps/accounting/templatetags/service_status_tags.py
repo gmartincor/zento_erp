@@ -30,14 +30,13 @@ def service_status_badge(service):
 def service_status_icon(service):
     status_data = ServiceStateManager.get_status_display_data(service)
     
-    icons = {
+    icon_paths = {
         'check-circle': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
         'x-circle': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
         'pause-circle': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+        'exclamation-triangle': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>',
+        'clock': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
     }
-    
-    icon_path = icons.get(status_data['icon'], icons['pause-circle'])
-    color = status_data['color']
     
     color_classes = {
         'green': 'text-green-500',
@@ -47,6 +46,10 @@ def service_status_icon(service):
         'gray': 'text-gray-500',
     }
     
+    icon = status_data.get('icon', 'pause-circle')
+    color = status_data.get('color', 'gray')
+    
+    icon_path = icon_paths.get(icon, icon_paths['pause-circle'])
     icon_class = color_classes.get(color, color_classes['gray'])
     
     return mark_safe(
@@ -60,14 +63,13 @@ def service_status_icon(service):
 def service_expiry_info(service):
     status_data = ServiceStateManager.get_status_display_data(service)
     
-    if status_data['active_until'] is None:
+    active_until = status_data.get('active_until')
+    if not active_until:
         return "Sin fecha de vencimiento"
     
-    days_left = status_data['days_left']
+    days_left = status_data.get('days_left', 0)
     
-    if days_left is None:
-        return "Sin información de vencimiento"
-    elif days_left <= 0:
+    if days_left <= 0:
         days_overdue = abs(days_left)
         if days_overdue == 0:
             return "Vence hoy"

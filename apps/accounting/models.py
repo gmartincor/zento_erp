@@ -233,7 +233,6 @@ class ClientService(TimeStampedModel):
                 self.remanentes = {}
         
         self.clean()
-        
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -275,6 +274,15 @@ class ClientService(TimeStampedModel):
         from .services.payment_service import PaymentService
         self.invalidate_payment_cache()
         return PaymentService.get_service_active_until(self)
+
+    @property
+    def current_status(self):
+        from .services.service_state_manager import ServiceStateManager
+        return ServiceStateManager.get_service_status(self)
+
+    def get_payment_timing_analysis(self):
+        from .services.payment_service import PaymentService
+        return PaymentService.analyze_payment_timing(self)
 
     @property
     def total_paid(self):
@@ -323,6 +331,14 @@ class ClientService(TimeStampedModel):
         self.invalidate_payment_cache()
         self.refresh_from_db()
         return self
+
+    def can_edit_dates(self):
+        from .services.service_manager import ServiceManager
+        return ServiceManager.can_edit_service_dates(self)
+    
+    def get_date_edit_info(self):
+        from .services.service_manager import ServiceManager
+        return ServiceManager.get_date_edit_restrictions(self)
 
 
 class ServicePayment(TimeStampedModel):
@@ -512,3 +528,7 @@ class ServicePayment(TimeStampedModel):
             if reason:
                 self.notes = f"{self.notes}\nReembolsado: {reason}" if self.notes else f"Reembolsado: {reason}"
             self.save()
+
+    def get_payment_timing_analysis(self):
+        from .services.service_date_manager import ServiceDateManager
+        return ServiceDateManager.analyze_payment_timing(self)

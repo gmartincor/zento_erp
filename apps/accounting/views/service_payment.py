@@ -8,8 +8,7 @@ from ..models import ClientService
 from ..forms.payment_form import ServicePaymentForm
 from ..forms.renewal_form import ServiceActionForm
 from ..services.payment_service import PaymentService
-from ..services.service_renewal_service import ServiceRenewalService
-from ..services.context_builder import RenewalViewContextMixin
+from ..services.service_manager import ServiceManager
 from apps.core.mixins import BusinessLinePermissionMixin
 
 
@@ -65,7 +64,7 @@ class ServicePaymentView(LoginRequiredMixin, BusinessLinePermissionMixin, FormVi
             return self.form_invalid(form)
 
 
-class ServiceRenewalView(LoginRequiredMixin, BusinessLinePermissionMixin, RenewalViewContextMixin, FormView):
+class ServiceRenewalView(LoginRequiredMixin, BusinessLinePermissionMixin, FormView):
     template_name = 'accounting/service_renewal.html'
     form_class = ServiceActionForm
     
@@ -94,8 +93,14 @@ class ServiceRenewalView(LoginRequiredMixin, BusinessLinePermissionMixin, Renewa
         
         self._refresh_service()
         
-        renewal_context = self.get_renewal_context_data()
-        context.update(renewal_context)
+        context.update({
+            'service': self.service,
+            'page_title': f'Gestionar Servicio - {self.service.client.full_name}',
+            'back_url': reverse('accounting:category-services', kwargs={
+                'line_path': self.service.get_line_path(),
+                'category': self.service.category
+            })
+        })
         
         return context
     
@@ -115,35 +120,30 @@ class ServiceRenewalView(LoginRequiredMixin, BusinessLinePermissionMixin, Renewa
             return self.form_invalid(form)
     
     def _handle_extend_service(self, form):
-        payment_date = None
-        payment_method = None
-        reference_number = None
-        
-        if form.cleaned_data['payment_now']:
-            payment_date = form.cleaned_data['payment_date']
-            payment_method = form.cleaned_data['payment_method']
-            reference_number = form.cleaned_data['reference_number']
-        
         try:
-            payment, end_date = ServiceRenewalService.extend_service_flexible(
-                service=self.service,
-                amount=form.cleaned_data['amount'],
-                payment_method=payment_method,
-                duration_months=form.cleaned_data['duration_months'],
-                payment_date=payment_date,
-                reference_number=reference_number,
-                notes=form.cleaned_data['notes']
-            )
-            
-            if payment:
+            if form.cleaned_data['payment_now']:
+                payment = PaymentService.create_payment_and_extend_service(
+                    client_service=self.service,
+                    amount=form.cleaned_data['amount'],
+                    payment_method=form.cleaned_data['payment_method'],
+                    payment_date=form.cleaned_data['payment_date'],
+                    reference_number=form.cleaned_data.get('reference_number'),
+                    notes=form.cleaned_data.get('notes'),
+                    extend_months=form.cleaned_data['duration_months']
+                )
                 messages.success(
                     self.request,
-                    f'Servicio extendido exitosamente con pago. Activo hasta {end_date.strftime("%d/%m/%Y")}.'
+                    f'Servicio extendido con pago. Activo hasta {payment.period_end.strftime("%d/%m/%Y")}.'
                 )
             else:
+                ServiceManager.extend_service_without_payment(
+                    service=self.service,
+                    extension_months=form.cleaned_data['duration_months'],
+                    notes=form.cleaned_data.get('notes')
+                )
                 messages.success(
                     self.request,
-                    f'Servicio extendido exitosamente sin pago. Vigente hasta {end_date.strftime("%d/%m/%Y")}. Pendiente de pago.'
+                    f'Servicio extendido sin pago por {form.cleaned_data["duration_months"]} meses.'
                 )
         except Exception as e:
             messages.error(self.request, f'Error al extender el servicio: {str(e)}')
@@ -154,46 +154,24 @@ class ServiceRenewalView(LoginRequiredMixin, BusinessLinePermissionMixin, Renewa
                       category=self.service.category)
     
     def _handle_renew_service(self, form):
-        payment_date = None
-        payment_method = None
-        reference_number = None
-        
-        if form.cleaned_data['payment_now']:
-            payment_date = form.cleaned_data['payment_date']
-            payment_method = form.cleaned_data['payment_method']
-            reference_number = form.cleaned_data['reference_number']
-        
-        new_service, payment = ServiceRenewalService.create_manual_renewal(
-            original_service=self.service,
-            start_date=form.cleaned_data['start_date'],
-            duration_months=form.cleaned_data['duration_months'],
-            amount=form.cleaned_data['amount'],
-            payment_date=payment_date,
-            payment_method=payment_method,
-            reference_number=reference_number,
-            notes=form.cleaned_data['notes']
+        messages.info(
+            self.request,
+            'La creación de nuevos servicios se ha simplificado. Use la opción "Crear Servicio" en lugar de renovar.'
         )
         
-        if payment:
-            messages.success(
-                self.request,
-                f'Nuevo servicio creado exitosamente con pago. Activo hasta {payment.period_end.strftime("%d/%m/%Y")}.'
-            )
-        else:
-            messages.success(
-                self.request,
-                f'Nuevo servicio creado exitosamente. Pendiente de pago desde {new_service.start_date.strftime("%d/%m/%Y")}.'
-            )
-        
-        return redirect('accounting:category-services', 
-                      line_path=new_service.get_line_path(),
-                      category=new_service.category)
+        return redirect('accounting:service-create', 
+                      line_path=self.service.get_line_path(),
+                      category=self.service.category)
     
     def _handle_no_renew(self, form):
-        ServiceRenewalService.mark_service_as_not_renewed(
-            service=self.service,
-            reason=form.cleaned_data['no_renew_reason']
-        )
+        self.service.status = self.service.StatusChoices.INACTIVE
+        
+        reason = form.cleaned_data.get('no_renew_reason', '')
+        if reason:
+            existing_notes = self.service.notes or ""
+            self.service.notes = f"{existing_notes}\nNo renovado: {reason}".strip()
+        
+        self.service.save()
         
         messages.info(
             self.request,

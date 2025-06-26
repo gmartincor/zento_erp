@@ -70,8 +70,10 @@
         
         {% if service.end_date %}
         <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Fecha de Fin:</span>
-            <span class="text-sm text-gray-900 dark:text-white">
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+                {% if service.end_date != service.active_until %}Fecha Base:{% else %}Fecha de Fin:{% endif %}
+            </span>
+            <span class="text-sm {% if service.end_date != service.active_until %}text-gray-500{% else %}text-gray-900{% endif %} dark:text-gray-400">
                 {{ service.end_date|date:"d/m/Y" }}
             </span>
         </div>
@@ -93,4 +95,6 @@
         </div>
     </div>
     {% endif %}
+    
+    {% include 'accounting/components/late_payments_info.html' %}
 </div>

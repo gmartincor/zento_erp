@@ -122,6 +122,7 @@ class ServiceEditView(BaseServiceView, UpdateView):
             messages.error(self.request, 'Servicio no encontrado')
             raise Http404("Servicio no encontrado")
         
+        service.get_fresh_service_data()
         return service
     
     def get_context_data(self, **kwargs):
@@ -144,6 +145,7 @@ class ServiceEditView(BaseServiceView, UpdateView):
     def form_valid(self, form):
         try:
             service = form.save()
+            service.get_fresh_service_data()
             self.object = service
             return redirect(self.get_success_url())
         except Exception as e:
