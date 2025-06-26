@@ -20,6 +20,7 @@ class ServiceDateManager:
             'max_start_date': timezone.now().date() if not service.pk else None,
             'min_end_date': service.start_date if service.start_date else timezone.now().date(),
             'max_end_date': None,
+            'restriction_reason': 'No se pueden modificar las fechas de servicios con pagos registrados' if has_payments else None,
             'restrictions': {
                 'has_payments': has_payments,
                 'message': 'No se pueden modificar las fechas de servicios con pagos registrados' if has_payments else None

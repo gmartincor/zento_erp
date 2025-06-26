@@ -120,17 +120,21 @@ class ServiceStateManager:
     @classmethod
     def get_status_display(cls, status: str) -> str:
         status_labels = {
-            'ACTIVE': 'Activo',
-            'EXPIRED': 'Vencido',
-            'INACTIVE': 'Inactivo'
+            'active': 'Activo',
+            'renewal_due': 'Renovar Pronto',
+            'expiring_soon': 'Vence Pronto',
+            'expired': 'Vencido',
+            'inactive': 'Inactivo'
         }
         return status_labels.get(status, 'Desconocido')
     
     @classmethod
     def get_status_priority(cls, status: str) -> int:
         priorities = {
-            'EXPIRED': 1,
-            'INACTIVE': 2,
-            'ACTIVE': 3,
+            'expired': 1,
+            'expiring_soon': 2,
+            'renewal_due': 3,
+            'inactive': 4,
+            'active': 5,
         }
         return priorities.get(status, 0)

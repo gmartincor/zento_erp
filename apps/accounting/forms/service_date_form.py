@@ -32,10 +32,11 @@ class ServiceDateEditForm(forms.ModelForm):
             self.fields['end_date'].help_text = reason
     
     def _setup_editable_date_fields(self, restrictions: dict):
-        if restrictions['has_payments'] and restrictions['restriction_reason']:
+        restriction_reason = restrictions.get('restriction_reason')
+        if restriction_reason:
             for field in ['start_date', 'end_date']:
                 if field in self.fields:
-                    self.fields[field].help_text = restrictions['restriction_reason']
+                    self.fields[field].help_text = restriction_reason
     
     def clean(self):
         cleaned_data = super().clean()
@@ -52,8 +53,9 @@ class ServiceDateEditForm(forms.ModelForm):
             restrictions = ServiceDateManager.get_date_edit_restrictions(self.instance)
             if not restrictions['can_edit_dates']:
                 if start_date != self.instance.start_date or end_date != self.instance.end_date:
+                    reason = restrictions.get('restriction_reason', 'No se pueden modificar las fechas')
                     raise forms.ValidationError(
-                        'No se pueden modificar las fechas: ' + restrictions['restriction_reason']
+                        'No se pueden modificar las fechas: ' + reason
                     )
         
         return cleaned_data
