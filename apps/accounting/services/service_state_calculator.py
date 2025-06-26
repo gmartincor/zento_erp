@@ -67,11 +67,36 @@ class ServiceStateCalculator:
         days_until = cls.days_until_expiry(service)
         days_since = cls.days_since_expiry(service)
         
+        status_config = {
+            'ACTIVE': {
+                'label': 'Activo',
+                'color': 'green',
+                'icon': 'check-circle'
+            },
+            'EXPIRED': {
+                'label': 'Vencido',
+                'color': 'red',
+                'icon': 'x-circle'
+            },
+            'INACTIVE': {
+                'label': 'Inactivo',
+                'color': 'gray',
+                'icon': 'pause-circle'
+            }
+        }
+        
+        config = status_config.get(status, status_config['INACTIVE'])
+        days_left = days_until if status == 'ACTIVE' else (days_since * -1 if days_since else None)
+        
         return {
             'status': status,
+            'label': config['label'],
+            'color': config['color'],
+            'icon': config['icon'],
             'active_until': active_until,
             'days_until_expiry': days_until,
             'days_since_expiry': days_since,
+            'days_left': days_left,
             'needs_renewal': cls.needs_renewal(service),
             'is_active': status == 'ACTIVE',
             'is_expired': status == 'EXPIRED'

@@ -30,6 +30,15 @@ class ServiceStateManager:
         return ServiceStateCalculator.get_status_display_data(service)
     
     @classmethod
+    def get_status_display(cls, status: str) -> str:
+        status_labels = {
+            'ACTIVE': 'Activo',
+            'EXPIRED': 'Vencido',
+            'INACTIVE': 'Inactivo'
+        }
+        return status_labels.get(status, 'Desconocido')
+    
+    @classmethod
     def get_status_priority(cls, status: str) -> int:
         priorities = {
             'EXPIRED': 1,
