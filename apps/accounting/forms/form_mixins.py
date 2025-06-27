@@ -119,6 +119,23 @@ class ClientFieldsMixin:
                 initial=client.notes if client else '',
                 widget=forms.Textarea(attrs={**base_attrs, 'rows': 3})
             ),
+            'client_is_active': forms.BooleanField(
+                required=False,
+                label='Cliente activo',
+                initial=client.is_active if client else True,
+                help_text='Controla si el cliente está activo en el sistema',
+                widget=forms.CheckboxInput(attrs={
+                    'class': 'h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded'
+                })
+            ),
+            'client_admin_status': forms.ChoiceField(
+                required=False,
+                choices=Client.AdminStatusChoices.choices,
+                label='Estado administrativo del cliente',
+                initial=client.admin_status if client else 'ENABLED',
+                help_text='Estado administrativo del cliente (habilitado/deshabilitado/suspendido)',
+                widget=forms.Select(attrs=base_attrs)
+            ),
         }
     
     def validate_client_data(self, cleaned_data: Dict[str, Any], existing_client: Client = None):

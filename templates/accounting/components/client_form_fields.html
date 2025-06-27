@@ -83,18 +83,32 @@
             Estado del Cliente
         </h4>
         
-        <div class="flex items-start space-x-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex items-center">
-                {{ form.is_active }}
-                <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                {{ form.client_is_active|default:form.is_active }}
+                <label for="{{ form.client_is_active.id_for_label|default:form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     Cliente activo
                 </label>
             </div>
+            
+            {% if form.client_admin_status %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Estado administrativo
+                </label>
+                {{ form.client_admin_status }}
+                {% if form.client_admin_status.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.client_admin_status.errors|first }}
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
         
-        {% if form.is_active.errors %}
+        {% if form.client_is_active.errors or form.is_active.errors %}
             <div class="mt-2 text-sm text-red-600 dark:text-red-400">
-                {{ form.is_active.errors|first }}
+                {{ form.client_is_active.errors|first|default:form.is_active.errors|first }}
             </div>
         {% endif %}
         
@@ -105,6 +119,7 @@
                 </svg>
                 <div>
                     <strong>Cliente activo:</strong> Si está desmarcado, el cliente y TODOS sus servicios se congelan automáticamente.
+                    <br><strong>Estado administrativo:</strong> ENABLED (habilitado), DISABLED (deshabilitado) o SUSPENDED (suspendido).
                     <br><strong>Automático:</strong> Al desactivar se cancelan períodos futuros. Al reactivar, servicios continúan desde la fecha actual.
                 </div>
             </div>

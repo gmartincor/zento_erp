@@ -20,10 +20,6 @@ class ClientServiceTransactionManager:
             client.save()
             service_instance.save()
             
-            payment_validation = PaymentService.validate_payment_consistency_after_service_update(service_instance)
-            if payment_validation['warnings'] or payment_validation['recommendations']:
-                service_instance._payment_validation_info = payment_validation
-            
             return service_instance
             
         except Exception as e:
@@ -51,6 +47,12 @@ class ClientServiceTransactionManager:
         client.email = form_data.get('client_email', client.email or '').strip().lower()
         client.phone = form_data.get('client_phone', client.phone or '').strip()
         client.notes = form_data.get('client_notes', client.notes or '').strip()
+        
+        # Actualizar estados del cliente si están presentes
+        if 'client_is_active' in form_data:
+            client.is_active = form_data['client_is_active']
+        if 'client_admin_status' in form_data:
+            client.admin_status = form_data['client_admin_status']
         
         if Client.objects.filter(dni=client.dni).exclude(pk=client.pk).exists():
             raise ValidationError(f"Ya existe otro cliente con el DNI {client.dni}")

@@ -103,7 +103,21 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
         if not commit:
             return super().save(commit=False)
         
-        return super().save(commit=True)
+        # Usar ClientServiceTransactionManager para actualizar cliente y servicio conjuntamente
+        from apps.accounting.services.client_service_transaction import ClientServiceTransactionManager
+        
+        # Extraer datos tanto del cliente como del servicio desde el formulario
+        form_data = self.cleaned_data.copy()
+        
+        # Agregar campos adicionales si están presentes en el formulario
+        for field_name, field_value in self.cleaned_data.items():
+            if field_name.startswith('client_'):
+                form_data[field_name] = field_value
+            elif field_name in ['price', 'start_date', 'end_date', 'admin_status', 'is_active', 'notes', 'remanentes']:
+                form_data[field_name] = field_value
+        
+        # Actualizar usando el manager de transacciones
+        return ClientServiceTransactionManager.update_client_service(self.instance, form_data)
 
 
 class ServiceRenewalForm(BaseClientServiceForm):
