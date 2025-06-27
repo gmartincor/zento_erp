@@ -21,6 +21,10 @@
                 {{ form.admin_status.errors|first }}
             </div>
         {% endif %}
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <strong>Suspendido:</strong> Para impagos o problemas temporales. El tiempo sigue corriendo y el cliente debe pagar los períodos.
+            <br><strong>Habilitado:</strong> Funcionamiento normal del servicio.
+        </p>
     </div>
 
     <div>
@@ -45,6 +49,34 @@
                 {{ form.end_date.errors|first }}
             </div>
         {% endif %}
+    </div>
+
+    <!-- Control de Estado del Servicio -->
+    <div class="md:col-span-2">
+        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Control de Estado del Servicio</h4>
+            
+            <div class="flex items-start space-x-6">
+                <div class="flex items-center">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        {{ form.is_active.label }}
+                    </label>
+                </div>
+                <div class="flex-1">
+                    <p class="text-xs text-gray-600 dark:text-gray-400">
+                        <strong>Desmarcar</strong> para congelar completamente el servicio (vacaciones largas, pausa indefinida).
+                        <br><strong>Diferencia:</strong> Esto congela el tiempo y no genera períodos. Use "Estado administrativo" para suspensiones donde el tiempo debe seguir corriendo.
+                    </p>
+                </div>
+            </div>
+            
+            {% if form.is_active.errors %}
+                <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                    {{ form.is_active.errors|first }}
+                </div>
+            {% endif %}
+        </div>
     </div>
 
     <div class="md:col-span-2">

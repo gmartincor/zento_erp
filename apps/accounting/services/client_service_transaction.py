@@ -1,6 +1,7 @@
 from typing import Dict, Any
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from apps.accounting.models import Client, ClientService
 from apps.accounting.services.payment_service import PaymentService
@@ -56,10 +57,13 @@ class ClientServiceTransactionManager:
     
     @staticmethod
     def _update_service_data(service, form_data: Dict[str, Any]) -> None:
+        original_is_active = service.is_active
+        
         service.price = form_data.get('price', service.price)
         service.start_date = form_data.get('start_date', service.start_date)
         service.end_date = form_data.get('end_date', service.end_date)
         service.admin_status = form_data.get('admin_status', service.admin_status)
+        service.is_active = form_data.get('is_active', service.is_active)
         service.notes = form_data.get('notes', service.notes or '').strip()
         
         if 'remanentes' in form_data:
@@ -70,6 +74,18 @@ class ClientServiceTransactionManager:
                 raise ValidationError(
                     f'La línea de negocio {service.business_line.name} no tiene configurado el tipo de remanente.'
                 )
+        
+        ClientServiceTransactionManager._handle_service_activation_change(service, original_is_active)
+    
+    @staticmethod
+    def _handle_service_activation_change(service, original_is_active: bool) -> None:
+        if original_is_active != service.is_active:
+            from .client_state_manager import ClientStateManager
+            
+            if service.is_active:
+                ClientStateManager._unfreeze_service(service, timezone.now().date())
+            else:
+                ClientStateManager._freeze_service(service, timezone.now().date())
     
     @staticmethod
     def _create_client_from_data(form_data: Dict[str, Any]) -> Client:

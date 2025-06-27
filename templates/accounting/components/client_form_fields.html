@@ -73,4 +73,41 @@
             Información adicional, observaciones médicas, preferencias, etc.
         </p>
     </div>
+    
+    <!-- Control de Estado del Cliente -->
+    <div class="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+            </svg>
+            Estado del Cliente
+        </h4>
+        
+        <div class="flex items-start space-x-6">
+            <div class="flex items-center">
+                {{ form.is_active }}
+                <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                    Cliente activo
+                </label>
+            </div>
+        </div>
+        
+        {% if form.is_active.errors %}
+            <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                {{ form.is_active.errors|first }}
+            </div>
+        {% endif %}
+        
+        <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+            <div class="flex items-start">
+                <svg class="w-3 h-3 mr-1 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <strong>Cliente activo:</strong> Si está desmarcado, el cliente y TODOS sus servicios se congelan automáticamente.
+                    <br><strong>Automático:</strong> Al desactivar se cancelan períodos futuros. Al reactivar, servicios continúan desde la fecha actual.
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

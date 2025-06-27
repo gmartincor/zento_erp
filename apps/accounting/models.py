@@ -66,6 +66,27 @@ class Client(TimeStampedModel, SoftDeleteModel):
 
     def __str__(self):
         return f"{self.full_name} ({self.dni})"
+    
+    def save(self, *args, **kwargs):
+        is_update = self.pk is not None
+        original_is_active = None
+        
+        if is_update:
+            original_instance = Client.objects.get(pk=self.pk)
+            original_is_active = original_instance.is_active
+        
+        super().save(*args, **kwargs)
+        
+        if is_update and original_is_active is not None and original_is_active != self.is_active:
+            self._handle_activation_change()
+    
+    def _handle_activation_change(self):
+        from .services.client_state_manager import ClientStateManager
+        
+        if self.is_active:
+            ClientStateManager.reactivate_client(self)
+        else:
+            ClientStateManager.deactivate_client(self)
 
 
 class ClientService(TimeStampedModel):
