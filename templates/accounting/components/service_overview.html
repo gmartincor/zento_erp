@@ -1,0 +1,130 @@
+{% load service_tags text_filters %}
+
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Resumen del Servicio
+    </h3>
+    
+    <!-- Estado principal del servicio -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Estado Actual:</span>
+            <div class="flex items-center">
+                {% with status_data=service.status_display_data %}
+                    <div class="w-3 h-3 rounded-full mr-2" style="background-color: {{ status_data.color }}"></div>
+                    <span class="text-sm font-semibold" style="color: {{ status_data.color }}">{{ status_data.label }}</span>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Información financiera -->
+    <div class="space-y-3 mb-6">
+        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-1">
+            Información Financiera
+        </h4>
+        
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Precio Base:</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ service.price|floatformat:2 }}€
+            </span>
+        </div>
+        
+        {% if service.payment_count > 0 %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Total Pagado:</span>
+            <span class="text-sm font-medium text-green-600">
+                {{ service.total_paid|floatformat:2 }}€ ({{ service.payment_count }} pago{{ service.payment_count|pluralize }})
+            </span>
+        </div>
+        {% else %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Pagos:</span>
+            <span class="text-sm font-medium text-yellow-600">
+                Sin pagos registrados
+            </span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Información temporal -->
+    <div class="space-y-3 mb-6">
+        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-1">
+            Vigencia del Servicio
+        </h4>
+        
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Creado:</span>
+            <span class="text-sm text-gray-900 dark:text-white">
+                {{ service.created|date:"d/m/Y" }}
+            </span>
+        </div>
+        
+        {% if service.start_date %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Inicio:</span>
+            <span class="text-sm text-gray-900 dark:text-white">
+                {{ service.start_date|date:"d/m/Y" }}
+            </span>
+        </div>
+        {% endif %}
+        
+        {% if service.end_date %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Vigencia hasta:</span>
+            <span class="text-sm font-medium {% with status_data=service.status_display_data %}{% if status_data.status == 'active' %}text-blue-600{% else %}text-gray-900 dark:text-white{% endif %}{% endwith %}">
+                {{ service.end_date|date:"d/m/Y" }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Próximo paso o acción requerida -->
+    {% if next_step_message %}
+    <div class="mb-6">
+        <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
+            <div class="flex items-start">
+                <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">Próximo Paso</h4>
+                    <p class="text-sm text-blue-700 dark:text-blue-400 mt-1">{{ next_step_message }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Información adicional (notas) -->
+    {% if service.notes %}
+    <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-1 mb-3">
+            Notas del Servicio
+        </h4>
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+            {% with formatted_notes=service.notes|format_service_notes %}
+                {% if formatted_notes %}
+                    <pre class="whitespace-pre-wrap font-sans">{{ formatted_notes }}</pre>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Información específica para servicios BLACK -->
+    {% if service.category == 'BLACK' and service.remanentes %}
+    <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-1 mb-3">
+            Remanentes
+        </h4>
+        <div class="bg-gray-50 dark:bg-gray-900 rounded p-2">
+            <pre class="text-xs text-gray-600 dark:text-gray-400">{{ service.remanentes|pprint }}</pre>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Alertas de pagos tardíos -->
+    {% include 'accounting/components/late_payments_info.html' %}
+</div>
