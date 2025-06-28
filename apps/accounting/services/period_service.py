@@ -99,12 +99,14 @@ class ServicePeriodManager:
         
         total_days = sum(period.duration_days for period in pending_periods)
         total_months = total_days / 30
+        total_amount = sum(period.amount for period in pending_periods)
         
         return {
             'periods': pending_periods,
             'count': pending_periods.count(),
             'total_days': total_days,
             'total_months': round(total_months, 1),
+            'total_amount': total_amount,
             'earliest_start': pending_periods.first().period_start if pending_periods else None,
             'latest_end': pending_periods.last().period_end if pending_periods else None
         }

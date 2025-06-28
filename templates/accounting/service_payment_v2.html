@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+{% load static accounting_tags presentation_tags service_tags %}
+
+{% block title %}Procesar Pago - {{ client_service.client.full_name }} - Nutrition Pro CRM{% endblock %}
+
+{% block breadcrumb %}
+{% include 'accounting/components/enhanced_breadcrumb.html' with breadcrumb_path=breadcrumb_path current_page_title="Procesar Pago" show_stats=False %}
+{% endblock %}
+
+{% block page_header %}
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                Procesar Pago de Servicio
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">
+                <span class="font-medium">{{ client_service.client.full_name }}</span>
+                • {{ client_service.business_line.name }}
+                • {{ client_service.get_category_display }}
+            </p>
+        </div>
+        
+        <div class="mt-4 lg:mt-0 flex flex-col sm:flex-row gap-3">
+            <a href="{% url 'accounting:client-service-detail' service_id=client_service.id %}" 
+               class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium flex items-center justify-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Volver
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            {% if has_pending_periods %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        Períodos Pendientes de Pago
+                    </h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Selecciona los períodos que deseas procesar
+                    </p>
+                </div>
+                
+                <div class="p-6">
+                    <form method="post" id="payment-form">
+                        {% csrf_token %}
+                        
+                        <div class="space-y-4 mb-6">
+                            {% for period in pending_periods %}
+                            <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <label class="flex items-start cursor-pointer">
+                                    <input type="checkbox" 
+                                           name="selected_periods" 
+                                           value="{{ period.id }}"
+                                           class="mt-1 mr-3 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <h4 class="font-medium text-gray-900 dark:text-white">
+                                                Período {{ period.period_number }}
+                                            </h4>
+                                            <span class="text-lg font-bold text-primary-600 dark:text-primary-400">
+                                                {{ period.amount|format_currency:"€" }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-1 grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                            <div>
+                                                <span class="font-medium">Fecha:</span>
+                                                {{ period.due_date|date:"d/m/Y" }}
+                                            </div>
+                                            <div>
+                                                <span class="font-medium">Estado:</span>
+                                                {{ period.get_status_display }}
+                                            </div>
+                                        </div>
+                                        {% if period.notes %}
+                                        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                            <span class="font-medium">Notas:</span>
+                                            {{ period.notes }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="border-t border-gray-200 dark:border-gray-600 pt-6">
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                                Detalles del Pago
+                            </h4>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Método de Pago
+                                    </label>
+                                    <select name="payment_method" 
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                                        <option value="CASH">💵 Efectivo</option>
+                                        <option value="CARD">💳 Tarjeta</option>
+                                        <option value="TRANSFER">🏦 Transferencia</option>
+                                        <option value="BIZUM">📱 Bizum</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Fecha de Pago
+                                    </label>
+                                    <input type="date" 
+                                           name="payment_date" 
+                                           value="{{ today|date:'Y-m-d' }}"
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Notas del Pago (opcional)
+                                </label>
+                                <textarea name="payment_notes" 
+                                         rows="3"
+                                         placeholder="Añade cualquier nota relevante sobre este pago..."
+                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-end">
+                            <button type="submit" 
+                                    class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+                                Procesar Pago
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    No hay períodos pendientes
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">
+                    Este servicio no tiene períodos pendientes de pago.
+                </p>
+                <a href="{% url 'accounting:service-renewal' service_id=client_service.id %}" 
+                   class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Renovar Servicio
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="space-y-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Resumen del Servicio
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Cliente:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ client_service.client.full_name }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Categoría:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ client_service.get_category_display }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Precio base:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ client_service.price|format_currency:"€" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Total pagado:</span>
+                        <span class="font-medium text-green-600 dark:text-green-400">{{ client_service.total_paid|format_currency:"€" }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            {% if pending_periods_summary.count > 0 %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Resumen de Períodos
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Períodos pendientes:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ pending_periods_summary.count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Total pendiente:</span>
+                        <span class="font-medium text-red-600 dark:text-red-400">{{ pending_periods_summary.total_amount|format_currency:"€" }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if payment_history %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Últimos Pagos
+                </h3>
+                
+                <div class="space-y-3">
+                    {% for payment in payment_history %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                {{ payment.amount|format_currency:"€" }}
+                            </div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                {{ payment.payment_date|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                {{ payment.payment_method|payment_method_icon }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <a href="{% url 'accounting:client-service-history' client_id=client_service.client.id %}" 
+                       class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
+                        Ver historial completo →
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('payment-form');
+    const checkboxes = document.querySelectorAll('input[name="selected_periods"]');
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    function updateSubmitButton() {
+        const selectedCount = document.querySelectorAll('input[name="selected_periods"]:checked').length;
+        submitButton.disabled = selectedCount === 0;
+        submitButton.textContent = selectedCount > 0 
+            ? `Procesar ${selectedCount} período${selectedCount > 1 ? 's' : ''}`
+            : 'Selecciona períodos';
+    }
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSubmitButton);
+    });
+    
+    updateSubmitButton();
+});
+</script>
+{% endblock %}

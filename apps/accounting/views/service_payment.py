@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from ..models import ClientService, ServicePayment
 from ..forms.service_payment_form import ServicePaymentForm, BulkPaymentForm
@@ -52,9 +53,11 @@ def service_payment_view(request, service_id):
         'form': form,
         'client_service': client_service,
         'client': client_service.client,
+        'pending_periods': pending_summary.get('periods', []),
         'pending_periods_summary': pending_summary,
         'payment_history': payment_history[:5],
-        'has_pending_periods': pending_summary['count'] > 0
+        'has_pending_periods': pending_summary['count'] > 0,
+        'today': timezone.now().date()
     }
     
     return render(request, 'accounting/service_payment_v2.html', context)
