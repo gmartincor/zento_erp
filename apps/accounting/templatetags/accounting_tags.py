@@ -1,15 +1,11 @@
-from decimal import Decimal
 from django import template
-from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.utils.html import format_html
-from django.template.loader import render_to_string
 
-from apps.accounting.models import ClientService
 from apps.accounting.services.statistics_service import StatisticsService
 from apps.accounting.services.business_line_service import BusinessLineService
-from apps.core.constants import CATEGORY_CONFIG, CATEGORY_DEFAULTS
-from apps.accounting.services.template_service import TemplateDataService
+from apps.accounting.services.template_tag_service import TemplateTagService
+from apps.core.constants import CATEGORY_CONFIG
 
 register = template.Library()
 
@@ -52,18 +48,12 @@ def get_business_line_children(business_line, user_permissions=None):
 
 @register.filter
 def category_badge_class(category):
-    normalized_category = normalize_category(category)
+    normalized_category = TemplateTagService.normalize_category(category)
     return CATEGORY_CONFIG[normalized_category]['badge_class']
 
 @register.filter
 def payment_method_icon(method):
-    icons = {
-        'CARD': '💳',
-        'CASH': '💵',
-        'TRANSFER': '🏦',
-        'BIZUM': '📱'
-    }
-    return icons.get(method, '💰')
+    return TemplateTagService.get_payment_method_icon(method)
 
 @register.inclusion_tag('accounting/components/stats_card.html')
 def stats_card(title, value, subtitle=None, icon=None, trend=None):
@@ -126,15 +116,13 @@ def service_summary_table(services, show_actions=True):
 def url_with_category(url_name, line_path, category, **kwargs):
     kwargs.update({
         'line_path': line_path,
-        'category': category.lower()
+        'category': TemplateTagService.normalize_category(category)
     })
     return reverse(url_name, kwargs=kwargs)
 
 @register.simple_tag
 def calculate_remanente_total(service):
-    if hasattr(service, 'get_remanente_total'):
-        return service.get_remanente_total()
-    return 0
+    return TemplateTagService.calculate_remanente_total(service)
 
 @register.filter
 def get_item(dictionary, key):
@@ -153,12 +141,16 @@ def format_business_line_hierarchy(business_line):
 
 @register.filter
 def percentage_of(part, total):
-    if not total or total == 0:
-        return 0
-    try:
-        return (float(part) / float(total)) * 100
-    except (ValueError, TypeError, ZeroDivisionError):
-        return 0
+    return TemplateTagService.calculate_percentage(part, total)
 
-def normalize_category(category):
-    return category.lower() if category else CATEGORY_DEFAULTS['DEFAULT_CATEGORY']
+@register.simple_tag
+def get_client_status(client):
+    return TemplateTagService.get_client_reactivation_status(client)
+
+@register.simple_tag
+def should_show_reactivation_option(client):
+    return TemplateTagService.should_show_reactivation_option(client)
+
+@register.simple_tag
+def get_reactivation_url(service, business_line=None, category=None):
+    return TemplateTagService.build_reactivation_url(service, business_line, category)

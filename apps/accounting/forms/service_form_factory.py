@@ -51,9 +51,12 @@ class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMi
         self.user = kwargs.pop('user', None)
         self.business_line = kwargs.pop('business_line', None)
         self.category = kwargs.pop('category', None)
+        self.source_service = kwargs.pop('source_service', None)
         super().__init__(*args, **kwargs)
         self.setup_form_styles()
         self.setup_business_line_context(self.user, self.business_line, self.category)
+        if self.source_service:
+            self.setup_source_service_data()
 
 
 class ClientServiceCreateForm(BaseClientServiceForm):
@@ -71,37 +74,15 @@ class ClientServiceCreateForm(BaseClientServiceForm):
     
     def save(self, commit=True):
         if not commit:
-            service = super().save(commit=False)
-            service.client = self._get_or_create_client()
-            return service
+            return super().save(commit=False)
         
-        service = super().save(commit=False)
-        service.client = self._get_or_create_client()
-        service.save()
-        return service
-    
-    def _get_or_create_client(self):
-        from apps.accounting.models import Client
+        from apps.accounting.services.client_service_transaction import ClientServiceTransactionManager
         
-        client_data = {
-            'full_name': self.cleaned_data.get('client_name', '').strip(),
-            'dni': self.cleaned_data.get('client_dni', '').strip().upper(),
-            'gender': self.cleaned_data.get('client_gender'),
-            'email': self.cleaned_data.get('client_email', '').strip(),
-            'phone': self.cleaned_data.get('client_phone', '').strip(),
-            'notes': self.cleaned_data.get('client_notes', '').strip(),
-            'is_active': self.cleaned_data.get('client_is_active', True),
-        }
-        
-        try:
-            client = Client.objects.get(dni=client_data['dni'], is_deleted=False)
-            for field, value in client_data.items():
-                if field != 'dni' and value:
-                    setattr(client, field, value)
-            client.save()
-            return client
-        except Client.DoesNotExist:
-            return Client.objects.create(**client_data)
+        return ClientServiceTransactionManager.create_client_service(
+            self.cleaned_data, 
+            self.business_line, 
+            self.category
+        )
 
 
 class ClientServiceUpdateForm(BaseClientServiceForm):

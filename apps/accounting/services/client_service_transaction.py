@@ -28,7 +28,7 @@ class ClientServiceTransactionManager:
     @transaction.atomic
     def create_client_service(form_data: Dict[str, Any], business_line, category) -> ClientService:
         try:
-            client = ClientServiceTransactionManager._create_client_from_data(form_data)
+            client = ClientServiceTransactionManager._get_or_create_client(form_data)
             service = ClientServiceTransactionManager._create_service_from_data(
                 client, form_data, business_line, category
             )
@@ -37,6 +37,18 @@ class ClientServiceTransactionManager:
             
         except Exception as e:
             raise ValidationError(f"Error al crear cliente y servicio: {str(e)}")
+    
+    @staticmethod
+    def _get_or_create_client(form_data: Dict[str, Any]) -> Client:
+        dni = form_data['client_dni'].strip().upper()
+        
+        try:
+            client = Client.objects.get(dni=dni, is_deleted=False)
+            ClientServiceTransactionManager._update_client_data(client, form_data)
+            client.save()
+            return client
+        except Client.DoesNotExist:
+            return ClientServiceTransactionManager._create_client_from_data(form_data)
     
     @staticmethod
     def _update_client_data(client: Client, form_data: Dict[str, Any]) -> None:
@@ -87,21 +99,20 @@ class ClientServiceTransactionManager:
     
     @staticmethod
     def _create_client_from_data(form_data: Dict[str, Any]) -> Client:
-        client = Client(
-            full_name=form_data['client_name'].strip().title(),
-            dni=form_data['client_dni'].strip().upper(),
-            gender=form_data['client_gender'],
-            email=form_data.get('client_email', '').strip().lower(),
-            phone=form_data.get('client_phone', '').strip(),
-            notes=form_data.get('client_notes', '').strip(),
-            is_active=True
-        )
+        client_data = {
+            'full_name': form_data['client_name'].strip().title(),
+            'dni': form_data['client_dni'].strip().upper(),
+            'gender': form_data['client_gender'],
+            'email': form_data.get('client_email', '').strip().lower(),
+            'phone': form_data.get('client_phone', '').strip(),
+            'notes': form_data.get('client_notes', '').strip(),
+            'is_active': form_data.get('client_is_active', True)
+        }
         
-        if Client.objects.filter(dni=client.dni).exists():
-            raise ValidationError(f"Ya existe un cliente con el DNI {client.dni}")
+        if Client.objects.filter(dni=client_data['dni']).exists():
+            raise ValidationError(f"Ya existe un cliente con el DNI {client_data['dni']}")
         
-        client.save()
-        return client
+        return Client.objects.create(**client_data)
     
     @staticmethod
     def _create_service_from_data(client, form_data: Dict[str, Any], business_line, category):

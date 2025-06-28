@@ -1,4 +1,4 @@
-{% load presentation_tags service_tags service_status_tags %}
+{% load presentation_tags service_tags service_status_tags accounting_tags %}
 
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow duration-200">
     <div class="p-6">
@@ -104,6 +104,13 @@
                     <a href="{% url 'accounting:service-renewal' service_id=service.id %}"
                        class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium">
                         Renovar
+                    </a>
+                    {% endif %}
+                    {% should_show_reactivation_option service.client as show_reactivation %}
+                    {% if show_reactivation %}
+                    <a href="{% get_reactivation_url service %}"
+                       class="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300 font-medium">
+                        Nuevo Servicio
                     </a>
                     {% endif %}
                 </div>

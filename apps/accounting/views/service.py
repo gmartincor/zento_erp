@@ -33,10 +33,22 @@ class BaseServiceView(
         kwargs = super().get_form_kwargs()
         business_line, _, category = self.get_business_line_data()
         normalized_category = category.lower() if category else None
+        
+        renew_from_id = self.request.GET.get('renew_from')
+        source_service = None
+        if renew_from_id:
+            try:
+                source_service = ClientService.objects.select_related('client').get(
+                    id=renew_from_id, is_active=True
+                )
+            except ClientService.DoesNotExist:
+                pass
+        
         kwargs.update({
             'user': self.request.user,
             'business_line': business_line,
-            'category': normalized_category
+            'category': normalized_category,
+            'source_service': source_service
         })
         return kwargs
         
@@ -181,11 +193,30 @@ class ServiceCreateView(BaseServiceView, CreateView):
         context = super().get_context_data(**kwargs)
         business_line, _, category = self.get_business_line_data()
         
+        renew_from_id = self.request.GET.get('renew_from')
+        source_service_info = None
+        
+        if renew_from_id:
+            try:
+                from apps.accounting.services.client_reactivation_service import ClientReactivationService
+                source_service = ClientService.objects.select_related('client').get(
+                    id=renew_from_id, is_active=True
+                )
+                client_status = ClientReactivationService.get_client_status(source_service.client)
+                source_service_info = {
+                    'service': source_service,
+                    'client_status': client_status,
+                    'is_reactivation': client_status['status'] == 'long_inactive'
+                }
+            except ClientService.DoesNotExist:
+                pass
+        
         context.update(self.get_base_context())
         context.update({
             'business_line': business_line,
             'category': category,
-            'page_title': f'Crear Servicio - {business_line.name}'
+            'page_title': f'Crear Servicio - {business_line.name}',
+            'source_service_info': source_service_info
         })
         
         return context
