@@ -65,7 +65,9 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         status_filter = self.request.GET.get('status')
         client_filter = self.request.GET.get('client')
         
-        queryset = ClientService.objects.by_business_line(business_line).by_category(category)
+        queryset = ClientService.objects.get_services_by_category_including_descendants(
+            business_line, category
+        )
         
         if status_filter:
             queryset = queryset.with_status(status_filter)

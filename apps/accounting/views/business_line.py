@@ -114,9 +114,10 @@ class BusinessLineHierarchyView(
                     parent=current_line
                 )
                 if not accessible_children.exists():
-                    services = ClientService.objects.filter(business_line=current_line)
-                    black_services = services.filter(category='BLACK')
-                    white_services = services.filter(category='WHITE')
+                    descendant_ids = current_line.get_descendant_ids()
+                    services = ClientService.objects.filter(business_line__id__in=descendant_ids)
+                    black_services = services.filter(category='black')  # Usar lowercase
+                    white_services = services.filter(category='white')  # Usar lowercase
                     black_count = black_services.count()
                     white_count = white_services.count()
                     black_revenue = ServicePayment.objects.filter(
@@ -167,11 +168,13 @@ class BusinessLineHierarchyView(
                         }
                     })
                 else:
+                    # Para líneas con sublíneas, incluir servicios de todas las sublíneas
+                    descendant_ids = current_line.get_descendant_ids()
                     current_line_services = ClientService.objects.filter(
-                        business_line=current_line
+                        business_line__id__in=descendant_ids
                     ).count()
                     current_line_revenue = ServicePayment.objects.filter(
-                        client_service__business_line=current_line
+                        client_service__business_line__id__in=descendant_ids
                     ).aggregate(total=Sum('amount'))['total'] or 0
                     context.update({
                         'current_line': current_line,
