@@ -14,15 +14,40 @@ class ClientServiceTransactionManager:
         try:
             client = service_instance.client
             ClientServiceTransactionManager._update_client_data(client, form_data)
+            
+            original_start = service_instance.start_date
+            original_end = service_instance.end_date
+            
             ClientServiceTransactionManager._update_service_data(service_instance, form_data)
             
             client.save()
             service_instance.save()
             
+            if ClientServiceTransactionManager._should_update_periods(
+                service_instance, original_start, original_end, form_data
+            ):
+                ClientServiceTransactionManager._handle_period_changes(
+                    service_instance, original_start, original_end, form_data
+                )
+            
             return service_instance
             
         except Exception as e:
             raise ValidationError(f"Error al actualizar cliente y servicio: {str(e)}")
+    
+    @staticmethod
+    def _should_update_periods(service, original_start, original_end, form_data):
+        new_start = form_data.get('start_date')
+        new_end = form_data.get('end_date')
+        
+        start_changed = new_start != original_start
+        end_changed = new_end != original_end
+        
+        return start_changed or end_changed
+    
+    @staticmethod
+    def _handle_period_changes(service, original_start, original_end, form_data):
+        pass
     
     @staticmethod
     @transaction.atomic

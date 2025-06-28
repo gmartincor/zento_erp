@@ -94,6 +94,10 @@ class ServicePeriodManager:
         ).order_by('period_start')
     
     @staticmethod
+    def get_last_period(client_service: ClientService) -> ServicePayment:
+        return client_service.payments.order_by('-period_end').first()
+    
+    @staticmethod
     def get_unpaid_periods_summary(client_service: ClientService) -> Dict[str, Any]:
         pending_periods = ServicePeriodManager.get_pending_periods(client_service)
         

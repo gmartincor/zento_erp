@@ -18,38 +18,39 @@ class ServiceStateManager:
         if service.admin_status == 'DISABLED':
             return False
         
-        if not service.end_date:
-            return service.is_active
+        last_period = cls._get_last_period(service)
+        if last_period:
+            return not DateCalculator.is_date_in_past(last_period.period_end)
         
-        return not DateCalculator.is_date_in_past(service.end_date)
+        if service.end_date:
+            return not DateCalculator.is_date_in_past(service.end_date)
+        
+        return service.is_active
     
     @classmethod
     def is_service_expired(cls, service: ClientService) -> bool:
         if not service.is_active:
             return True
+        
+        last_period = cls._get_last_period(service)
+        if last_period:
+            return DateCalculator.is_date_in_past(last_period.period_end)
             
-        if not service.end_date:
-            return False
-            
-        return DateCalculator.is_date_in_past(service.end_date)
+        if service.end_date:
+            return DateCalculator.is_date_in_past(service.end_date)
+        
+        return False
     
     @classmethod
     def days_until_expiry(cls, service: ClientService) -> int:
-        if not service.end_date:
-            return 0
+        last_period = cls._get_last_period(service)
+        if last_period:
+            return DateCalculator.days_between(DateCalculator.get_today(), last_period.period_end)
         
-        return DateCalculator.days_between(DateCalculator.get_today(), service.end_date)
-    
-    @classmethod
-    def needs_renewal(cls, service: ClientService) -> bool:
-        if not service.is_active:
-            return True
+        if service.end_date:
+            return DateCalculator.days_between(DateCalculator.get_today(), service.end_date)
         
-        if cls.is_service_expired(service):
-            return True
-        
-        days_until_expiry = cls.days_until_expiry(service)
-        return days_until_expiry <= cls.RENEWAL_WARNING_DAYS
+        return 0
     
     @classmethod
     def get_service_status(cls, service) -> str:
@@ -58,6 +59,17 @@ class ServiceStateManager:
         
         if service.admin_status == 'DISABLED':
             return 'disabled'
+        
+        last_period = cls._get_last_period(service)
+        has_pending_periods = service.payments.filter(
+            status__in=['PERIOD_CREATED', 'PENDING']
+        ).exists()
+        
+        if not last_period and not service.end_date:
+            return 'no_periods'
+        
+        if has_pending_periods:
+            return 'pending_payment'
         
         if cls.is_service_expired(service):
             return 'expired'
@@ -71,6 +83,10 @@ class ServiceStateManager:
             return 'active'
     
     @classmethod
+    def _get_last_period(cls, service: ClientService) -> Optional[ServicePayment]:
+        return service.payments.order_by('-period_end').first()
+    
+    @classmethod
     def get_status_display_data(cls, service: ClientService) -> Dict[str, Any]:
         status = cls.get_service_status(service)
         days_left = cls.days_until_expiry(service)
@@ -81,6 +97,18 @@ class ServiceStateManager:
                 'class': 'badge-success',
                 'icon': 'check-circle',
                 'color': 'green'
+            },
+            'no_periods': {
+                'label': 'Sin períodos',
+                'class': 'badge-warning',
+                'icon': 'calendar-plus',
+                'color': 'yellow'
+            },
+            'pending_payment': {
+                'label': 'Pago pendiente',
+                'class': 'badge-info',
+                'icon': 'credit-card',
+                'color': 'blue'
             },
             'renewal_due': {
                 'label': f'Renovar en {days_left} días' if days_left > 0 else 'Renovar pronto',
@@ -146,6 +174,8 @@ class ServiceStateManager:
     def get_status_display(cls, status: str) -> str:
         status_labels = {
             'active': 'Activo',
+            'no_periods': 'Sin Períodos',
+            'pending_payment': 'Pago Pendiente',
             'renewal_due': 'Renovar Pronto',
             'expiring_soon': 'Vence Pronto',
             'expired': 'Vencido',
@@ -160,9 +190,11 @@ class ServiceStateManager:
             'expired': 1,
             'expiring_soon': 2,
             'renewal_due': 3,
-            'disabled': 4,
-            'inactive': 5,
-            'active': 6,
+            'pending_payment': 4,
+            'no_periods': 5,
+            'disabled': 6,
+            'inactive': 7,
+            'active': 8,
         }
         return priorities.get(status, 0)
     

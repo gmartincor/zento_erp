@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from datetime import timedelta
+from datetime import timedelta, date
 
 from .base_forms import BaseServiceForm, PaymentFieldsMixin
 from ..services.period_service import ServicePeriodManager
@@ -34,26 +34,37 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
     def __init__(self, client_service=None, *args, **kwargs):
         super().__init__(client_service=client_service, *args, **kwargs)
         
-        if self.client_service and self.client_service.end_date:
-            from datetime import timedelta
-            min_date = self.client_service.end_date + timedelta(days=1)
-            self.fields['end_date'].widget.attrs.update({
-                'min': min_date.strftime('%Y-%m-%d')
-            })
+        if self.client_service:
+            self._set_minimum_date()
         
         renewal_type = self.data.get('renewal_type', self.initial.get('renewal_type', 'period_only'))
         if renewal_type == 'with_payment':
             self.add_payment_fields()
             self._set_suggested_amount()
     
+    def _set_minimum_date(self):
+        last_period = ServicePeriodManager.get_last_period(self.client_service)
+        
+        if last_period:
+            min_date = last_period.period_end + timedelta(days=1)
+        elif self.client_service.start_date:
+            min_date = self.client_service.start_date
+        else:
+            min_date = date.today()
+        
+        self.fields['end_date'].widget.attrs.update({
+            'min': min_date.strftime('%Y-%m-%d')
+        })
+    
     def clean(self):
         cleaned_data = super().clean()
         
         end_date = cleaned_data.get('end_date')
-        if self.client_service and self.client_service.end_date and end_date:
-            if end_date <= self.client_service.end_date:
+        if self.client_service and end_date:
+            last_period = ServicePeriodManager.get_last_period(self.client_service)
+            if last_period and end_date <= last_period.period_end:
                 raise ValidationError({
-                    'end_date': 'La nueva fecha de fin debe ser posterior a la fecha actual de finalización'
+                    'end_date': 'La nueva fecha de fin debe ser posterior al último período existente'
                 })
         
         renewal_type = cleaned_data.get('renewal_type')
@@ -66,18 +77,17 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
         end_date = self.cleaned_data['end_date']
         notes = self.cleaned_data.get('notes', '')
         
-        if renewal_type == 'period_only':
-            period = ServicePeriodManager.extend_service_to_date(
-                client_service=self.client_service,
-                new_end_date=end_date,
-                notes=notes
-            )
-        elif renewal_type == 'with_payment':
-            period = ServicePeriodManager.extend_service_to_date(
-                client_service=self.client_service,
-                new_end_date=end_date,
-                notes=notes
-            )
+        last_period = ServicePeriodManager.get_last_period(self.client_service)
+        start_date = last_period.period_end + timedelta(days=1) if last_period else self.client_service.start_date
+        
+        period = ServicePeriodManager.create_period(
+            client_service=self.client_service,
+            period_start=start_date,
+            period_end=end_date,
+            notes=notes
+        )
+        
+        if renewal_type == 'with_payment':
             period = PaymentService.process_payment(
                 period=period,
                 amount=self.cleaned_data['amount'],
@@ -103,10 +113,8 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
         except (ValueError, TypeError):
             return
         
-        if self.client_service.end_date:
-            period_start = self.client_service.end_date + timedelta(days=1)
-        else:
-            period_start = self.client_service.start_date or end_date
+        last_period = ServicePeriodManager.get_last_period(self.client_service)
+        period_start = last_period.period_end + timedelta(days=1) if last_period else self.client_service.start_date
         
         from ..models import ServicePayment
         temp_period = ServicePayment(
