@@ -15,7 +15,7 @@
         </div>
         <div class="flex space-x-2">
             {% if service %}
-            <a href="{% url 'accounting:payment-history' service_id=service.id %}" 
+            <a href="{% url 'accounting:service-payment-history' service_id=service.id %}" 
                class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors">
                 Ver Historial
             </a>

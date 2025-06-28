@@ -8,6 +8,7 @@ from django.contrib import messages
 from apps.accounting.models import Client, ClientService
 from apps.accounting.services.service_state_manager import ServiceStateManager
 from apps.accounting.services.payment_service import PaymentService
+from apps.accounting.services.history_service import HistoryService
 from apps.core.mixins import BusinessLinePermissionMixin
 
 
@@ -24,27 +25,19 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
     
     def get_queryset(self):
         client = self.get_client()
-        business_line_id = self.request.GET.get('business_line')
-        category = self.request.GET.get('category')
-        
         accessible_lines = self.get_allowed_business_lines()
         
-        queryset = ClientService.objects.filter(
-            client=client,
-            business_line__in=accessible_lines
-        ).select_related('client', 'business_line').prefetch_related('payments')
+        filters = {
+            'business_line': self.request.GET.get('business_line'),
+            'category': self.request.GET.get('category')
+        }
         
-        if business_line_id:
-            try:
-                business_line = accessible_lines.get(id=business_line_id)
-                queryset = queryset.filter(business_line=business_line)
-            except:
-                pass
-                
-        if category:
-            queryset = queryset.filter(category=category)
-            
-        return queryset.order_by('-created_at')
+        queryset = HistoryService.get_client_services_history(
+            client.id, 
+            {k: v for k, v in filters.items() if v}
+        )
+        
+        return queryset.filter(business_line__in=accessible_lines)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -54,7 +47,7 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
         from ..services.service_status_utility import ServiceStatusUtility
         services_with_status = ServiceStatusUtility.get_services_with_status_data(context['services'])
         
-        categories = ClientService.CATEGORY_CHOICES
+        categories = ClientService.CategoryChoices.choices
         business_line_options = [(bl.id, bl.name) for bl in accessible_lines]
         
         context.update({
@@ -62,6 +55,12 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
             'services_with_status': services_with_status,
             'categories': categories,
             'business_line_options': business_line_options,
+            'available_business_lines': accessible_lines,
+            'filter_params': {
+                'business_line': self.request.GET.get('business_line'),
+                'category': self.request.GET.get('category'),
+            },
+            'summary_stats': HistoryService.get_history_summary(client_id=client.id),
             'selected_business_line': self.request.GET.get('business_line'),
             'selected_category': self.request.GET.get('category'),
             'page_title': f'Historial de Servicios - {client.full_name}',

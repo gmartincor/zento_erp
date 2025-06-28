@@ -107,7 +107,7 @@ def breadcrumb_navigation(business_line, category=None):
         current = current.parent
     breadcrumbs.insert(0, {
         'name': 'Dashboard',
-        'url': reverse('accounting:dashboard'),
+        'url': reverse('accounting:index'),
         'is_current': False
     })
     return {

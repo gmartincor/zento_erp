@@ -8,44 +8,24 @@ from datetime import datetime, date
 from apps.accounting.models import ServicePayment, ClientService
 from apps.accounting.services.revenue_analytics_service import RevenueAnalyticsService
 from apps.accounting.services.presentation_service import PresentationService
+from apps.accounting.services.history_service import HistoryService
 from apps.business_lines.models import BusinessLine
 
 
 @login_required
 def payment_history_view(request):
     analytics_service = RevenueAnalyticsService()
-    presentation_service = PresentationService()
     
-    business_line_path = request.GET.get('business_line')
-    category = request.GET.get('category')
-    service_id = request.GET.get('service')
+    filters = {
+        'business_line': request.GET.get('business_line'),
+        'category': request.GET.get('category'),
+        'service_id': request.GET.get('service'),
+    }
     period_type = request.GET.get('period', RevenueAnalyticsService.PeriodType.CURRENT_MONTH)
     
-    payments_query = ServicePayment.objects.filter(
-        status=ServicePayment.StatusChoices.PAID
-    ).select_related(
-        'client_service__client',
-        'client_service__business_line'
-    ).order_by('-payment_date')
-    
-    if business_line_path:
-        try:
-            business_line = BusinessLine.objects.get(slug=business_line_path)
-            payments_query = payments_query.filter(
-                client_service__business_line=business_line
-            )
-        except BusinessLine.DoesNotExist:
-            pass
-    
-    if category:
-        payments_query = payments_query.filter(
-            client_service__category=category.upper()
-        )
-    
-    if service_id:
-        payments_query = payments_query.filter(
-            client_service_id=service_id
-        )
+    payments_query = HistoryService.get_global_payments_history(
+        {k: v for k, v in filters.items() if v}
+    )
     
     payments_query = analytics_service._apply_period_filter(
         payments_query, period_type
@@ -69,9 +49,9 @@ def payment_history_view(request):
         ],
         'selected_period': period_type,
         'filters': {
-            'business_line': business_line_path,
-            'category': category,
-            'service': service_id,
+            'business_line': filters['business_line'],
+            'category': filters['category'],
+            'service': filters['service_id'],
         }
     }
     

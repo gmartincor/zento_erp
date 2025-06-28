@@ -155,33 +155,23 @@ def payment_options_view(request, service_id):
 
 @login_required
 @require_http_methods(["GET"])
-def payment_history_view(request, service_id):
+def service_payment_history_view(request, service_id):
     """
-    Vista para mostrar el historial completo de pagos.
+    Vista para mostrar el historial completo de pagos de un servicio específico.
     """
+    from apps.accounting.services.history_service import HistoryService
+    
     client_service = get_object_or_404(ClientService, id=service_id)
-    
-    payment_history = PaymentService.get_payment_history(client_service)
-    pending_periods = ServicePeriodManager.get_pending_periods(client_service)
-    
-
-    total_paid = sum(payment.amount for payment in payment_history if payment.amount)
-    avg_payment = total_paid / len(payment_history) if payment_history else 0
+    payment_history = HistoryService.get_service_payment_history(service_id)
     
     context = {
-        'client_service': client_service,
+        'service': client_service,
         'client': client_service.client,
-        'payment_history': payment_history,
-        'pending_periods': pending_periods,
-        'stats': {
-            'total_payments': len(payment_history),
-            'total_paid': total_paid,
-            'average_payment': avg_payment,
-            'pending_count': pending_periods.count()
-        }
+        'payments': payment_history,
+        'stats': HistoryService.get_history_summary(service_id=service_id)
     }
     
-    return render(request, 'accounting/payment_history_v2.html', context)
+    return render(request, 'accounting/payments/service_history.html', context)
 
 
 @login_required

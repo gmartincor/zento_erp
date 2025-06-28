@@ -146,7 +146,7 @@
                             </div>
                         {% endfor %}
                         <hr>
-                        <a href="{% url 'accounting:payment-history-v2' client_service.id %}" 
+                        <a href="{% url 'accounting:service-payment-history' service_id=client_service.id %}" 
                            class="btn btn-sm btn-outline-secondary">
                             Ver Todo el Historial
                         </a>

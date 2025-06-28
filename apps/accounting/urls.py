@@ -22,7 +22,7 @@ from .views.service_payment import (
     bulk_payment_view,
     ajax_get_suggested_amount,
     payment_options_view,
-    payment_history_view,
+    service_payment_history_view,
     cancel_period_view
 )
 
@@ -90,7 +90,7 @@ urlpatterns = [
     path('services/<int:service_id>/payment/', service_payment_view, name='service-payment'),
     path('services/<int:service_id>/payment/bulk/', bulk_payment_view, name='bulk-payment'),
     path('services/<int:service_id>/payment/options/', payment_options_view, name='payment-options'),
-    path('services/<int:service_id>/payment/history/', payment_history_view, name='payment-history'),
+    path('services/<int:service_id>/payment/history/', service_payment_history_view, name='service-payment-history'),
     path('services/<int:service_id>/payment/ajax/suggested-amount/<int:period_id>/', ajax_get_suggested_amount, name='ajax-suggested-amount'),
     
     path('services/<int:service_id>/periods/<int:period_id>/cancel/', cancel_period_view, name='cancel-period'),
