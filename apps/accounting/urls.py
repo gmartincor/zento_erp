@@ -16,11 +16,7 @@ from .views import (
 )
 from .views.payment_history import payment_history_view
 from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
-from .views.service_renewal import (
-    service_renewal_view,
-    ajax_calculate_extension_dates,
-    service_extension_preview
-)
+from .views.service_renewal import service_renewal_view
 from .views.service_payment import (
     service_payment_view,
     bulk_payment_view,
@@ -93,8 +89,6 @@ urlpatterns = [
     path('services/<int:service_id>/detail/', ClientServiceDetailView.as_view(), name='client-service-detail'),
     
     path('services/<int:service_id>/renewal/', service_renewal_view, name='service-renewal'),
-    path('services/<int:service_id>/renewal/preview/', service_extension_preview, name='service-extension-preview'),
-    path('services/<int:service_id>/renewal/ajax/calculate-dates/', ajax_calculate_extension_dates, name='ajax-calculate-extension-dates'),
     
     path('services/<int:service_id>/payment/', service_payment_view, name='service-payment'),
     path('services/<int:service_id>/payment/bulk/', bulk_payment_view, name='bulk-payment'),

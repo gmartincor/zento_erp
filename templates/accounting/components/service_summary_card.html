@@ -1,0 +1,62 @@
+{% load service_tags text_filters %}
+
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Información del Servicio
+    </h3>
+    
+    <!-- Estado principal del servicio -->
+    <div class="mb-4">
+        <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Estado:</span>
+            <div class="flex items-center">
+                {% with status_data=client_service.status_display_data %}
+                    <div class="w-3 h-3 rounded-full mr-2" style="background-color: {{ status_data.color }}"></div>
+                    <span class="text-sm font-semibold" style="color: {{ status_data.color }}">{{ status_data.label }}</span>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fechas del servicio -->
+    <div class="space-y-2 mb-4">
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Fecha Inicio:</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ client_service.start_date|date:"d/m/Y" }}
+            </span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Fecha Fin:</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ client_service.end_date|date:"d/m/Y" }}
+            </span>
+        </div>
+    </div>
+    
+    <!-- Información financiera -->
+    <div class="space-y-2 border-t border-gray-200 dark:border-gray-600 pt-4">
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Precio:</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ client_service.price|floatformat:2 }}€
+            </span>
+        </div>
+        
+        {% if client_service.payment_count > 0 %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Total Pagado:</span>
+            <span class="text-sm font-medium text-green-600">
+                {{ client_service.total_paid|floatformat:2 }}€
+            </span>
+        </div>
+        {% else %}
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Pagos:</span>
+            <span class="text-sm font-medium text-yellow-600">
+                Sin pagos
+            </span>
+        </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,6 +1,5 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from datetime import timedelta
 
 from .base_forms import BaseServiceForm, PaymentFieldsMixin, PeriodFieldsMixin
 from ..services.period_service import ServicePeriodManager
@@ -16,7 +15,9 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin, PeriodFieldsMixin)
     
     renewal_type = forms.ChoiceField(
         choices=RENEWAL_TYPE_CHOICES,
-        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        widget=forms.RadioSelect(attrs={
+            'class': 'w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+        }),
         label="Tipo de renovación",
         initial='period_only'
     )
@@ -24,8 +25,11 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin, PeriodFieldsMixin)
     def __init__(self, client_service=None, *args, **kwargs):
         super().__init__(client_service=client_service, *args, **kwargs)
         self.add_period_fields(show_duration=True)
-        self.add_payment_fields()
-        self._set_suggested_amount()
+        
+        renewal_type = self.data.get('renewal_type', self.initial.get('renewal_type', 'period_only'))
+        if renewal_type == 'with_payment':
+            self.add_payment_fields()
+            self._set_suggested_amount()
     
     def clean(self):
         cleaned_data = super().clean()
@@ -70,6 +74,7 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin, PeriodFieldsMixin)
         if not self.client_service or not self.client_service.end_date:
             return
         
+        from datetime import timedelta
         current_end = self.client_service.end_date
         temp_start = current_end + timedelta(days=1)
         temp_end = temp_start + timedelta(days=30)

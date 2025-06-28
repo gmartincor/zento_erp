@@ -1,0 +1,58 @@
+<!-- Campos de información de pago -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+        <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {{ form.amount.label }}
+        </label>
+        {{ form.amount }}
+        {% if form.amount.help_text %}
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.amount.help_text }}</p>
+        {% endif %}
+        {% if form.amount.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.amount.errors|first }}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div>
+        <label for="{{ form.payment_method.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {{ form.payment_method.label }}
+        </label>
+        {{ form.payment_method }}
+        {% if form.payment_method.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.payment_method.errors|first }}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    <div>
+        <label for="{{ form.payment_date.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {{ form.payment_date.label }}
+        </label>
+        {{ form.payment_date }}
+        {% if form.payment_date.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.payment_date.errors|first }}
+            </div>
+        {% endif %}
+    </div>
+    
+    <div>
+        <label for="{{ form.reference_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {{ form.reference_number.label }}
+        </label>
+        {{ form.reference_number }}
+        {% if form.reference_number.help_text %}
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.reference_number.help_text }}</p>
+        {% endif %}
+        {% if form.reference_number.errors %}
+            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ form.reference_number.errors|first }}
+            </div>
+        {% endif %}
+    </div>
+</div>

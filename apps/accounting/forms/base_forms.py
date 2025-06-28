@@ -12,7 +12,7 @@ class BaseServiceForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={
             'rows': 3,
-            'class': 'form-control',
+            'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white',
             'placeholder': 'Notas adicionales (opcional)'
         }),
         label="Notas"
@@ -34,12 +34,14 @@ class BaseServiceForm(forms.Form):
 class PaymentFieldsMixin:
     
     def add_payment_fields(self):
+        base_input_class = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+        
         self.fields['amount'] = forms.DecimalField(
             max_digits=10,
             decimal_places=2,
             min_value=Decimal('0.01'),
             widget=forms.NumberInput(attrs={
-                'class': 'form-control',
+                'class': base_input_class,
                 'step': '0.01',
                 'placeholder': '0.00'
             }),
@@ -50,14 +52,14 @@ class PaymentFieldsMixin:
             initial=timezone.now().date(),
             widget=forms.DateInput(attrs={
                 'type': 'date',
-                'class': 'form-control'
+                'class': base_input_class
             }),
             label="Fecha de pago"
         )
         
         self.fields['payment_method'] = forms.ChoiceField(
             choices=ServicePayment.PaymentMethodChoices.choices,
-            widget=forms.Select(attrs={'class': 'form-control'}),
+            widget=forms.Select(attrs={'class': base_input_class}),
             label="Método de pago"
         )
         
@@ -65,7 +67,7 @@ class PaymentFieldsMixin:
             required=False,
             max_length=100,
             widget=forms.TextInput(attrs={
-                'class': 'form-control',
+                'class': base_input_class,
                 'placeholder': 'Número de referencia (opcional)'
             }),
             label="Referencia"
@@ -93,13 +95,15 @@ class PaymentFieldsMixin:
 class PeriodFieldsMixin:
     
     def add_period_fields(self, show_duration=True):
+        base_input_class = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+        
         if show_duration:
             self.fields['duration_months'] = forms.IntegerField(
                 min_value=1,
                 max_value=24,
                 initial=1,
                 widget=forms.NumberInput(attrs={
-                    'class': 'form-control',
+                    'class': base_input_class,
                     'min': '1',
                     'max': '24'
                 }),
@@ -109,7 +113,7 @@ class PeriodFieldsMixin:
             self.fields['period_start'] = forms.DateField(
                 widget=forms.DateInput(attrs={
                     'type': 'date',
-                    'class': 'form-control'
+                    'class': base_input_class
                 }),
                 label="Inicio del período"
             )
@@ -117,7 +121,7 @@ class PeriodFieldsMixin:
             self.fields['period_end'] = forms.DateField(
                 widget=forms.DateInput(attrs={
                     'type': 'date',
-                    'class': 'form-control'
+                    'class': base_input_class
                 }),
                 label="Fin del período"
             )
