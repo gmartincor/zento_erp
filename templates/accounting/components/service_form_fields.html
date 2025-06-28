@@ -22,8 +22,9 @@
             </div>
         {% endif %}
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            <strong>Suspendido:</strong> Para impagos o problemas temporales. El tiempo sigue corriendo y el cliente debe pagar los períodos.
-            <br><strong>Habilitado:</strong> Funcionamiento normal del servicio.
+            <strong>Habilitado:</strong> Funcionamiento normal del servicio.
+            <br><strong>Suspendido:</strong> Restricciones temporales, el tiempo sigue corriendo.
+            <br><strong>Deshabilitado:</strong> Bloqueado administrativamente.
         </p>
     </div>
 
@@ -54,7 +55,12 @@
     <!-- Control de Estado del Servicio -->
     <div class="md:col-span-2">
         <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Control de Estado del Servicio</h4>
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Control Individual del Servicio
+            </h4>
             
             <div class="flex items-start space-x-6">
                 <div class="flex items-center">
@@ -65,8 +71,8 @@
                 </div>
                 <div class="flex-1">
                     <p class="text-xs text-gray-600 dark:text-gray-400">
-                        <strong>Desmarcar</strong> para congelar completamente el servicio (vacaciones largas, pausa indefinida).
-                        <br><strong>Diferencia:</strong> Esto congela el tiempo y no genera períodos. Use "Estado administrativo" para suspensiones donde el tiempo debe seguir corriendo.
+                        <strong>Congelación completa:</strong> Pausa el servicio y detiene la generación de períodos.
+                        <br><strong>Uso recomendado:</strong> Vacaciones largas, pausas indefinidas del cliente.
                     </p>
                 </div>
             </div>

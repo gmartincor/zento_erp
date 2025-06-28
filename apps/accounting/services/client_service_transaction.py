@@ -4,7 +4,6 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from apps.accounting.models import Client, ClientService
-from apps.accounting.services.payment_service import PaymentService
 
 
 class ClientServiceTransactionManager:
@@ -48,11 +47,8 @@ class ClientServiceTransactionManager:
         client.phone = form_data.get('client_phone', client.phone or '').strip()
         client.notes = form_data.get('client_notes', client.notes or '').strip()
         
-        # Actualizar estados del cliente si están presentes
         if 'client_is_active' in form_data:
             client.is_active = form_data['client_is_active']
-        if 'client_admin_status' in form_data:
-            client.admin_status = form_data['client_admin_status']
         
         if Client.objects.filter(dni=client.dni).exclude(pk=client.pk).exists():
             raise ValidationError(f"Ya existe otro cliente con el DNI {client.dni}")

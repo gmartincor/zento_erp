@@ -14,11 +14,6 @@ class Client(TimeStampedModel, SoftDeleteModel):
         FEMALE = 'F', 'Femenino'
         OTHER = 'O', 'Otro'
     
-    class AdminStatusChoices(models.TextChoices):
-        ENABLED = 'ENABLED', 'Habilitado'
-        DISABLED = 'DISABLED', 'Deshabilitado administrativamente'
-        SUSPENDED = 'SUSPENDED', 'Suspendido temporalmente'
-    
     full_name = models.CharField(
         max_length=255,
         verbose_name="Nombre completo"
@@ -58,13 +53,6 @@ class Client(TimeStampedModel, SoftDeleteModel):
         default=True,
         verbose_name="Activo",
         db_index=True
-    )
-    
-    admin_status = models.CharField(
-        max_length=20,
-        choices=AdminStatusChoices.choices,
-        default=AdminStatusChoices.ENABLED,
-        verbose_name="Estado administrativo"
     )
 
     class Meta:
@@ -109,6 +97,7 @@ class ClientService(TimeStampedModel):
     
     class AdminStatusChoices(models.TextChoices):
         ENABLED = 'ENABLED', 'Habilitado'
+        SUSPENDED = 'SUSPENDED', 'Suspendido temporalmente'
         DISABLED = 'DISABLED', 'Deshabilitado administrativamente'
     
     client = models.ForeignKey(

@@ -78,32 +78,16 @@
     <div class="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
         <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
             </svg>
-            Estado del Cliente
+            Estado Global del Cliente
         </h4>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="flex items-center">
-                {{ form.client_is_active|default:form.is_active }}
-                <label for="{{ form.client_is_active.id_for_label|default:form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                    Cliente activo
-                </label>
-            </div>
-            
-            {% if form.client_admin_status %}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Estado administrativo
-                </label>
-                {{ form.client_admin_status }}
-                {% if form.client_admin_status.errors %}
-                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {{ form.client_admin_status.errors|first }}
-                    </div>
-                {% endif %}
-            </div>
-            {% endif %}
+        <div class="flex items-center">
+            {{ form.client_is_active|default:form.is_active }}
+            <label for="{{ form.client_is_active.id_for_label|default:form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                Cliente activo en el sistema
+            </label>
         </div>
         
         {% if form.client_is_active.errors or form.is_active.errors %}
@@ -118,9 +102,8 @@
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                 </svg>
                 <div>
-                    <strong>Cliente activo:</strong> Si está desmarcado, el cliente y TODOS sus servicios se congelan automáticamente.
-                    <br><strong>Estado administrativo:</strong> ENABLED (habilitado), DISABLED (deshabilitado) o SUSPENDED (suspendido).
-                    <br><strong>Automático:</strong> Al desactivar se cancelan períodos futuros. Al reactivar, servicios continúan desde la fecha actual.
+                    <strong>Control global:</strong> Si está desmarcado, TODOS los servicios del cliente se pausan automáticamente.
+                    <br><strong>Granularidad:</strong> Cada servicio individual puede gestionarse por separado cuando el cliente está activo.
                 </div>
             </div>
         </div>
