@@ -78,8 +78,8 @@ def stats_card(title, value, subtitle=None, icon=None, trend=None):
 @register.inclusion_tag('accounting/components/category_tabs.html')
 def category_tabs(business_line, current_category, line_path):
     service = StatisticsService()
-    white_stats = service.calculate_category_performance('WHITE', [business_line])
-    black_stats = service.calculate_category_performance('BLACK', [business_line])
+    white_stats = service.calculate_category_performance('white', [business_line])
+    black_stats = service.calculate_category_performance('black', [business_line])
     return {
         'business_line': business_line,
         'current_category': current_category,
@@ -161,4 +161,4 @@ def percentage_of(part, total):
         return 0
 
 def normalize_category(category):
-    return category.upper() if category else CATEGORY_DEFAULTS['DEFAULT_CATEGORY']
+    return category.lower() if category else CATEGORY_DEFAULTS['DEFAULT_CATEGORY']

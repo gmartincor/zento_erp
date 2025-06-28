@@ -68,7 +68,7 @@ class BusinessLinePresentationService:
 class CategoryNormalizationService:
     @staticmethod
     def normalize_category_code(category_code: str) -> str:
-        return category_code.upper() if category_code else CATEGORY_DEFAULTS['DEFAULT_CATEGORY']
+        return category_code.lower() if category_code else CATEGORY_DEFAULTS['DEFAULT_CATEGORY']
 
 class CategoryPresentationService(CategoryNormalizationService):
     def get_category_styling(self, category_code: str) -> Dict[str, str]:

@@ -110,7 +110,7 @@ NAVIGATION_ITEMS = {
 }
 
 CATEGORY_CONFIG = {
-    'WHITE': {
+    'white': {
         'name': 'Servicios Blancos',
         'color': 'green',
         'icon': 'check-circle',
@@ -118,7 +118,7 @@ CATEGORY_CONFIG = {
         'bg_class': 'bg-emerald-100 dark:bg-emerald-900',
         'text_class': 'text-emerald-600 dark:text-emerald-300'
     },
-    'BLACK': {
+    'black': {
         'name': 'Servicios Negros',
         'color': 'purple',
         'icon': 'exclamation-circle',
@@ -129,6 +129,6 @@ CATEGORY_CONFIG = {
 }
 
 CATEGORY_DEFAULTS = {
-    'DEFAULT_CATEGORY': 'WHITE',
-    'VALID_CATEGORIES': ['WHITE', 'BLACK']
+    'DEFAULT_CATEGORY': 'white',
+    'VALID_CATEGORIES': ['white', 'black']
 }

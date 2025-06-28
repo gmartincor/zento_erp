@@ -43,7 +43,7 @@ class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMi
     class Meta:
         model = ClientService
         fields = [
-            'client', 'business_line', 'category', 
+            'business_line', 'category', 
             'price', 'start_date', 'end_date', 'admin_status', 'is_active', 'notes', 'remanentes'
         ]
     
@@ -71,9 +71,37 @@ class ClientServiceCreateForm(BaseClientServiceForm):
     
     def save(self, commit=True):
         if not commit:
-            return super().save(commit=False)
+            service = super().save(commit=False)
+            service.client = self._get_or_create_client()
+            return service
         
-        return super().save(commit=True)
+        service = super().save(commit=False)
+        service.client = self._get_or_create_client()
+        service.save()
+        return service
+    
+    def _get_or_create_client(self):
+        from apps.accounting.models import Client
+        
+        client_data = {
+            'full_name': self.cleaned_data.get('client_name', '').strip(),
+            'dni': self.cleaned_data.get('client_dni', '').strip().upper(),
+            'gender': self.cleaned_data.get('client_gender'),
+            'email': self.cleaned_data.get('client_email', '').strip(),
+            'phone': self.cleaned_data.get('client_phone', '').strip(),
+            'notes': self.cleaned_data.get('client_notes', '').strip(),
+            'is_active': self.cleaned_data.get('client_is_active', True),
+        }
+        
+        try:
+            client = Client.objects.get(dni=client_data['dni'], is_deleted=False)
+            for field, value in client_data.items():
+                if field != 'dni' and value:
+                    setattr(client, field, value)
+            client.save()
+            return client
+        except Client.DoesNotExist:
+            return Client.objects.create(**client_data)
 
 
 class ClientServiceUpdateForm(BaseClientServiceForm):

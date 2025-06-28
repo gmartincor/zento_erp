@@ -110,7 +110,7 @@ class CategoryNormalizationMixin:
     
     @staticmethod
     def normalize_category_for_comparison(category):
-        return category.upper() if category else None
+        return category.lower() if category else None
 
 class BusinessLineHierarchyMixin(CategoryNormalizationMixin):
     def resolve_business_line_from_path(self, line_path):
@@ -204,8 +204,10 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
     def get_services_by_category(self, business_line, category):
         from apps.accounting.models import ClientService
         
+        normalized_category = category.lower() if category else None
+        
         queryset = ClientService.objects.get_services_by_category_including_descendants(
-            business_line, category
+            business_line, normalized_category
         )
         
         if hasattr(self, 'filter_business_lines_by_permission'):
@@ -217,15 +219,17 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
         from django.db.models import Sum, Count
         from apps.accounting.models import ClientService
         
+        normalized_category = category.lower() if category else None
+        
         stats_data = ClientService.objects.get_service_statistics_including_descendants(
-            business_line, category
+            business_line, normalized_category
         )
         services = ClientService.objects.get_services_by_category_including_descendants(
-            business_line, category
+            business_line, normalized_category
         )
         
         remanente_total = 0
-        if category == 'BLACK':
+        if normalized_category == 'black':
             for service in services:
                 remanente_total += service.get_remanente_total()
 
@@ -237,17 +241,20 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
         }
     
     def get_category_display_name(self, category):
+        normalized = category.lower() if category else None
         return {
-            'WHITE': 'Servicios White',
-            'BLACK': 'Servicios Black'
-        }.get(category, category)
+            'white': 'Servicios White',
+            'black': 'Servicios Black'
+        }.get(normalized, category)
     
     def validate_category(self, category):
-        if category not in ['WHITE', 'BLACK']:
+        normalized_category = category.lower() if category else None
+        if normalized_category not in ['white', 'black']:
             raise Http404(f"Categoría '{category}' no válida.")
     
     def get_service_category_context(self, business_line, category):
-        self.validate_category(category)
+        normalized_category = category.lower() if category else None
+        self.validate_category(normalized_category)
         
         services = self.get_services_by_category(business_line, category)
         stats = self.get_category_stats(business_line, category)
@@ -257,8 +264,8 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
             'current_category': self.normalize_category_for_url(category),
             'category_display': self.get_category_display_name(category),
             'category_stats': stats,
-            'has_remanentes': category == 'BLACK' and business_line.has_remanente,
-            'remanente_field': business_line.remanente_field if category == 'BLACK' else None,
+            'has_remanentes': normalized_category == 'black' and business_line.has_remanente,
+            'remanente_field': business_line.remanente_field if normalized_category == 'black' else None,
         }
     
     def get_category_counts(self, business_line):
@@ -273,8 +280,8 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
         if hasattr(self, 'filter_business_lines_by_permission'):
             base_queryset = self.filter_business_lines_by_permission(base_queryset)
         
-        white_count = base_queryset.filter(category='WHITE').count()
-        black_count = base_queryset.filter(category='BLACK').count()
+        white_count = base_queryset.filter(category='white').count()
+        black_count = base_queryset.filter(category='black').count()
         
         return {
             'white_count': white_count,

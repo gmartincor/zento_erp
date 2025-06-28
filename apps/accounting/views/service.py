@@ -32,22 +32,24 @@ class BaseServiceView(
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         business_line, _, category = self.get_business_line_data()
+        normalized_category = category.lower() if category else None
         kwargs.update({
             'user': self.request.user,
             'business_line': business_line,
-            'category': category
+            'category': normalized_category
         })
         return kwargs
         
     def get_base_context(self):
         business_line, line_path, category = self.get_business_line_data()
+        normalized_category = category.lower() if category else None
         context = {}
         context.update(self.get_business_line_context(line_path, category))
         context.update({
             'business_line': business_line,
-            'category': category,
+            'category': normalized_category,
             'current_category': category,
-            'category_display': self.get_category_display_name(category),
+            'category_display': self.get_category_display_name(normalized_category),
             'back_url': reverse('accounting:category-services', 
                               kwargs={'line_path': line_path, 'category': category}),
         })
@@ -61,12 +63,13 @@ class ServiceCategoryListView(BaseServiceView, ListView):
     
     def get_queryset(self):
         business_line, _, category = self.get_business_line_data()
+        normalized_category = category.lower() if category else None
         
         status_filter = self.request.GET.get('status')
         client_filter = self.request.GET.get('client')
         
         queryset = ClientService.objects.get_services_by_category_including_descendants(
-            business_line, category
+            business_line, normalized_category
         )
         
         if status_filter:
@@ -80,6 +83,7 @@ class ServiceCategoryListView(BaseServiceView, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         business_line, line_path, category = self.get_business_line_data()
+        normalized_category = category.upper() if category else None
         
         view_mode = self.request.GET.get('view', 'grid')
         if view_mode not in ['grid', 'list']:
@@ -88,7 +92,7 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         context.update(self.get_base_context())
         context.update({
             'business_line': business_line,
-            'category': category,
+            'category': normalized_category,
             'page_title': f'Servicios - {business_line.name}'
         })
         
@@ -108,7 +112,8 @@ class ServiceEditView(BaseServiceView, UpdateView):
     
     def get_form_class(self):
         business_line, _, category = self.get_business_line_data()
-        return ServiceFormFactory.get_update_form(category)
+        normalized_category = category.lower() if category else None
+        return ServiceFormFactory.get_update_form(normalized_category)
     
     def get_object(self):
         service = get_object_or_404(
@@ -119,8 +124,9 @@ class ServiceEditView(BaseServiceView, UpdateView):
         
         self.check_business_line_permission(service.business_line)
         business_line, _, category = self.get_business_line_data()
+        normalized_category = category.lower() if category else None
         
-        if service.business_line != business_line or service.category != category:
+        if service.business_line != business_line or service.category != normalized_category:
             messages.error(self.request, 'Servicio no encontrado')
             raise Http404("Servicio no encontrado")
         
@@ -168,7 +174,8 @@ class ServiceCreateView(BaseServiceView, CreateView):
     
     def get_form_class(self):
         business_line, _, category = self.get_business_line_data()
-        return ServiceFormFactory.get_create_form(category)
+        normalized_category = category.lower() if category else None
+        return ServiceFormFactory.get_create_form(normalized_category)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -186,10 +193,11 @@ class ServiceCreateView(BaseServiceView, CreateView):
     def form_valid(self, form):
         business_line, _, category = self.get_business_line_data()
         
-        self.validate_category(category)
+        normalized_category = category.lower()
+        self.validate_category(normalized_category)
         
         form.instance.business_line = business_line
-        form.instance.category = category
+        form.instance.category = normalized_category
         
         try:
             service = form.save()

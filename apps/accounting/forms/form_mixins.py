@@ -49,7 +49,8 @@ class ServiceFormMixin:
                     self.fields['business_line'].widget = forms.HiddenInput()
         
         if category and 'category' in self.fields:
-            self.fields['category'].initial = category
+            normalized_category = category.lower() if category else None
+            self.fields['category'].initial = normalized_category
             self.fields['category'].widget = forms.HiddenInput()
 
 
@@ -63,13 +64,9 @@ class ClientFieldsMixin:
             new_fields[field_name] = field
         
         for field_name, field in self.fields.items():
-            if field_name != 'client':
-                new_fields[field_name] = field
+            new_fields[field_name] = field
         
         self.fields = new_fields
-        
-        if 'client' in self.fields:
-            self.fields.pop('client', None)
     
     def _get_client_field_definitions(self, client: Client = None):
         base_attrs = {
@@ -143,8 +140,10 @@ class ClientFieldsMixin:
         
         if not client_dni or len(client_dni) != 9:
             errors['client_dni'] = 'El DNI debe tener 9 caracteres'
-        elif not client_dni[:-1].isdigit() or not client_dni[-1].isalpha():
-            errors['client_dni'] = 'Formato de DNI inválido (8 dígitos + 1 letra)'
+        elif not client_dni[:-1].isdigit():
+            errors['client_dni'] = 'Los primeros 8 caracteres deben ser dígitos'
+        elif not client_dni[-1].isalpha():
+            errors['client_dni'] = 'El último carácter debe ser una letra'
         
         if not client_gender:
             errors['client_gender'] = 'El género es obligatorio'
