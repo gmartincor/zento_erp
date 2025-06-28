@@ -63,8 +63,8 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            {% if item.active_until %}
-                                <div class="text-sm text-gray-900 dark:text-white">{{ item.active_until|date:"d/m/Y" }}</div>
+                            {% if item.service.end_date %}
+                                <div class="text-sm text-gray-900 dark:text-white">{{ item.service.end_date|date:"d/m/Y" }}</div>
                             {% else %}
                                 <div class="text-sm text-gray-500 dark:text-gray-400">Sin fecha</div>
                             {% endif %}

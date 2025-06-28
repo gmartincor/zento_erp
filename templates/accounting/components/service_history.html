@@ -34,11 +34,11 @@
         </div>
         {% endif %}
         
-        {% if service.active_until %}
+        {% if service.end_date %}
         <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <span class="text-gray-600 dark:text-gray-400">Activo hasta:</span>
             <span class="font-medium text-gray-900 dark:text-white ml-1">
-                {{ service.active_until|date:"d/m/Y" }}
+                {{ service.end_date|date:"d/m/Y" }}
             </span>
         </div>
         {% endif %}

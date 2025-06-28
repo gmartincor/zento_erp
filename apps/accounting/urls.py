@@ -82,9 +82,6 @@ urlpatterns = [
     path('expiring-services/', ExpiringServicesView.as_view(), name='expiring_services'),
     
     # Client Service History
-    path('payments/history/', payment_history_view, name='payment-history'),
-    
-    # Client Service History
     path('clients/<int:client_id>/services/', ClientServiceHistoryView.as_view(), name='client-service-history'),
     path('services/<int:service_id>/detail/', ClientServiceDetailView.as_view(), name='client-service-detail'),
     

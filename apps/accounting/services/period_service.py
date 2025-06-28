@@ -36,6 +36,35 @@ class ServicePeriodManager:
         return period
     
     @staticmethod
+    def extend_service_to_date(
+        client_service: ClientService,
+        new_end_date: date,
+        notes: str = ""
+    ) -> ServicePayment:
+        current_end = client_service.end_date
+        
+        if current_end is None:
+            period_start = client_service.start_date or new_end_date
+            if client_service.start_date is None:
+                client_service.start_date = new_end_date
+        else:
+            if new_end_date <= current_end:
+                raise ValidationError("La nueva fecha de fin debe ser posterior a la fecha actual")
+            period_start = current_end + timedelta(days=1)
+        
+        period = ServicePeriodManager.create_period(
+            client_service=client_service,
+            period_start=period_start,
+            period_end=new_end_date,
+            notes=notes
+        )
+        
+        client_service.end_date = new_end_date
+        client_service.save(update_fields=['start_date', 'end_date', 'modified'])
+        
+        return period
+    
+    @staticmethod
     def extend_service(
         client_service: ClientService,
         extension_months: int,
@@ -43,22 +72,17 @@ class ServicePeriodManager:
     ) -> ServicePayment:
         current_end = client_service.end_date
         if current_end is None:
-            raise ValidationError("No se puede extender un servicio sin fecha de fin")
+            from datetime import date
+            current_end = client_service.start_date or date.today()
         
         new_start = current_end + timedelta(days=1)
         new_end = ServicePeriodManager._calculate_end_date(new_start, extension_months)
         
-        period = ServicePeriodManager.create_period(
+        return ServicePeriodManager.extend_service_to_date(
             client_service=client_service,
-            period_start=new_start,
-            period_end=new_end,
+            new_end_date=new_end,
             notes=notes
         )
-        
-        client_service.end_date = new_end
-        client_service.save(update_fields=['end_date', 'modified'])
-        
-        return period
     
     @staticmethod
     def get_pending_periods(client_service: ClientService) -> List[ServicePayment]:

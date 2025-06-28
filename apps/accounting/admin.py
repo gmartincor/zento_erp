@@ -72,7 +72,7 @@ class ClientServiceAdmin(admin.ModelAdmin):
         'current_status_display',
         'payment_count_display',
         'total_paid_display',
-        'active_until_display',
+        'end_date_display',
         'is_active'
     ]
     
@@ -163,13 +163,13 @@ class ClientServiceAdmin(admin.ModelAdmin):
     
     total_paid_display.short_description = 'Total pagado'
 
-    def active_until_display(self, obj):
-        date = obj.active_until
+    def end_date_display(self, obj):
+        date = obj.end_date
         if date:
             return format_html('<strong>{}</strong>', date.strftime('%d/%m/%Y'))
         return '-'
     
-    active_until_display.short_description = 'Activo hasta'
+    end_date_display.short_description = 'Fecha fin'
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

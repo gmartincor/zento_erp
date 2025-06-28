@@ -63,8 +63,7 @@ def service_status_icon(service):
 def service_expiry_info(service):
     status_data = ServiceStateManager.get_status_display_data(service)
     
-    active_until = status_data.get('active_until')
-    if not active_until:
+    if not service.end_date:
         return "Sin fecha de vencimiento"
     
     days_left = status_data.get('days_left', 0)

@@ -74,9 +74,8 @@ class ExpiringServicesView(LoginRequiredMixin, BusinessLinePermissionMixin, List
         
         expiring_services = []
         for service in all_services:
-            active_until = service.end_date
-            if active_until:
-                days_left = (active_until - timezone.now().date()).days
+            if service.end_date:
+                days_left = (service.end_date - timezone.now().date()).days
                 if 0 <= days_left <= days:
                     expiring_services.append(service.id)
         
@@ -88,16 +87,14 @@ class ExpiringServicesView(LoginRequiredMixin, BusinessLinePermissionMixin, List
         services_with_status = []
         for service in context['services']:
             status = ServiceStateManager.get_service_status(service)
-            active_until = service.end_date
             days_left = None
-            if active_until:
-                days_left = (active_until - timezone.now().date()).days
+            if service.end_date:
+                days_left = (service.end_date - timezone.now().date()).days
                 
             services_with_status.append({
                 'service': service,
                 'status': status,
                 'status_display': ServiceStateManager.get_status_display(status),
-                'active_until': active_until,
                 'days_left': days_left
             })
         

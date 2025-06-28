@@ -54,9 +54,6 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
         from ..services.service_status_utility import ServiceStatusUtility
         services_with_status = ServiceStatusUtility.get_services_with_status_data(context['services'])
         
-        for service_data in services_with_status:
-            service_data['active_until'] = service_data['service'].end_date
-        
         categories = ClientService.CATEGORY_CHOICES
         business_line_options = [(bl.id, bl.name) for bl in accessible_lines]
         
@@ -94,13 +91,11 @@ class ClientServiceDetailView(LoginRequiredMixin, BusinessLinePermissionMixin, D
         service = self.object
         
         service_status = ServiceStateManager.get_service_status(service)
-        active_until = service.end_date
         payments = service.payments.order_by('-payment_date')
         
         context.update({
             'service_status': service_status,
             'status_display': ServiceStateManager.get_status_display(service_status),
-            'active_until': active_until,
             'payments': payments,
             'page_title': f'Detalle del Servicio - {service.client.full_name}',
             'page_subtitle': f'{service.business_line.name} • {service.get_category_display()}',

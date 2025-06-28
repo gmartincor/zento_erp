@@ -30,6 +30,20 @@ class ClientServiceQuerySet(models.QuerySet):
             client_name=F('client__full_name'),
             business_line_name=F('business_line__name')
         )
+    
+    def expiring_soon(self, days=30):
+        target_date = timezone.now().date() + timedelta(days=days)
+        return self.active().filter(
+            end_date__isnull=False,
+            end_date__gte=timezone.now().date(),
+            end_date__lte=target_date
+        )
+    
+    def expired(self):
+        return self.active().filter(
+            end_date__isnull=False,
+            end_date__lt=timezone.now().date()
+        )
 
 
 class ClientServiceManager(models.Manager):
@@ -41,6 +55,12 @@ class ClientServiceManager(models.Manager):
     
     def by_category(self, category: str):
         return self.get_queryset().by_category(category)
+    
+    def expiring_soon(self, days=30):
+        return self.get_queryset().expiring_soon(days)
+    
+    def expired(self):
+        return self.get_queryset().expired()
     
     def get_services_by_category(
         self,

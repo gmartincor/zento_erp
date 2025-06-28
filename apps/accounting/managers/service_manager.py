@@ -17,28 +17,22 @@ class ServiceQuerySet(models.QuerySet):
         return self.filter(business_line=business_line)
     
     def expiring_soon(self, days=30):
-        from ..services.payment_service import PaymentService
+        from django.utils import timezone
         
-        services = []
-        for service in self.active():
-            active_until = PaymentService.get_service_active_until(service)
-            if active_until:
-                days_left = (active_until - timezone.now().date()).days
-                if 0 <= days_left <= days:
-                    services.append(service.pk)
-        
-        return self.filter(pk__in=services)
+        target_date = timezone.now().date() + timezone.timedelta(days=days)
+        return self.active().filter(
+            end_date__isnull=False,
+            end_date__gte=timezone.now().date(),
+            end_date__lte=target_date
+        )
     
     def expired(self):
-        from ..services.payment_service import PaymentService
+        from django.utils import timezone
         
-        services = []
-        for service in self.active():
-            active_until = PaymentService.get_service_active_until(service)
-            if active_until and active_until < timezone.now().date():
-                services.append(service.pk)
-        
-        return self.filter(pk__in=services)
+        return self.active().filter(
+            end_date__isnull=False,
+            end_date__lt=timezone.now().date()
+        )
     
     def with_status(self, status):
         from django.utils import timezone

@@ -32,15 +32,17 @@ def service_renewal_view(request, service_id):
                 period = form.save()
                 
                 if period.is_period_only:
+                    action = "activado" if not client_service.end_date else "extendido"
                     messages.success(
                         request, 
-                        f"Servicio extendido exitosamente hasta {client_service.end_date}. "
+                        f"Servicio {action} exitosamente hasta {period.period_end}. "
                         f"Se creó un período pendiente de pago."
                     )
                 else:
+                    action = "activado" if not client_service.end_date else "extendido"
                     messages.success(
                         request, 
-                        f"Servicio extendido y pago procesado exitosamente. "
+                        f"Servicio {action} y pago procesado exitosamente. "
                         f"Nuevo período: {period.period_start} - {period.period_end}"
                     )
                 

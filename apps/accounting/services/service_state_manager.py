@@ -18,30 +18,27 @@ class ServiceStateManager:
         if service.admin_status == 'DISABLED':
             return False
         
-        active_until = service.end_date
-        if not active_until:
+        if not service.end_date:
             return service.is_active
         
-        return not DateCalculator.is_date_in_past(active_until)
+        return not DateCalculator.is_date_in_past(service.end_date)
     
     @classmethod
     def is_service_expired(cls, service: ClientService) -> bool:
         if not service.is_active:
             return True
             
-        active_until = service.end_date
-        if not active_until:
+        if not service.end_date:
             return False
             
-        return DateCalculator.is_date_in_past(active_until)
+        return DateCalculator.is_date_in_past(service.end_date)
     
     @classmethod
     def days_until_expiry(cls, service: ClientService) -> int:
-        active_until = service.end_date
-        if not active_until:
+        if not service.end_date:
             return 0
         
-        return DateCalculator.days_between(DateCalculator.get_today(), active_until)
+        return DateCalculator.days_between(DateCalculator.get_today(), service.end_date)
     
     @classmethod
     def needs_renewal(cls, service: ClientService) -> bool:
@@ -77,7 +74,6 @@ class ServiceStateManager:
     def get_status_display_data(cls, service: ClientService) -> Dict[str, Any]:
         status = cls.get_service_status(service)
         days_left = cls.days_until_expiry(service)
-        active_until = service.end_date
         
         status_map = {
             'active': {
@@ -121,8 +117,7 @@ class ServiceStateManager:
         base_data = status_map.get(status, status_map['inactive'])
         base_data.update({
             'status': status,
-            'days_left': days_left,
-            'active_until': active_until
+            'days_left': days_left
         })
         
         return base_data
@@ -175,7 +170,6 @@ class ServiceStateManager:
     def get_service_summary(cls, service: ClientService) -> Dict[str, Any]:
         status = cls.get_service_status(service)
         days_left = cls.days_until_expiry(service)
-        active_until = service.end_date
         
         return {
             'status': status,
@@ -184,6 +178,5 @@ class ServiceStateManager:
             'is_expired': cls.is_service_expired(service),
             'needs_renewal': cls.needs_renewal(service),
             'days_left': days_left,
-            'active_until': active_until,
             'priority': cls.get_status_priority(status)
         }

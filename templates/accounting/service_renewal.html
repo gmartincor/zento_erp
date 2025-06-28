@@ -12,7 +12,11 @@
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                Renovar Servicio {{ client_service.get_category_display }}
+                {% if client_service.end_date %}
+                    Renovar Servicio {{ client_service.get_category_display }}
+                {% else %}
+                    Activar Servicio {{ client_service.get_category_display }}
+                {% endif %}
             </h1>
             <p class="text-gray-600 dark:text-gray-400 mt-2">
                 <span class="font-medium">{{ client_service.client.full_name }}</span>
@@ -73,25 +77,25 @@
                 </div>
 
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Duración del Período</h2>
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Fecha de Finalización</h2>
                     <div>
-                        <label for="{{ form.duration_months.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {{ form.duration_months.label }}
+                        <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ form.end_date.label }}
                         </label>
-                        {{ form.duration_months }}
-                        {% if form.duration_months.help_text %}
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.duration_months.help_text }}</p>
+                        {{ form.end_date }}
+                        {% if form.end_date.help_text %}
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.end_date.help_text }}</p>
                         {% endif %}
-                        {% if form.duration_months.errors %}
+                        {% if form.end_date.errors %}
                             <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                                {{ form.duration_months.errors|first }}
+                                {{ form.end_date.errors|first }}
                             </div>
                         {% endif %}
                     </div>
                 </div>
 
                 {% if form.renewal_type.value == 'with_payment' or request.POST.renewal_type == 'with_payment' %}
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6" data-payment-section>
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Información de Pago</h2>
                     {% include 'accounting/components/payment_form_fields.html' %}
                 </div>
@@ -112,7 +116,7 @@
                     </div>
                 </div>
 
-                {% include 'accounting/components/form_actions.html' with submit_text="Renovar Servicio" submit_icon="refresh" %}
+                {% include 'accounting/components/form_actions.html' with submit_text="Procesar Servicio" submit_icon="refresh" %}
             </form>
         </div>
         
@@ -122,4 +126,37 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const renewalTypeInputs = document.querySelectorAll('input[name="renewal_type"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    const currentEndDate = '{{ client_service.end_date|date:"Y-m-d" }}';
+    
+    function togglePaymentFields() {
+        const withPayment = document.querySelector('input[name="renewal_type"][value="with_payment"]').checked;
+        const paymentSection = document.querySelector('[data-payment-section]');
+        if (paymentSection) {
+            paymentSection.style.display = withPayment ? 'block' : 'none';
+        }
+    }
+    
+    function setMinDate() {
+        if (endDateInput && currentEndDate && currentEndDate !== 'None') {
+            const minDate = new Date(currentEndDate);
+            minDate.setDate(minDate.getDate() + 1);
+            endDateInput.min = minDate.toISOString().split('T')[0];
+        }
+    }
+    
+    renewalTypeInputs.forEach(input => {
+        input.addEventListener('change', togglePaymentFields);
+    });
+    
+    setMinDate();
+    togglePaymentFields();
+});
+</script>
 {% endblock %}
