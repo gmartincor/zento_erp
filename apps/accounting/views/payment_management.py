@@ -67,7 +67,7 @@ class ExpiringServicesView(LoginRequiredMixin, BusinessLinePermissionMixin, List
         accessible_lines = self.get_allowed_business_lines()
         days = int(self.request.GET.get('days', 30))
         
-        all_services = ClientService.services.filter(
+        all_services = ClientService.objects.filter(
             business_line__in=accessible_lines,
             is_active=True
         ).select_related('client', 'business_line').prefetch_related('payments')

@@ -29,7 +29,7 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
         
         accessible_lines = self.get_allowed_business_lines()
         
-        queryset = ClientService.services.filter(
+        queryset = ClientService.objects.filter(
             client=client,
             business_line__in=accessible_lines
         ).select_related('client', 'business_line').prefetch_related('payments')

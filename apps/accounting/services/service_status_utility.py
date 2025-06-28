@@ -1,5 +1,5 @@
-from typing import Dict, List, Any, QuerySet
-from django.db.models import Count, Q
+from typing import Dict, List, Any
+from django.db.models import Count, Q, QuerySet
 from ..models import ClientService
 from .service_state_manager import ServiceStateManager
 
@@ -8,14 +8,14 @@ class ServiceStatusUtility:
     
     @classmethod
     def get_services_by_status(cls, status: str, business_lines: QuerySet = None) -> QuerySet:
-        queryset = ClientService.services.all()
+        queryset = ClientService.objects.all()
         if business_lines:
             queryset = queryset.filter(business_line__in=business_lines)
         return queryset.with_status(status)
     
     @classmethod
     def get_status_counts(cls, business_lines: QuerySet = None) -> Dict[str, int]:
-        base_queryset = ClientService.services.all()
+        base_queryset = ClientService.objects.all()
         if business_lines:
             base_queryset = base_queryset.filter(business_line__in=business_lines)
         

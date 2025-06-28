@@ -13,7 +13,6 @@ from apps.business_lines.models import BusinessLine
 from apps.accounting.models import Client, ClientService
 from apps.accounting.utils import BusinessLineNavigator, ServiceStatisticsCalculator
 from apps.accounting.services.service_state_manager import ServiceStateManager
-from apps.accounting.services.payment_service import PaymentService
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
     BusinessLineHierarchyMixin,
@@ -54,34 +53,28 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
         return context
     
     def _get_simplified_stats(self, accessible_lines):
-        services = ClientService.services.filter(business_line__in=accessible_lines)
+        services = ClientService.objects.by_business_lines(accessible_lines)
+        active_services = services.active()
         
-        total_revenue = PaymentService.calculate_service_revenue(
-            services.first() if services.exists() else None
-        ) if services.exists() else Decimal('0')
+        from apps.accounting.models import ServicePayment
+        total_revenue = ServicePayment.objects.filter(
+            client_service__in=active_services,
+            status=ServicePayment.StatusChoices.PAID
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
         
-        if services.exists():
-            total_revenue = sum(
-                PaymentService.get_service_total_paid(service) for service in services
-            )
-        
-        active_services = []
-        unique_clients = set()
-        
-        for service in services:
-            if ServiceStateManager.is_service_active(service):
-                active_services.append(service)
-                unique_clients.add(service.client.id)
+        unique_clients = active_services.values('client').distinct().count()
         
         return {
             'total_revenue': total_revenue,
-            'total_services': len(active_services),
-            'unique_clients': len(unique_clients),
+            'total_services': active_services.count(),
+            'unique_clients': unique_clients,
             'total_lines': accessible_lines.count()
         }
     
     def _get_expiring_services(self, accessible_lines):
-        services = ClientService.services.filter(business_line__in=accessible_lines)
+        from apps.accounting.services.service_state_manager import ServiceStateManager
+        
+        services = ClientService.objects.by_business_lines(accessible_lines)
         expiring = []
         
         for service in services:
@@ -93,8 +86,6 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
     def _get_service_status_stats(self, accessible_lines):
         from ..services.service_status_utility import ServiceStatusUtility
         return ServiceStatusUtility.get_status_counts(accessible_lines)
-        
-        return stats
     
     def _prepare_dashboard_cards(self, stats):
         return [
