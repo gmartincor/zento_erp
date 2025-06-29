@@ -28,7 +28,7 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
         accessible_lines = self.get_allowed_business_lines()
         
         filters = {
-            'business_line': self.request.GET.get('business_line'),
+            'is_active': self.request.GET.get('is_active'),
             'category': self.request.GET.get('category')
         }
         
@@ -48,20 +48,20 @@ class ClientServiceHistoryView(LoginRequiredMixin, BusinessLinePermissionMixin, 
         services_with_status = ServiceStatusUtility.get_services_with_status_data(context['services'])
         
         categories = ClientService.CategoryChoices.choices
-        business_line_options = [(bl.id, bl.name) for bl in accessible_lines]
+        status_options = [('true', 'Activos'), ('false', 'Inactivos')]
         
         context.update({
             'client': client,
             'services_with_status': services_with_status,
             'categories': categories,
-            'business_line_options': business_line_options,
+            'status_options': status_options,
             'available_business_lines': accessible_lines,
             'filter_params': {
-                'business_line': self.request.GET.get('business_line'),
+                'is_active': self.request.GET.get('is_active'),
                 'category': self.request.GET.get('category'),
             },
             'summary_stats': HistoryService.get_history_summary(client_id=client.id),
-            'selected_business_line': self.request.GET.get('business_line'),
+            'selected_is_active': self.request.GET.get('is_active'),
             'selected_category': self.request.GET.get('category'),
             'page_title': f'Historial de Servicios - {client.full_name}',
             'page_subtitle': f'Servicios contratados por {client.full_name}',

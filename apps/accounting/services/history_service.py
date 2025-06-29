@@ -9,12 +9,13 @@ class HistoryService:
         queryset = ClientService.objects.filter(
             client_id=client_id
         ).select_related(
-            'client', 'business_line'
+            'client', 'business_line', 'business_line__parent'
         ).prefetch_related('payments').order_by('-created')
         
         if filters:
-            if filters.get('business_line'):
-                queryset = queryset.filter(business_line_id=filters['business_line'])
+            if filters.get('is_active') is not None:
+                is_active = filters['is_active'].lower() == 'true'
+                queryset = queryset.filter(is_active=is_active)
             if filters.get('category'):
                 queryset = queryset.filter(category=filters['category'])
                 

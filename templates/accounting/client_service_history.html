@@ -132,26 +132,24 @@
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 lg:mb-0">Filtrar Servicios</h2>
         
         <form method="get" class="flex flex-col sm:flex-row gap-3">
-            <select name="business_line" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="">Todas las líneas de negocio</option>
-                {% for line in available_business_lines %}
-                    <option value="{{ line.id }}" {% if line.id|stringformat:"s" == filter_params.business_line %}selected{% endif %}>
-                        {{ line.name }}
-                    </option>
+            <select name="is_active" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                <option value="">Todos los estados</option>
+                {% for value, label in status_options %}
+                    <option value="{{ value }}" {% if filter_params.is_active == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
             
             <select name="category" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                 <option value="">Todas las categorías</option>
-                <option value="WHITE" {% if filter_params.category == "WHITE" %}selected{% endif %}>White</option>
-                <option value="BLACK" {% if filter_params.category == "BLACK" %}selected{% endif %}>Black</option>
+                <option value="white" {% if filter_params.category == "white" %}selected{% endif %}>White</option>
+                <option value="black" {% if filter_params.category == "black" %}selected{% endif %}>Black</option>
             </select>
             
             <button type="submit" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium">
                 Filtrar
             </button>
             
-            {% if filter_params.business_line or filter_params.category %}
+            {% if filter_params.is_active or filter_params.category %}
             <a href="?" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium">
                 Limpiar
             </a>
@@ -212,7 +210,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900 dark:text-white">
-                            {{ service.business_line.name }}
+                            {{ service.business_line.get_full_hierarchy }}
                         </div>
                         <div class="text-sm text-gray-500 dark:text-gray-400">
                             Nivel {{ service.business_line.level }}
@@ -221,7 +219,7 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         {% if service.payments.exists %}
                             <div class="text-sm font-medium text-green-600">
-                                {{ service.get_total_paid|format_currency:"€" }}
+                                {{ service.total_paid|format_currency:"€" }}
                             </div>
                             <div class="text-sm text-gray-500 dark:text-gray-400">
                                 {{ service.payments.count|format_count:"pago" }}
@@ -254,7 +252,17 @@
                         {% endwith %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {{ service.created|date:"d/m/Y" }}
+                        {% if service.is_active %}
+                            <div>
+                                <div class="font-medium">{{ service.created|date:"d/m/Y" }}</div>
+                                <div class="text-xs">Fecha de inicio</div>
+                            </div>
+                        {% else %}
+                            <div>
+                                <div class="font-medium">{{ service.end_date|date:"d/m/Y"|default:"N/A" }}</div>
+                                <div class="text-xs">Fecha de fin</div>
+                            </div>
+                        {% endif %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <a href="{% url 'accounting:client-service-detail' service_id=service.id %}" 
@@ -283,13 +291,13 @@
             </div>
             <div class="flex space-x-2">
                 {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}{% if filter_params.business_line %}&business_line={{ filter_params.business_line }}{% endif %}{% if filter_params.category %}&category={{ filter_params.category }}{% endif %}"
+                    <a href="?page={{ page_obj.previous_page_number }}{% if filter_params.is_active %}&is_active={{ filter_params.is_active }}{% endif %}{% if filter_params.category %}&category={{ filter_params.category }}{% endif %}"
                        class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700">
                         Anterior
                     </a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}{% if filter_params.business_line %}&business_line={{ filter_params.business_line }}{% endif %}{% if filter_params.category %}&category={{ filter_params.category }}{% endif %}"
+                    <a href="?page={{ page_obj.next_page_number }}{% if filter_params.is_active %}&is_active={{ filter_params.is_active }}{% endif %}{% if filter_params.category %}&category={{ filter_params.category }}{% endif %}"
                        class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700">
                         Siguiente
                     </a>
@@ -306,7 +314,7 @@
         </svg>
         <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No hay servicios</h3>
         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {% if filter_params.business_line or filter_params.category %}
+            {% if filter_params.is_active or filter_params.category %}
                 No se encontraron servicios con los filtros aplicados.
             {% else %}
                 Este cliente aún no tiene servicios registrados.
