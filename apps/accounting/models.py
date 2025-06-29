@@ -97,7 +97,6 @@ class ClientService(TimeStampedModel):
     class AdminStatusChoices(models.TextChoices):
         ENABLED = 'ENABLED', 'Habilitado'
         SUSPENDED = 'SUSPENDED', 'Suspendido temporalmente'
-        DISABLED = 'DISABLED', 'Deshabilitado administrativamente'
     
     client = models.ForeignKey(
         Client,

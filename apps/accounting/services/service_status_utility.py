@@ -24,7 +24,7 @@ class ServiceStatusUtility:
             'expiring_soon': base_queryset.with_status('expiring_soon').count(),
             'renewal_due': base_queryset.with_status('renewal_due').count(),
             'expired': base_queryset.with_status('expired').count(),
-            'disabled': base_queryset.with_status('disabled').count(),
+            'suspended': base_queryset.with_status('suspended').count(),
             'inactive': base_queryset.with_status('inactive').count(),
         }
     

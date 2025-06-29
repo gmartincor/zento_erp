@@ -12,17 +12,25 @@ class ServiceStateManager:
     
     @classmethod
     def is_service_active(cls, service) -> bool:
+        """
+        Un servicio está activo si:
+        1. is_active=True (no pausado individualmente)
+        2. admin_status='ENABLED' (no suspendido administrativamente)
+        3. Tiene períodos válidos
+        
+        NOTA: is_active=False tiene prioridad total (servicio congelado)
+        """
         if not service.is_active:
             return False
         
-        if service.admin_status == 'DISABLED':
+        if service.admin_status == 'SUSPENDED':
             return False
         
         last_period = cls._get_last_period(service)
         if last_period:
             return not DateCalculator.is_date_in_past(last_period.period_end)
         
-        return service.is_active
+        return True
     
     @classmethod
     def is_service_expired(cls, service: ClientService) -> bool:
@@ -45,12 +53,21 @@ class ServiceStateManager:
     
     @classmethod
     def get_service_status(cls, service) -> str:
+        """
+        Estados simplificados con lógica clara:
+        1. is_active=False → 'inactive' (prioridad máxima - servicio congelado)
+        2. admin_status='SUSPENDED' → 'suspended' (restricciones administrativas)
+        3. Resto → estados operacionales normales
+        """
+        # Prioridad 1: Servicio pausado/congelado
         if not service.is_active:
             return 'inactive'
         
-        if service.admin_status == 'DISABLED':
-            return 'disabled'
+        # Prioridad 2: Restricciones administrativas
+        if service.admin_status == 'SUSPENDED':
+            return 'suspended'
         
+        # Prioridad 3: Estados operacionales normales
         last_period = cls._get_last_period(service)
         has_pending_periods = service.payments.filter(
             status__in=['PERIOD_CREATED', 'PENDING']
@@ -120,16 +137,16 @@ class ServiceStateManager:
                 'color': 'red'
             },
             'inactive': {
-                'label': 'Inactivo',
+                'label': 'Pausado',
                 'class': 'badge-secondary',
                 'icon': 'pause-circle',
                 'color': 'gray'
             },
-            'disabled': {
-                'label': 'Deshabilitado',
-                'class': 'badge-dark',
+            'suspended': {
+                'label': 'Suspendido',
+                'class': 'badge-warning',
                 'icon': 'ban',
-                'color': 'black'
+                'color': 'orange'
             }
         }
         
@@ -170,8 +187,8 @@ class ServiceStateManager:
             'renewal_due': 'Renovar Pronto',
             'expiring_soon': 'Vence Pronto',
             'expired': 'Vencido',
-            'inactive': 'Inactivo',
-            'disabled': 'Deshabilitado'
+            'inactive': 'Pausado',
+            'suspended': 'Suspendido'
         }
         return status_labels.get(status, 'Desconocido')
     
@@ -183,7 +200,7 @@ class ServiceStateManager:
             'renewal_due': 3,
             'pending_payment': 4,
             'no_periods': 5,
-            'disabled': 6,
+            'suspended': 6,
             'inactive': 7,
             'active': 8,
         }

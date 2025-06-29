@@ -53,8 +53,8 @@ class ClientServiceQuerySet(models.QuerySet):
         
         if status == 'inactive':
             return self.filter(is_active=False)
-        elif status == 'disabled':
-            return self.filter(base_filter, admin_status='DISABLED')
+        elif status == 'suspended':
+            return self.filter(base_filter, admin_status='SUSPENDED')
         elif status == 'expired':
             return self.filter(base_filter, admin_status='ENABLED', end_date__lt=today)
         elif status == 'active':

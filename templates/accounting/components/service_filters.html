@@ -19,8 +19,8 @@
                 <option value="expiring_soon" {% if request.GET.status == 'expiring_soon' %}selected{% endif %}>Vencen Pronto</option>
                 <option value="renewal_due" {% if request.GET.status == 'renewal_due' %}selected{% endif %}>Renovar Pronto</option>
                 <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Vencidos</option>
-                <option value="disabled" {% if request.GET.status == 'disabled' %}selected{% endif %}>Deshabilitados</option>
-                <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactivos</option>
+                <option value="suspended" {% if request.GET.status == 'suspended' %}selected{% endif %}>Suspendidos</option>
+                <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Pausados</option>
             </select>
         </div>
     </div>
