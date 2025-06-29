@@ -43,25 +43,15 @@
                     Servicio {{ service.get_category_display }}
                 </h1>
                 {% category_badge service.category %}
-                {% with status=service.current_status %}
-                    {% if status == "ACTIVE" %}
-                        <span class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
-                            Activo
-                        </span>
-                    {% elif status == "EXPIRED_RECENT" %}
-                        <span class="px-3 py-1 text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">
-                            Vencido reciente
-                        </span>
-                    {% elif status == "EXPIRED" %}
-                        <span class="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full">
-                            Vencido
-                        </span>
-                    {% else %}
-                        <span class="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 rounded-full">
-                            Inactivo
-                        </span>
-                    {% endif %}
-                {% endwith %}
+                {% if service.is_active %}
+                    <span class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
+                        Activo
+                    </span>
+                {% else %}
+                    <span class="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full">
+                        Inactivo
+                    </span>
+                {% endif %}
             </div>
             <p class="text-gray-600 dark:text-gray-400">
                 <span class="font-medium">{{ service.client.full_name }}</span>
@@ -163,11 +153,11 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
-                        <div class="text-sm text-gray-900 dark:text-white">
+                        <div class="text-sm">
                             {% if service.is_active %}
-                                <span class="text-green-600">Activo</span>
+                                <span class="text-green-600 font-medium">Activo</span>
                             {% else %}
-                                <span class="text-red-600">Inactivo</span>
+                                <span class="text-red-600 font-medium">Inactivo</span>
                             {% endif %}
                         </div>
                     </div>
