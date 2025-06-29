@@ -64,14 +64,12 @@
                             {% endif %}
 
                             <!-- Remanente Badge -->
-                            {% if business_line.allows_remanentes %}
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
                                 <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
-                                Con Remanentes
+                                Compatible con Remanentes
                             </span>
-                            {% endif %}
                         </div>
 
                         <!-- Description -->
@@ -278,11 +276,7 @@
                                 Servicios Black
                             </h3>
                             <p class="text-sm text-gray-600 dark:text-gray-400">
-                                {% if business_line.allows_remanentes %}
                                 Servicios con gestión de remanentes
-                                {% else %}
-                                Servicios especiales
-                                {% endif %}
                             </p>
                         </div>
                     </div>
@@ -302,7 +296,7 @@
                             </span>
                         </div>
                         {% get_remanente_stats business_line=business_line as remanente_stats %}
-                        {% if business_line.allows_remanentes and remanente_stats.total_count > 0 %}
+                        {% if remanente_stats.total_count > 0 %}
                         <div class="flex justify-between">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Remanentes:</span>
                             <span class="text-sm font-medium text-amber-700 dark:text-amber-300">

@@ -167,13 +167,6 @@ def get_service_remanentes_summary(client_service):
     service = StatisticsService()
     return service.get_service_remanente_summary(client_service)
 
-@register.simple_tag
-def get_available_remanente_types(business_line):
-    """Obtiene tipos de remanente disponibles para una línea de negocio"""
-    if hasattr(business_line, 'allows_remanentes') and business_line.allows_remanentes:
-        return business_line.get_available_remanente_types()
-    return []
-
 @register.filter
 def remanente_badge_class(has_remanentes):
     """Clase CSS para badge de remanentes"""

@@ -2,10 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 from apps.core.models import TimeStampedModel
 
-# Importar modelos de remanentes para que Django los detecte
-from .models_remanentes import RemanenteType, BusinessLineRemanenteConfig, ServicePeriodRemanente
-
-__all__ = ['BusinessLine', 'RemanenteType', 'BusinessLineRemanenteConfig', 'ServicePeriodRemanente']
+__all__ = ['BusinessLine']
 
 
 class BusinessLine(TimeStampedModel):
@@ -45,13 +42,6 @@ class BusinessLine(TimeStampedModel):
     order = models.PositiveIntegerField(
         default=0,
         verbose_name="Orden"
-    )
-    
-    # NUEVO SISTEMA DE REMANENTES
-    allows_remanentes = models.BooleanField(
-        default=False,
-        verbose_name="Permite remanentes",
-        help_text="Indica si esta línea de negocio puede tener remanentes configurados"
     )
 
     class Meta:
@@ -138,25 +128,3 @@ class BusinessLine(TimeStampedModel):
         for child in children:
             id_set.add(child.id)
             child._collect_descendant_ids(id_set)
-    
-    def get_available_remanente_types(self):
-        """Obtiene tipos de remanente disponibles para esta línea de negocio"""
-        if not self.allows_remanentes:
-            return []
-        
-        return RemanenteType.objects.filter(
-            businesslineremanenteconfig__business_line=self,
-            businesslineremanenteconfig__is_enabled=True,
-            is_active=True
-        )
-    
-    def has_remanente_type(self, remanente_type):
-        """Verifica si esta línea puede usar un tipo específico de remanente"""
-        if not self.allows_remanentes:
-            return False
-            
-        return BusinessLineRemanenteConfig.objects.filter(
-            business_line=self,
-            remanente_type=remanente_type,
-            is_enabled=True
-        ).exists()

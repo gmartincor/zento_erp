@@ -179,114 +179,34 @@
                             </div>
                         </div>
                         
-                        <!-- Sección de Remanentes (Solo si la línea permite remanentes) -->
-                        {% if client_service.business_line.allows_remanentes %}
-                        {% get_available_remanente_types client_service.business_line as available_types %}
-                        {% if available_types %}
+                        <!-- Sección de Remanentes (Simplificada) -->
                         <div class="border-t border-gray-200 dark:border-gray-600 pt-6">
                             <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                                💰 Remanentes Disponibles
+                                💰 Remanente
                             </h4>
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                Esta línea de negocio permite aplicar remanentes. Puedes asignarlos voluntariamente a períodos específicos.
+                                Aplicar un remanente (positivo o negativo) al período seleccionado.
                             </p>
                             
-                            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-700 mb-4">
-                                <p class="text-sm text-amber-700 dark:text-amber-300">
-                                    <strong>📋 Tipos disponibles:</strong>
-                                    {% for type in available_types %}
-                                        <span class="inline-block bg-amber-100 dark:bg-amber-800 px-2 py-1 rounded text-xs mr-2">
-                                            {{ type.name }} (€{{ type.default_amount }})
-                                        </span>
-                                    {% endfor %}
-                                </p>
-                            </div>
-                            
-                            <div class="space-y-4" id="remanentes-section">
-                                {% for field in form %}
-                                    {% if field.name|startswith:"enable_remanente_" %}
-                                        {% with period_id=field.name|split:"_"|get_item:"2" %}
-                                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                                            <div class="mb-4">
-                                                <label class="flex items-start">
-                                                    {{ field }}
-                                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                                                        {{ field.label }}
-                                                    </span>
-                                                </label>
-                                                {% if field.errors %}
-                                                <div class="text-red-600 text-sm mt-1">
-                                                    {{ field.errors }}
-                                                </div>
-                                                {% endif %}
-                                            </div>
-                                            
-                                            <div class="remanente-fields-{{ period_id }} hidden">
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                                    {% for other_field in form %}
-                                                        {% if other_field.name == "remanente_type_"|add_string:period_id %}
-                                                        <div>
-                                                            <label for="{{ other_field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                                {{ other_field.label }}
-                                                            </label>
-                                                            {{ other_field }}
-                                                            {% if other_field.errors %}
-                                                            <div class="text-red-600 text-sm mt-1">
-                                                                {{ other_field.errors }}
-                                                            </div>
-                                                            {% endif %}
-                                                        </div>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                    
-                                                    {% for other_field in form %}
-                                                        {% if other_field.name == "remanente_amount_"|add_string:period_id %}
-                                                        <div>
-                                                            <label for="{{ other_field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                                {{ other_field.label }}
-                                                            </label>
-                                                            {{ other_field }}
-                                                            {% if other_field.errors %}
-                                                            <div class="text-red-600 text-sm mt-1">
-                                                                {{ other_field.errors }}
-                                                            </div>
-                                                            {% endif %}
-                                                        </div>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </div>
-                                                
-                                                {% for other_field in form %}
-                                                    {% if other_field.name == "remanente_notes_"|add_string:period_id %}
-                                                    <div>
-                                                        <label for="{{ other_field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                            {{ other_field.label }}
-                                                        </label>
-                                                        {{ other_field }}
-                                                        {% if other_field.errors %}
-                                                        <div class="text-red-600 text-sm mt-1">
-                                                            {{ other_field.errors }}
-                                                        </div>
-                                                        {% endif %}
-                                                    </div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                        {% endwith %}
+                            {% for field in form %}
+                                {% if field.name == "remanente" %}
+                                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {{ field.label }}
+                                        {% if field.help_text %}
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ field.help_text }}</span>
+                                        {% endif %}
+                                    </label>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                    <div class="text-red-600 text-sm mt-1">
+                                        {{ field.errors }}
+                                    </div>
                                     {% endif %}
-                                {% endfor %}
-                                
-                                {% if not form.fields|has_fields_starting_with:"enable_remanente_" %}
-                                <div class="text-center text-gray-500 dark:text-gray-400 py-8">
-                                    <div class="text-3xl mb-2">🎯</div>
-                                    <p class="text-sm">No hay opciones de remanentes disponibles para este servicio</p>
                                 </div>
                                 {% endif %}
-                            </div>
+                            {% endfor %}
                         </div>
-                        {% endif %}
-                        {% endif %}
                         
                         <div class="mt-6 flex justify-end">
                             <button type="submit" 
@@ -421,32 +341,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     updateSubmitButton();
-    
-    // Manejo simple de campos de remanentes
-    const remanenteCheckboxes = document.querySelectorAll('input[name^="enable_remanente_"]');
-    
-    remanenteCheckboxes.forEach(checkbox => {
-        const periodId = checkbox.name.replace('enable_remanente_', '');
-        const fieldsContainer = document.querySelector('.remanente-fields-' + periodId);
-        
-        if (fieldsContainer) {
-            // Configurar estado inicial
-            toggleRemanenteFields(checkbox, fieldsContainer);
-            
-            // Agregar event listener
-            checkbox.addEventListener('change', function() {
-                toggleRemanenteFields(this, fieldsContainer);
-            });
-        }
-    });
-    
-    function toggleRemanenteFields(checkbox, container) {
-        if (checkbox.checked) {
-            container.classList.remove('hidden');
-        } else {
-            container.classList.add('hidden');
-        }
-    }
 });
 </script>
 {% endblock %}

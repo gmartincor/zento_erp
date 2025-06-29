@@ -191,21 +191,8 @@ class ServiceFieldsMixin:
         if not business_line or not category:
             return cleaned_data
         
-        # Validación específica para servicios BLACK con el nuevo sistema flexible
+        # Validación específica para servicios BLACK con el sistema simplificado
         if category == 'BLACK':
-            # Verificar si la línea de negocio permite remanentes
-            if not business_line.allows_remanentes:
-                raise ValidationError({
-                    'business_line': f'La línea de negocio "{business_line.name}" no está configurada para servicios BLACK. '
-                                   f'Los servicios BLACK requieren líneas de negocio con remanentes habilitados.'
-                })
-            
-            # Verificar si tiene tipos de remanente configurados
-            available_remanente_types = business_line.get_available_remanente_types()
-            if not available_remanente_types.exists():
-                raise ValidationError({
-                    'business_line': f'La línea de negocio "{business_line.name}" no tiene tipos de remanente configurados. '
-                                   f'Configure al menos un tipo de remanente para esta línea de negocio antes de crear servicios BLACK.'
-                })
+            pass
         
         return cleaned_data

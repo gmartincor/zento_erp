@@ -203,33 +203,7 @@ class ClientService(TimeStampedModel):
             if not self.business_line_id:
                 return
             
-            # Validación con el nuevo sistema flexible de remanentes
-            if not self.business_line.allows_remanentes:
-                raise ValidationError({
-                    'business_line': f'La línea de negocio "{self.business_line.name}" no está configurada para usar remanentes. '
-                                   f'Los servicios BLACK requieren líneas de negocio con remanentes habilitados.'
-                })
-            
-            # Verificar si tiene tipos de remanente configurados
-            available_remanente_types = self.business_line.get_available_remanente_types()
-            if not available_remanente_types.exists():
-                raise ValidationError({
-                    'business_line': f'La línea de negocio "{self.business_line.name}" no tiene tipos de remanente configurados. '
-                                   f'Configure al menos un tipo de remanente para esta línea de negocio antes de crear servicios BLACK.'
-                })
-            
-            # Validación de la estructura del campo remanentes (si se proporciona)
-            if self.remanentes and isinstance(self.remanentes, dict):
-                # Obtener tipos de remanente válidos para esta línea de negocio
-                valid_types = {rt.name for rt in available_remanente_types}
-                invalid_keys = set(self.remanentes.keys()) - valid_types
-                
-                if invalid_keys:
-                    valid_types_str = '", "'.join(sorted(valid_types))
-                    raise ValidationError({
-                        'remanentes': f'El campo de remanentes contiene tipos no válidos para esta línea de negocio: {", ".join(invalid_keys)}. '
-                                     f'Tipos válidos: "{valid_types_str}".'
-                    })
+            pass
 
     def save(self, *args, **kwargs):
         # Limpiar remanentes para servicios que no son BLACK
@@ -422,6 +396,15 @@ class ServicePayment(TimeStampedModel):
     notes = models.TextField(
         blank=True,
         verbose_name="Notas"
+    )
+    
+    remanente = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Remanente",
+        help_text="Cantidad de remanente aplicado (positivo o negativo)"
     )
 
     class Meta:

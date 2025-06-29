@@ -79,8 +79,7 @@ class PaymentForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin):
                 'payment_date': 'La fecha de pago no puede ser futura'
             })
         
-        # Validar campos de remanentes
-        self.clean_remanente_fields()
+        # Validación omitida ya que no necesitamos validación especial para el campo remanente simple
             
         return cleaned_data
     
@@ -90,8 +89,10 @@ class PaymentForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin):
             'payment_date': self.cleaned_data['payment_date'],
             'payment_method': self.cleaned_data['payment_method'],
             'reference_number': self.cleaned_data.get('reference_number', ''),
-            'notes': self.cleaned_data.get('notes', '')
+            'notes': self.cleaned_data.get('notes', ''),
+            'remanente': self.cleaned_data.get('remanente')
         }
+        
         updated_periods = []
         for period in periods:
             suggested_amount = PaymentService.calculate_suggested_amount(period, self.client_service)
@@ -113,16 +114,5 @@ class PaymentForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin):
                 **payment_info
             )
             updated_periods.append(updated_period)
-        
-        # Guardar remanentes si están configurados y hay un usuario válido
-        if user:
-            remanentes_created = self.save_remanentes(user)
-            if remanentes_created:
-                # Opcional: agregar información sobre remanentes creados al contexto de respuesta
-                for period in updated_periods:
-                    if hasattr(period, '_remanentes_created'):
-                        period._remanentes_created = remanentes_created
-                    else:
-                        period._remanentes_created = []
                         
         return updated_periods

@@ -174,51 +174,33 @@ class StatisticsService:
         }
     
     def calculate_remanente_stats(self, business_line=None, client_service=None):
-        """Calcula estadísticas específicas de remanentes usando el nuevo sistema flexible"""
-        from apps.business_lines.models import ServicePeriodRemanente
-        
+        """Calcula estadísticas de remanentes usando el campo simple"""
         if client_service:
-            # Estadísticas por servicio específico
-            remanentes = ServicePeriodRemanente.objects.filter(client_service=client_service)
+            query = ServicePayment.objects.filter(client_service=client_service)
         elif business_line:
-            # Estadísticas por línea de negocio
-            services_query = self._get_services_for_line(business_line, include_children=True)
-            remanentes = ServicePeriodRemanente.objects.filter(client_service__in=services_query)
+            services = self._get_services_for_line(business_line)
+            query = ServicePayment.objects.filter(client_service__in=services)
         else:
-            # Estadísticas generales
-            remanentes = ServicePeriodRemanente.objects.all()
+            return {'total_amount': Decimal('0'), 'total_count': 0, 'average_amount': Decimal('0'), 'has_remanentes': False}
         
+        remanentes = query.filter(remanente__isnull=False)
         stats = remanentes.aggregate(
-            total_remanentes=Sum('amount'),
-            count_remanentes=Count('id'),
-            avg_remanente=Avg('amount')
+            total_amount=Sum('remanente'),
+            total_count=Count('id'),
+            average_amount=Avg('remanente')
         )
         
-        # Estadísticas por tipo
-        type_stats = {}
-        for remanente in remanentes.select_related('remanente_type'):
-            type_name = remanente.remanente_type.name
-            if type_name not in type_stats:
-                type_stats[type_name] = {
-                    'count': 0,
-                    'total': Decimal('0'),
-                    'name': remanente.remanente_type.name
-                }
-            type_stats[type_name]['count'] += 1
-            type_stats[type_name]['total'] += remanente.amount
-        
         return {
-            'total_amount': stats['total_remanentes'] or Decimal('0'),
-            'total_count': stats['count_remanentes'] or 0,
-            'average_amount': stats['avg_remanente'] or Decimal('0'),
-            'by_type': list(type_stats.values()),
-            'has_remanentes': stats['count_remanentes'] > 0
+            'total_amount': stats['total_amount'] or Decimal('0'),
+            'total_count': stats['total_count'] or 0,
+            'average_amount': stats['average_amount'] or Decimal('0'),
+            'has_remanentes': (stats['total_count'] or 0) > 0
         }
     
     def get_service_remanente_summary(self, client_service):
         """Resumen de remanentes para un servicio específico"""
         return self.calculate_remanente_stats(client_service=client_service)
-    
+
     def _get_services_for_line(self, business_line, include_children):
         if include_children:
             line_ids = [business_line.id]
@@ -239,12 +221,11 @@ class StatisticsService:
             self._collect_descendant_ids(child, id_list)
     
     def _calculate_remanente_totals(self, services_query):
-        """Calcula totales de remanentes usando el nuevo sistema flexible"""
-        from apps.business_lines.models import ServicePeriodRemanente
-        
-        total = ServicePeriodRemanente.objects.filter(
-            client_service__in=services_query
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        """Calcula totales de remanentes usando el campo simple en ServicePeriod"""
+        total = ServicePayment.objects.filter(
+            client_service__in=services_query,
+            remanente__isnull=False
+        ).aggregate(total=Sum('remanente'))['total'] or Decimal('0')
         
         return total
     

@@ -16,7 +16,8 @@ class PaymentService:
         payment_date: date,
         payment_method: str,
         reference_number: str = "",
-        notes: str = ""
+        notes: str = "",
+        remanente: Optional[Decimal] = None
     ) -> ServicePayment:
         if not period.can_be_paid:
             raise ValidationError(
@@ -30,6 +31,10 @@ class PaymentService:
         period.payment_method = payment_method
         period.reference_number = reference_number
         period.status = ServicePayment.StatusChoices.PAID
+        
+        # Asignar remanente si se proporciona
+        if remanente is not None:
+            period.remanente = remanente
         
         if notes:
             from .notes_manager import ServiceNotesManager
@@ -51,7 +56,8 @@ class PaymentService:
         period_start: date,
         period_end: date,
         reference_number: str = "",
-        notes: str = ""
+        notes: str = "",
+        remanente: Optional[Decimal] = None
     ) -> ServicePayment:
         PaymentService._validate_payment_data(amount, payment_date, payment_method)
         
@@ -67,7 +73,8 @@ class PaymentService:
             period_start=period_start,
             period_end=period_end,
             status=ServicePayment.StatusChoices.PAID,
-            notes=notes
+            notes=notes,
+            remanente=remanente
         )
         
         return payment_period
