@@ -69,31 +69,11 @@
 {% block content %}
 
 <!-- Resumen del Cliente -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-    <!-- Tarjeta de estadísticas generales -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Resumen General</h3>
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4"></path>
-            </svg>
-        </div>
-        <div class="space-y-3">
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600 dark:text-gray-400">Total Servicios</span>
-                <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ summary_stats.total_services|default:0 }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600 dark:text-gray-400">Ingresos Totales</span>
-                <span class="text-lg font-semibold text-green-600">{{ summary_stats.total_revenue|default:0|format_currency:"€" }}</span>
-            </div>
-        </div>
-    </div>
-
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Desglose por categoría -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Por Categoría</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Resumen por Categorías</h3>
             <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
             </svg>
