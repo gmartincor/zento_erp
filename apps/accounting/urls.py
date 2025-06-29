@@ -17,6 +17,7 @@ from .views import (
 from .views.payment_history import payment_history_view
 from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
 from .views.service_renewal import service_renewal_view
+from .views.service_termination import service_termination_view, service_reactivation_view
 from .views.service_payment import (
     service_payment_view,
     bulk_payment_view,
@@ -86,6 +87,8 @@ urlpatterns = [
     path('services/<int:service_id>/detail/', ClientServiceDetailView.as_view(), name='client-service-detail'),
     
     path('services/<int:service_id>/renewal/', service_renewal_view, name='service-renewal'),
+    path('services/<int:service_id>/terminate/', service_termination_view, name='service-terminate'),
+    path('services/<int:service_id>/reactivate/', service_reactivation_view, name='service-reactivate'),
     
     path('services/<int:service_id>/payment/', service_payment_view, name='service-payment'),
     path('services/<int:service_id>/payment/bulk/', bulk_payment_view, name='bulk-payment'),

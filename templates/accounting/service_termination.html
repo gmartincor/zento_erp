@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - {{ service.client.full_name }} - Nutrition Pro CRM{% endblock %}
+
+{% block breadcrumb %}
+{% include 'accounting/components/enhanced_breadcrumb.html' with breadcrumb_path=breadcrumb_path current_page_title=page_title show_stats=False %}
+{% endblock %}
+
+{% block page_header %}
+<div class="mb-6">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                {{ page_title }}
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">
+                <span class="font-medium">{{ service.client.full_name }}</span>
+                • {{ service.business_line.name }} - {{ service.get_category_display }}
+            </p>
+        </div>
+        
+        <div class="mt-4 lg:mt-0">
+            <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
+               class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Volver
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% include 'accounting/components/form_errors.html' %}
+                
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-red-800 dark:text-red-200">
+                                Advertencia: Finalización Definitiva
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                                <p>Esta acción marcará el servicio como finalizado de forma definitiva. El servicio quedará inactivo y se establecerá una fecha de finalización.</p>
+                                <ul class="mt-2 list-disc list-inside space-y-1">
+                                    <li>El servicio se desactivará automáticamente</li>
+                                    <li>Se establecerá la fecha de finalización</li>
+                                    <li>Los períodos existentes se mantendrán intactos</li>
+                                    <li>El servicio puede reactivarse posteriormente si es necesario</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Información de Finalización</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="{{ form.termination_date.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {{ form.termination_date.label }}
+                            </label>
+                            {{ form.termination_date }}
+                            {% if form.termination_date.help_text %}
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.termination_date.help_text }}</p>
+                            {% endif %}
+                            {% if form.termination_date.errors %}
+                                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    {{ form.termination_date.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.reason.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {{ form.reason.label }}
+                            </label>
+                            {{ form.reason }}
+                            {% if form.reason.help_text %}
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.reason.help_text }}</p>
+                            {% endif %}
+                            {% if form.reason.errors %}
+                                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    {{ form.reason.errors|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
+                       class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                        Cancelar
+                    </a>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium">
+                        Finalizar Servicio
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="lg:col-span-1 space-y-6">
+            {% include 'accounting/components/service_overview.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}

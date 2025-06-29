@@ -22,9 +22,6 @@ class ServiceStateManager:
         if last_period:
             return not DateCalculator.is_date_in_past(last_period.period_end)
         
-        if service.end_date:
-            return not DateCalculator.is_date_in_past(service.end_date)
-        
         return service.is_active
     
     @classmethod
@@ -35,9 +32,6 @@ class ServiceStateManager:
         last_period = cls._get_last_period(service)
         if last_period:
             return DateCalculator.is_date_in_past(last_period.period_end)
-            
-        if service.end_date:
-            return DateCalculator.is_date_in_past(service.end_date)
         
         return False
     
@@ -46,9 +40,6 @@ class ServiceStateManager:
         last_period = cls._get_last_period(service)
         if last_period:
             return DateCalculator.days_between(DateCalculator.get_today(), last_period.period_end)
-        
-        if service.end_date:
-            return DateCalculator.days_between(DateCalculator.get_today(), service.end_date)
         
         return 0
     
@@ -65,7 +56,7 @@ class ServiceStateManager:
             status__in=['PERIOD_CREATED', 'PENDING']
         ).exists()
         
-        if not last_period and not service.end_date:
+        if not last_period:
             return 'no_periods'
         
         if has_pending_periods:
@@ -212,3 +203,11 @@ class ServiceStateManager:
             'days_left': days_left,
             'priority': cls.get_status_priority(status)
         }
+    
+    @classmethod
+    def needs_renewal(cls, service: ClientService) -> bool:
+        if not service.is_active:
+            return False
+        
+        status = cls.get_service_status(service)
+        return status in ['renewal_due', 'expiring_soon', 'expired']

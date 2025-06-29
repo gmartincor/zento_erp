@@ -44,7 +44,7 @@ class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMi
         model = ClientService
         fields = [
             'business_line', 'category', 
-            'price', 'start_date', 'end_date', 'admin_status', 'is_active', 'notes', 'remanentes'
+            'price', 'start_date', 'admin_status', 'is_active', 'notes', 'remanentes'
         ]
     
     def __init__(self, *args, **kwargs):

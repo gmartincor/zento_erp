@@ -41,16 +41,17 @@ class ServicePeriodManager:
         new_end_date: date,
         notes: str = ""
     ) -> ServicePayment:
-        current_end = client_service.end_date
+        last_period = ServicePeriodManager.get_last_period(client_service)
         
-        if current_end is None:
+        if last_period:
+            if new_end_date <= last_period.period_end:
+                raise ValidationError("La nueva fecha de fin debe ser posterior al último período")
+            period_start = last_period.period_end + timedelta(days=1)
+        else:
             period_start = client_service.start_date or new_end_date
             if client_service.start_date is None:
                 client_service.start_date = new_end_date
-        else:
-            if new_end_date <= current_end:
-                raise ValidationError("La nueva fecha de fin debe ser posterior a la fecha actual")
-            period_start = current_end + timedelta(days=1)
+                client_service.save(update_fields=['start_date'])
         
         period = ServicePeriodManager.create_period(
             client_service=client_service,
@@ -58,9 +59,6 @@ class ServicePeriodManager:
             period_end=new_end_date,
             notes=notes
         )
-        
-        client_service.end_date = new_end_date
-        client_service.save(update_fields=['start_date', 'end_date', 'modified'])
         
         return period
     

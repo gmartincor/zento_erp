@@ -3,7 +3,6 @@ from datetime import date
 from django.utils import timezone
 
 from ..models import ClientService
-from ..services.service_manager import ServiceManager
 
 
 class ServiceDateEditForm(forms.ModelForm):
@@ -15,55 +14,37 @@ class ServiceDateEditForm(forms.ModelForm):
             self._setup_date_fields()
     
     def _setup_date_fields(self):
-        restrictions = ServiceManager.get_date_edit_restrictions(self.instance)
-        
-        if not restrictions['can_edit_dates']:
-            self._disable_date_fields(restrictions['restriction_reason'])
+        if self.instance.payments.exists():
+            self._disable_date_fields("No se puede modificar la fecha de inicio porque el servicio tiene períodos asociados")
         else:
-            self._setup_editable_date_fields(restrictions)
+            self._setup_editable_date_fields()
     
     def _disable_date_fields(self, reason: str):
         if 'start_date' in self.fields:
             self.fields['start_date'].disabled = True
             self.fields['start_date'].help_text = reason
-        
-        if 'end_date' in self.fields:
-            self.fields['end_date'].disabled = True
-            self.fields['end_date'].help_text = reason
     
-    def _setup_editable_date_fields(self, restrictions: dict):
-        restriction_reason = restrictions.get('restriction_reason')
-        if restriction_reason:
-            for field in ['start_date', 'end_date']:
-                if field in self.fields:
-                    self.fields[field].help_text = restriction_reason
+    def _setup_editable_date_fields(self):
+        if 'start_date' in self.fields:
+            self.fields['start_date'].help_text = "Fecha de inicio del servicio"
     
     def clean(self):
         cleaned_data = super().clean()
         
         if self.instance and self.instance.pk:
             start_date = cleaned_data.get('start_date')
-            end_date = cleaned_data.get('end_date')
             
-            if start_date and end_date and start_date >= end_date:
-                raise forms.ValidationError({
-                    'end_date': 'La fecha de finalización debe ser posterior a la fecha de inicio.'
-                })
-            
-            restrictions = ServiceManager.get_date_edit_restrictions(self.instance)
-            if not restrictions['can_edit_dates']:
-                if start_date != self.instance.start_date or end_date != self.instance.end_date:
-                    reason = restrictions.get('restriction_reason', 'No se pueden modificar las fechas')
+            if self.instance.payments.exists():
+                if start_date != self.instance.start_date:
                     raise forms.ValidationError(
-                        'No se pueden modificar las fechas: ' + reason
+                        'No se puede modificar la fecha de inicio porque el servicio tiene períodos asociados'
                     )
         
         return cleaned_data
     
     class Meta:
         model = ClientService
-        fields = ['start_date', 'end_date']
+        fields = ['start_date']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }

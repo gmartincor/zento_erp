@@ -1,7 +1,7 @@
 from .business_line_service import BusinessLineService
 from .statistics_service import StatisticsService
 from .payment_service import PaymentService
-from .service_manager import ServiceManager
+from .service_termination_manager import ServiceTerminationManager
 from .client_service_transaction import ClientServiceTransactionManager
 from .navigation_service import HierarchicalNavigationService
 from .presentation_service import PresentationService
@@ -22,7 +22,7 @@ __all__ = [
     'BusinessLineService', 
     'StatisticsService',
     'PaymentService',
-    'ServiceManager',
+    'ServiceTerminationManager',
     'ClientServiceTransactionManager',
     'ClientReactivationService',
     'HierarchicalNavigationService',
