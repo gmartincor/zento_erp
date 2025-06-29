@@ -25,6 +25,7 @@ from .views.service_payment import (
     service_payment_history_view,
     cancel_period_view
 )
+from .views.payment_detail import payment_detail_view
 
 app_name = 'accounting'
 
@@ -95,5 +96,7 @@ urlpatterns = [
     path('services/<int:service_id>/payment/ajax/suggested-amount/<int:period_id>/', ajax_get_suggested_amount, name='ajax-suggested-amount'),
     
     path('services/<int:service_id>/periods/<int:period_id>/cancel/', cancel_period_view, name='cancel-period'),
+    
+    path('payments/<int:payment_id>/', payment_detail_view, name='payment-detail'),
     
 ]
