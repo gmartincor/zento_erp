@@ -2,12 +2,12 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .base_forms import BaseServiceForm, PaymentFieldsMixin
+from .base_forms import BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin
 from ..services.payment_service import PaymentService
 from ..models import ServicePayment
 
 
-class PaymentForm(BaseServiceForm, PaymentFieldsMixin):
+class PaymentForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin):
     
     selected_periods = forms.ModelMultipleChoiceField(
         queryset=ServicePayment.objects.none(),
@@ -26,6 +26,7 @@ class PaymentForm(BaseServiceForm, PaymentFieldsMixin):
     def __init__(self, client_service=None, *args, **kwargs):
         super().__init__(client_service=client_service, *args, **kwargs)
         self.add_payment_fields()
+        self.add_remanente_fields()  # Agregar campos de remanentes
         
         if 'amount' in self.fields:
             self.fields['amount'].required = False
@@ -77,10 +78,13 @@ class PaymentForm(BaseServiceForm, PaymentFieldsMixin):
             raise ValidationError({
                 'payment_date': 'La fecha de pago no puede ser futura'
             })
+        
+        # Validar campos de remanentes
+        self.clean_remanente_fields()
             
         return cleaned_data
     
-    def save(self):
+    def save(self, user=None):
         periods = self.cleaned_data['selected_periods']
         payment_info = {
             'payment_date': self.cleaned_data['payment_date'],
@@ -109,4 +113,16 @@ class PaymentForm(BaseServiceForm, PaymentFieldsMixin):
                 **payment_info
             )
             updated_periods.append(updated_period)
+        
+        # Guardar remanentes si están configurados y hay un usuario válido
+        if user:
+            remanentes_created = self.save_remanentes(user)
+            if remanentes_created:
+                # Opcional: agregar información sobre remanentes creados al contexto de respuesta
+                for period in updated_periods:
+                    if hasattr(period, '_remanentes_created'):
+                        period._remanentes_created = remanentes_created
+                    else:
+                        period._remanentes_created = []
+                        
         return updated_periods

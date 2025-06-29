@@ -2,14 +2,13 @@ from django.db import models
 from django.utils.text import slugify
 from apps.core.models import TimeStampedModel
 
+# Importar modelos de remanentes para que Django los detecte
+from .models_remanentes import RemanenteType, BusinessLineRemanenteConfig, ServicePeriodRemanente
+
+__all__ = ['BusinessLine', 'RemanenteType', 'BusinessLineRemanenteConfig', 'ServicePeriodRemanente']
+
 
 class BusinessLine(TimeStampedModel):
-    
-    class RemanenteChoices(models.TextChoices):
-        REMANENTE_PEPE = 'remanente_pepe', 'Remanente Pepe'
-        REMANENTE_PEPE_VIDEO = 'remanente_pepe_video', 'Remanente Pepe Video'
-        REMANENTE_DANI = 'remanente_dani', 'Remanente Dani'
-        REMANENTE_AVEN = 'remanente_aven', 'Remanente Aven'
     
     name = models.CharField(
         max_length=255,
@@ -37,19 +36,6 @@ class BusinessLine(TimeStampedModel):
         help_text="Nivel jerárquico (1-3)"
     )
     
-    has_remanente = models.BooleanField(
-        default=False,
-        verbose_name="Tiene remanente"
-    )
-    
-    remanente_field = models.CharField(
-        max_length=30,
-        choices=RemanenteChoices.choices,
-        null=True,
-        blank=True,
-        verbose_name="Campo de remanente"
-    )
-    
     is_active = models.BooleanField(
         default=True,
         verbose_name="Activo",
@@ -59,6 +45,13 @@ class BusinessLine(TimeStampedModel):
     order = models.PositiveIntegerField(
         default=0,
         verbose_name="Orden"
+    )
+    
+    # NUEVO SISTEMA DE REMANENTES
+    allows_remanentes = models.BooleanField(
+        default=False,
+        verbose_name="Permite remanentes",
+        help_text="Indica si esta línea de negocio puede tener remanentes configurados"
     )
 
     class Meta:
@@ -76,10 +69,6 @@ class BusinessLine(TimeStampedModel):
             models.CheckConstraint(
                 check=models.Q(level__gte=1) & models.Q(level__lte=3),
                 name='business_line_level_range'
-            ),
-            models.CheckConstraint(
-                check=models.Q(has_remanente=False) | models.Q(remanente_field__isnull=False),
-                name='business_line_remanente_field_required'
             ),
         ]
 
@@ -149,3 +138,25 @@ class BusinessLine(TimeStampedModel):
         for child in children:
             id_set.add(child.id)
             child._collect_descendant_ids(id_set)
+    
+    def get_available_remanente_types(self):
+        """Obtiene tipos de remanente disponibles para esta línea de negocio"""
+        if not self.allows_remanentes:
+            return []
+        
+        return RemanenteType.objects.filter(
+            businesslineremanenteconfig__business_line=self,
+            businesslineremanenteconfig__is_enabled=True,
+            is_active=True
+        )
+    
+    def has_remanente_type(self, remanente_type):
+        """Verifica si esta línea puede usar un tipo específico de remanente"""
+        if not self.allows_remanentes:
+            return False
+            
+        return BusinessLineRemanenteConfig.objects.filter(
+            business_line=self,
+            remanente_type=remanente_type,
+            is_enabled=True
+        ).exists()

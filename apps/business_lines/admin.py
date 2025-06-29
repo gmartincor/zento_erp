@@ -1,114 +1,133 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import BusinessLine
+from .models_remanentes import RemanenteType, BusinessLineRemanenteConfig, ServicePeriodRemanente
+
+
+class BusinessLineRemanenteConfigInline(admin.TabularInline):
+    model = BusinessLineRemanenteConfig
+    extra = 0
+    fields = ['remanente_type', 'is_enabled', 'default_amount']
+    autocomplete_fields = ['remanente_type']
 
 
 @admin.register(BusinessLine)
 class BusinessLineAdmin(admin.ModelAdmin):
     """
-    Admin interface for BusinessLine with hierarchical display.
+    Admin interface for BusinessLine with flexible remanentes system.
     """
-    
-    list_display = [
-        'hierarchical_name_display',
-        'level',
-        'has_remanente',
-        'remanente_field',
-        'is_active',
-        'order',
-        'created'
-    ]
-    
-    list_filter = [
-        'level',
-        'is_active',
-        'has_remanente',
-        'remanente_field'
-    ]
-    
+    list_display = ['name', 'parent', 'level', 'allows_remanentes', 'remanente_types_display', 'is_active', 'order']
+    list_filter = ['level', 'allows_remanentes', 'is_active', 'parent']
     search_fields = ['name', 'slug']
-    
-    list_editable = ['is_active', 'order']
-    
     ordering = ['level', 'order', 'name']
-    
-    prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ['slug', 'level']
     
     fieldsets = (
-        ('Información básica', {
-            'fields': ('name', 'slug', 'parent')
+        ('Información Básica', {
+            'fields': ('name', 'parent', 'slug', 'level', 'is_active', 'order')
         }),
-        ('Configuración', {
-            'fields': ('is_active', 'order')
+        ('Configuración de Remanentes', {
+            'fields': ('allows_remanentes',),
+            'description': 'Configure si esta línea de negocio puede tener remanentes asociados'
         }),
-        ('Remanente', {
-            'fields': ('has_remanente', 'remanente_field'),
+    )
+    
+    inlines = [BusinessLineRemanenteConfigInline]
+    
+    def remanente_types_display(self, obj):
+        """Muestra los tipos de remanente configurados para esta línea"""
+        if not obj.allows_remanentes:
+            return format_html('<span style="color: #999;">Sin remanentes</span>')
+        
+        types = obj.get_available_remanente_types()
+        if not types:
+            return format_html('<span style="color: #ff6b6b;">Sin tipos configurados</span>')
+        
+        type_names = [t.name for t in types]
+        return format_html('<span style="color: #51cf66;">{}</span>', ', '.join(type_names))
+    
+    remanente_types_display.short_description = 'Tipos de Remanente'
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('remanente_configs__remanente_type')
+
+
+@admin.register(RemanenteType)
+class RemanenteTypeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'default_amount', 'is_active', 'business_lines_count', 'created_by', 'created']
+    list_filter = ['is_active', 'created_by']
+    search_fields = ['name', 'description']
+    readonly_fields = ['created_by', 'created', 'modified']
+    
+    fieldsets = (
+        ('Información del Tipo', {
+            'fields': ('name', 'description', 'default_amount', 'is_active')
+        }),
+        ('Metadatos', {
+            'fields': ('created_by', 'created', 'modified'),
             'classes': ('collapse',)
-        }),
-        ('Información del sistema', {
-            'fields': ('level', 'created', 'modified'),
-            'classes': ('collapse',),
-            'description': 'Campos calculados automáticamente'
         })
     )
     
-    readonly_fields = ['level', 'created', 'modified']
-
-    def get_queryset(self, request):
-        """
-        Optimize queries with select_related for parent relationships.
-        """
-        queryset = super().get_queryset(request)
-        return queryset.select_related('parent')
-
-    def hierarchical_name_display(self, obj):
-        """
-        Display name with hierarchical indentation based on level.
-        """
-        indent = '&nbsp;&nbsp;&nbsp;&nbsp;' * (obj.level - 1)
-        level_indicator = '└─ ' if obj.level > 1 else ''
-        
-        # Add visual indicators for active/inactive status
-        status_icon = '✓' if obj.is_active else '✗'
-        status_color = 'green' if obj.is_active else 'red'
-        
-        return format_html(
-            '{}<span style="color: {};">{}</span> {}{}',
-            indent,
-            status_color,
-            status_icon,
-            level_indicator,
-            obj.name
-        )
+    def business_lines_count(self, obj):
+        """Número de líneas de negocio que usan este tipo"""
+        count = obj.businesslineremanenteconfig_set.filter(is_enabled=True).count()
+        return f"{count} líneas"
     
-    hierarchical_name_display.short_description = 'Nombre (Jerarquía)'
-    hierarchical_name_display.admin_order_field = 'name'
-
-    def get_form(self, request, obj=None, **kwargs):
-        """
-        Customize form based on object context.
-        """
-        form = super().get_form(request, obj, **kwargs)
-        
-        # Limit parent choices to avoid circular references
-        if obj:
-            # Exclude self and descendants from parent choices
-            excluded_ids = list(obj.get_descendant_ids())
-            form.base_fields['parent'].queryset = BusinessLine.objects.exclude(
-                id__in=excluded_ids
-            ).filter(level__lt=3)  # Can't be parent if already at level 3
-        else:
-            # For new objects, only allow levels 1 and 2 as parents
-            form.base_fields['parent'].queryset = BusinessLine.objects.filter(level__lt=3)
-        
-        return form
-
+    business_lines_count.short_description = 'Líneas que lo usan'
+    
     def save_model(self, request, obj, form, change):
-        """
-        Custom save to handle remanente field validation.
-        """
-        # Clear remanente_field if has_remanente is False
-        if not obj.has_remanente:
-            obj.remanente_field = None
-        
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(BusinessLineRemanenteConfig)
+class BusinessLineRemanenteConfigAdmin(admin.ModelAdmin):
+    list_display = ['business_line', 'remanente_type', 'is_enabled', 'effective_default_amount']
+    list_filter = ['is_enabled', 'remanente_type', 'business_line__level']
+    search_fields = ['business_line__name', 'remanente_type__name']
+    autocomplete_fields = ['business_line', 'remanente_type']
+    
+    def effective_default_amount(self, obj):
+        """Muestra el monto por defecto efectivo"""
+        amount = obj.get_effective_default_amount()
+        if amount:
+            return f"€{amount}"
+        return "Sin monto"
+    
+    effective_default_amount.short_description = 'Monto Efectivo'
+
+
+@admin.register(ServicePeriodRemanente)
+class ServicePeriodRemanenteAdmin(admin.ModelAdmin):
+    list_display = ['client_service_display', 'period_start', 'period_end', 'remanente_type', 'amount', 'created_by']
+    list_filter = ['remanente_type', 'created_by', 'period_start']
+    search_fields = ['client_service__client__full_name', 'client_service__business_line__name']
+    readonly_fields = ['created_by', 'created', 'modified']
+    date_hierarchy = 'period_start'
+    
+    fieldsets = (
+        ('Información del Remanente', {
+            'fields': ('client_service', 'remanente_type', 'amount')
+        }),
+        ('Período', {
+            'fields': ('period_start', 'period_end')
+        }),
+        ('Detalles', {
+            'fields': ('notes', 'created_by', 'created', 'modified'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    def client_service_display(self, obj):
+        """Representación clara del servicio"""
+        return f"{obj.client_service.client.full_name} - {obj.client_service.business_line.name}"
+    
+    client_service_display.short_description = 'Cliente y Servicio'
+    client_service_display.admin_order_field = 'client_service__client__full_name'
+    
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
         super().save_model(request, obj, form, change)

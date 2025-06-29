@@ -203,52 +203,42 @@ class ClientService(TimeStampedModel):
             if not self.business_line_id:
                 return
             
-            if not self.business_line.has_remanente or not self.business_line.remanente_field:
+            # Validación con el nuevo sistema flexible de remanentes
+            if not self.business_line.allows_remanentes:
                 raise ValidationError({
-                    'business_line': f'La línea de negocio "{self.business_line.name}" no tiene un tipo de remanente configurado.'
+                    'business_line': f'La línea de negocio "{self.business_line.name}" no está configurada para usar remanentes. '
+                                   f'Los servicios BLACK requieren líneas de negocio con remanentes habilitados.'
                 })
             
-            business_line_name = self.business_line.name.lower()
-            expected_remanente = None
-            
-            if "pepe-normal" in business_line_name:
-                expected_remanente = BusinessLine.RemanenteChoices.REMANENTE_PEPE
-            elif "pepe-videocall" in business_line_name:
-                expected_remanente = BusinessLine.RemanenteChoices.REMANENTE_PEPE_VIDEO
-            elif "dani-rubi" in business_line_name:
-                expected_remanente = BusinessLine.RemanenteChoices.REMANENTE_DANI
-            elif "dani" in business_line_name and "rubi" not in business_line_name:
-                expected_remanente = BusinessLine.RemanenteChoices.REMANENTE_AVEN
-                
-            if expected_remanente and self.business_line.remanente_field != expected_remanente:
+            # Verificar si tiene tipos de remanente configurados
+            available_remanente_types = self.business_line.get_available_remanente_types()
+            if not available_remanente_types.exists():
                 raise ValidationError({
-                    'business_line': f'La línea de negocio "{self.business_line.name}" debe usar el tipo de remanente "{expected_remanente}".'
+                    'business_line': f'La línea de negocio "{self.business_line.name}" no tiene tipos de remanente configurados. '
+                                   f'Configure al menos un tipo de remanente para esta línea de negocio antes de crear servicios BLACK.'
                 })
             
+            # Validación de la estructura del campo remanentes (si se proporciona)
             if self.remanentes and isinstance(self.remanentes, dict):
-                valid_keys = {self.business_line.remanente_field}
-                invalid_keys = set(self.remanentes.keys()) - valid_keys
+                # Obtener tipos de remanente válidos para esta línea de negocio
+                valid_types = {rt.name for rt in available_remanente_types}
+                invalid_keys = set(self.remanentes.keys()) - valid_types
                 
                 if invalid_keys:
+                    valid_types_str = '", "'.join(sorted(valid_types))
                     raise ValidationError({
-                        'remanentes': f'El campo de remanentes contiene claves no válidas para esta línea de negocio: {", ".join(invalid_keys)}. '
-                                     f'Solo se permite la clave "{self.business_line.remanente_field}" para la línea "{self.business_line.name}".'
+                        'remanentes': f'El campo de remanentes contiene tipos no válidos para esta línea de negocio: {", ".join(invalid_keys)}. '
+                                     f'Tipos válidos: "{valid_types_str}".'
                     })
 
     def save(self, *args, **kwargs):
+        # Limpiar remanentes para servicios que no son BLACK
         if self.category != self.CategoryChoices.BLACK:
             self.remanentes = {}
         
+        # Asegurar que remanentes sea un dict para servicios BLACK
         elif self.category == self.CategoryChoices.BLACK and not isinstance(self.remanentes, dict):
             self.remanentes = {}
-        
-        elif self.category == self.CategoryChoices.BLACK and self.business_line_id and self.business_line.remanente_field:
-            valid_key = self.business_line.remanente_field
-            if valid_key in self.remanentes:
-                valid_value = self.remanentes[valid_key]
-                self.remanentes = {valid_key: valid_value}
-            else:
-                self.remanentes = {}
         
         self.clean()
         super().save(*args, **kwargs)

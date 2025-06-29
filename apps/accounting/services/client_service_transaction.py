@@ -92,10 +92,12 @@ class ClientServiceTransactionManager:
         if 'remanentes' in form_data:
             service.remanentes = form_data['remanentes']
         
-        if service.category == 'BLACK' and service.business_line.has_remanente:
-            if not service.business_line.remanente_field:
+        # Validación con el nuevo sistema flexible de remanentes
+        if service.category == 'BLACK' and service.business_line.allows_remanentes:
+            available_remanente_types = service.business_line.get_available_remanente_types()
+            if not available_remanente_types.exists():
                 raise ValidationError(
-                    f'La línea de negocio {service.business_line.name} no tiene configurado el tipo de remanente.'
+                    f'La línea de negocio {service.business_line.name} no tiene tipos de remanente configurados.'
                 )
         
         ClientServiceTransactionManager._handle_service_activation_change(service, original_is_active)

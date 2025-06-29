@@ -181,44 +181,29 @@
                     {% endif %}
                 </div>
 
-                <!-- Remanente Fields -->
-                <div>
+                <!-- Remanente Configuration -->
+                <div class="lg:col-span-1">
                     <div class="flex items-center">
-                        {{ form.has_remanente }}
-                        <label for="{{ form.has_remanente.id_for_label }}" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                            {{ form.has_remanente.label }}
+                        {{ form.allows_remanentes }}
+                        <label for="{{ form.allows_remanentes.id_for_label }}" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                            {{ form.allows_remanentes.label }}
                         </label>
                     </div>
-                    {% if form.has_remanente.help_text %}
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.has_remanente.help_text }}</p>
+                    {% if form.allows_remanentes.help_text %}
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.allows_remanentes.help_text }}</p>
                     {% endif %}
-                    {% if form.has_remanente.errors %}
+                    {% if form.allows_remanentes.errors %}
                         <div class="mt-2 text-sm text-red-600 dark:text-red-400">
-                            {% for error in form.has_remanente.errors %}
+                            {% for error in form.allows_remanentes.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
                         </div>
                     {% endif %}
-                </div>
-
-                <div>
-                    <label for="{{ form.remanente_field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ form.remanente_field.label }}
-                        {% if form.remanente_field.field.required %}<span class="text-red-500">*</span>{% endif %}
-                    </label>
-                    <div class="mt-1">
-                        {{ form.remanente_field }}
-                        {% if form.remanente_field.help_text %}
-                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ form.remanente_field.help_text }}</p>
-                        {% endif %}
+                    <div class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                            💡 <strong>Nuevo Sistema Flexible:</strong> Al habilitar remanentes, los nutricionistas podrán asignarlos voluntariamente durante el proceso de pagos, con total control sobre montos y períodos.
+                        </p>
                     </div>
-                    {% if form.remanente_field.errors %}
-                        <div class="mt-2 text-sm text-red-600 dark:text-red-400">
-                            {% for error in form.remanente_field.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
                 </div>
 
                 <!-- Status and Order -->

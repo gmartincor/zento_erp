@@ -154,3 +154,67 @@ def should_show_reactivation_option(client):
 @register.simple_tag
 def get_reactivation_url(service, business_line=None, category=None):
     return TemplateTagService.build_reactivation_url(service, business_line, category)
+
+@register.simple_tag
+def get_remanente_stats(business_line=None, client_service=None):
+    """Obtiene estadísticas de remanentes para línea de negocio o servicio específico"""
+    service = StatisticsService()
+    return service.calculate_remanente_stats(business_line=business_line, client_service=client_service)
+
+@register.simple_tag
+def get_service_remanentes_summary(client_service):
+    """Resumen de remanentes para un servicio específico"""
+    service = StatisticsService()
+    return service.get_service_remanente_summary(client_service)
+
+@register.simple_tag
+def get_available_remanente_types(business_line):
+    """Obtiene tipos de remanente disponibles para una línea de negocio"""
+    if hasattr(business_line, 'allows_remanentes') and business_line.allows_remanentes:
+        return business_line.get_available_remanente_types()
+    return []
+
+@register.filter
+def remanente_badge_class(has_remanentes):
+    """Clase CSS para badge de remanentes"""
+    if has_remanentes:
+        return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+    return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+
+@register.filter
+def dict_get(dictionary, key):
+    """Obtiene un valor de un diccionario por clave dinámica"""
+    if hasattr(dictionary, 'get'):
+        return dictionary.get(key)
+    return None
+
+@register.filter
+def startswith(value, prefix):
+    """Verifica si un string comienza con un prefijo determinado"""
+    return str(value).startswith(str(prefix))
+
+@register.filter
+def add_string(value, string):
+    """Concatena dos strings"""
+    return str(value) + str(string)
+
+@register.filter
+def has_fields_starting_with(form_fields, prefix):
+    """Verifica si un formulario tiene campos que comienzan con un prefijo"""
+    for field_name in form_fields.keys():
+        if field_name.startswith(prefix):
+            return True
+    return False
+
+@register.filter
+def split(value, delimiter):
+    """Divide un string por un delimitador"""
+    return str(value).split(str(delimiter))
+
+@register.filter
+def get_item(list_value, index):
+    """Obtiene un elemento de una lista por índice"""
+    try:
+        return list_value[int(index)]
+    except (IndexError, ValueError, TypeError):
+        return ""

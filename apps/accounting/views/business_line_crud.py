@@ -28,7 +28,7 @@ class BusinessLineCreateView(
 ):
     model = BusinessLine
     template_name = 'business_lines/business_line_form.html'
-    fields = ['name', 'parent']
+    fields = ['name', 'parent', 'allows_remanentes']
     
     def get_initial(self):
         initial = super().get_initial()
@@ -76,7 +76,7 @@ class BusinessLineUpdateView(
 ):
     model = BusinessLine
     template_name = 'business_lines/business_line_form.html'
-    fields = ['name', 'parent']
+    fields = ['name', 'parent', 'allows_remanentes']
     
     def get_success_url(self):
         return self.get_business_line_url(self.object)

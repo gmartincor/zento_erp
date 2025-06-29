@@ -22,13 +22,20 @@ def service_payment_view(request, service_id):
         
         if form.is_valid():
             try:
-                updated_periods = form.save()
+                # El método save() ahora maneja tanto pagos como remanentes
+                updated_periods = form.save(user=request.user)
                 
-                messages.success(
-                    request,
-                    f"Procesados {len(updated_periods)} pagos exitosamente. "
-                    f"Total de períodos actualizados: {len(updated_periods)}"
-                )
+                # Contar remanentes creados si los hay
+                total_remanentes = 0
+                for period in updated_periods:
+                    if hasattr(period, '_remanentes_created'):
+                        total_remanentes += len(period._remanentes_created)
+                
+                success_msg = f"Procesados {len(updated_periods)} pagos exitosamente."
+                if total_remanentes > 0:
+                    success_msg += f" Se aplicaron {total_remanentes} remanentes."
+                
+                messages.success(request, success_msg)
                 
                 return redirect('accounting:client-service-detail', service_id=service_id)
                 
