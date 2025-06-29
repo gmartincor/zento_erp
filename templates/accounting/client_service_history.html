@@ -222,7 +222,7 @@
                                 {{ service.total_paid|format_currency:"€" }}
                             </div>
                             <div class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ service.payments.count|format_count:"pago" }}
+                                {{ service.payment_count|format_count:"pago" }}
                             </div>
                         {% else %}
                             <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full">

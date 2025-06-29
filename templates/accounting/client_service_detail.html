@@ -217,10 +217,6 @@
                                 </span>
                             {% endif %}
                         </div>
-                        <a href="{% url 'accounting:payment-detail' payment_id=payment.id %}" 
-                           class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            Ver detalle
-                        </a>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4 text-sm">
@@ -250,13 +246,13 @@
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Pagado:</span>
                         <span class="text-lg font-semibold text-green-600">
-                            {{ payment_analysis.total_paid|format_currency:"€" }}
+                            {{ service.total_paid|format_currency:"€" }}
                         </span>
                     </div>
                     <div class="flex justify-between items-center mt-2">
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Número de Pagos:</span>
                         <span class="text-sm font-medium text-gray-900 dark:text-white">
-                            {{ payment_analysis.payment_count }}
+                            {{ service.payment_count }}
                         </span>
                     </div>
                 </div>
@@ -291,16 +287,6 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acciones Rápidas</h3>
             <div class="space-y-3">
-                {% if service.is_active %}
-                <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
-                   class="w-full flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                    </svg>
-                    Editar Servicio
-                </a>
-                {% endif %}
-                
                 {% if not service.payments.exists %}
                 <a href="{% url 'accounting:payment-create' service_id=service.id %}" 
                    class="w-full flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">

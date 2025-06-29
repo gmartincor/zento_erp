@@ -223,20 +223,6 @@
                     </dd>
                 </div>
 
-                <!-- Remanente Information -->
-                <div>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Remanente</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                        {% if business_line.allows_remanentes %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                Sí
-                            </span>
-                        {% else %}
-                            <span class="text-gray-500 dark:text-gray-400">No</span>
-                        {% endif %}
-                    </dd>
-                </div>
-
                 <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Creado</dt>
                     <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ business_line.created_at|date:"d/m/Y H:i" }}</dd>
