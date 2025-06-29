@@ -3,24 +3,9 @@ from apps.accounting.models import ServicePayment, ClientService
 
 
 class HistoryService:
-    """
-    Servicio unificado para manejar diferentes tipos de historiales en el sistema.
-    
-    Existen dos tipos principales de historiales:
-    1. Historial de servicios de un cliente específico (client history)
-    2. Historial global de pagos del sistema (payment history)
-    """
     
     @staticmethod
     def get_client_services_history(client_id: int, filters: dict = None) -> QuerySet:
-        """
-        Obtiene el historial de servicios para un cliente específico.
-        Usado en: /accounting/clients/{client_id}/services/
-        
-        Args:
-            client_id: ID del cliente
-            filters: Filtros opcionales (business_line, category)
-        """
         queryset = ClientService.objects.filter(
             client_id=client_id
         ).select_related(
@@ -37,13 +22,6 @@ class HistoryService:
     
     @staticmethod
     def get_global_payments_history(filters: dict = None) -> QuerySet:
-        """
-        Obtiene el historial global de pagos del sistema.
-        Usado en: /accounting/payments/history/
-        
-        Args:
-            filters: Filtros opcionales (business_line, category, service, period)
-        """
         queryset = ServicePayment.objects.filter(
             status=ServicePayment.StatusChoices.PAID
         ).select_related(
@@ -69,32 +47,45 @@ class HistoryService:
     
     @staticmethod
     def get_service_payment_history(service_id: int) -> QuerySet:
-        """
-        Obtiene el historial de pagos específico para un servicio.
-        Usado en: /accounting/services/{service_id}/payment/history/
-        
-        Args:
-            service_id: ID del servicio
-        """
         return ServicePayment.objects.filter(
             client_service_id=service_id
         ).order_by('-payment_date')
     
     @classmethod
     def get_history_summary(cls, client_id: int = None, service_id: int = None) -> dict:
-        """
-        Obtiene un resumen estadístico de historiales.
-        """
+        from decimal import Decimal
         summary = {}
         
         if client_id:
             services = cls.get_client_services_history(client_id)
+            
             summary.update({
                 'total_services': services.count(),
-                'total_revenue': services.aggregate(
-                    total=Sum('payments__amount')
-                )['total'] or 0,
                 'active_services': services.filter(is_active=True).count(),
+            })
+            
+            service_stats = services.aggregate(
+                white_services=Count('id', filter=Q(category='white')),
+                black_services=Count('id', filter=Q(category='black'))
+            )
+            summary.update(service_stats)
+            
+            from apps.accounting.models import ServicePayment
+            payment_stats = ServicePayment.objects.filter(
+                client_service__in=services,
+                status=ServicePayment.StatusChoices.PAID
+            ).aggregate(
+                total_revenue=Sum('amount'),
+                white_revenue=Sum('amount', filter=Q(client_service__category='white')),
+                black_revenue=Sum('amount', filter=Q(client_service__category='black'))
+            )
+            
+            summary.update({
+                'total_revenue': payment_stats['total_revenue'] or Decimal('0'),
+                'white_services': service_stats['white_services'] or 0,
+                'black_services': service_stats['black_services'] or 0,
+                'white_revenue': payment_stats['white_revenue'] or Decimal('0'),
+                'black_revenue': payment_stats['black_revenue'] or Decimal('0'),
             })
         
         if service_id:
@@ -103,10 +94,10 @@ class HistoryService:
                 'total_payments': payments.count(),
                 'total_paid': payments.aggregate(
                     total=Sum('amount')
-                )['total'] or 0,
+                )['total'] or Decimal('0'),
                 'average_payment': payments.aggregate(
                     avg=Avg('amount')
-                )['avg'] or 0,
+                )['avg'] or Decimal('0'),
             })
             
         return summary

@@ -30,7 +30,7 @@ def service_payment_view(request, service_id):
                     f"Total de períodos actualizados: {len(updated_periods)}"
                 )
                 
-                return redirect('accounting:client_service_detail', service_id=service_id)
+                return redirect('accounting:client-service-detail', service_id=service_id)
                 
             except ValidationError as e:
                 if hasattr(e, 'message_dict'):

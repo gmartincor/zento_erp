@@ -243,8 +243,8 @@ class ClientServiceManager(models.Manager):
         services = queryset
         service_stats = services.aggregate(
             total_services=Count('id'),
-            white_services=Count('id', filter=Q(category='WHITE')),
-            black_services=Count('id', filter=Q(category='BLACK'))
+            white_services=Count('id', filter=Q(category='white')),
+            black_services=Count('id', filter=Q(category='black'))
         )
         
         from apps.accounting.models import ServicePayment
@@ -252,8 +252,8 @@ class ClientServiceManager(models.Manager):
             client_service__in=services
         ).aggregate(
             total_revenue=Sum('amount'),
-            white_revenue=Sum('amount', filter=Q(client_service__category='WHITE')),
-            black_revenue=Sum('amount', filter=Q(client_service__category='BLACK'))
+            white_revenue=Sum('amount', filter=Q(client_service__category='white')),
+            black_revenue=Sum('amount', filter=Q(client_service__category='black'))
         )
         
         stats = {**service_stats, **payment_stats}
@@ -289,8 +289,8 @@ class ClientServiceManager(models.Manager):
             
             service_stats = services.aggregate(
                 total_services=Count('id'),
-                white_services=Count('id', filter=Q(category='WHITE')),
-                black_services=Count('id', filter=Q(category='BLACK'))
+                white_services=Count('id', filter=Q(category='white')),
+                black_services=Count('id', filter=Q(category='black'))
             )
             
             revenue_stats = ServicePayment.objects.filter(
@@ -314,7 +314,7 @@ class ClientServiceManager(models.Manager):
     def get_services_with_remanentes(self, business_lines: QuerySet) -> QuerySet:
         return self.get_queryset().filter(
             business_line__in=business_lines,
-            category='BLACK',
+            category='black',
             is_active=True
         ).exclude(
             remanentes__isnull=True
