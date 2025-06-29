@@ -9,7 +9,7 @@ from .service_form_factory import (
 from .client_forms import ClientForm, ClientCreateForm, ClientUpdateForm
 from .flexible_payment_form import FlexiblePaymentForm
 from .service_renewal_form import ServiceRenewalForm as NewServiceRenewalForm
-from .service_payment_form import ServicePaymentForm, BulkPaymentForm
+from .service_payment_form import PaymentForm
 from .form_mixins import ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMixin
 
 __all__ = [
@@ -24,8 +24,7 @@ __all__ = [
     'ClientUpdateForm',
     'FlexiblePaymentForm',
     'NewServiceRenewalForm',
-    'ServicePaymentForm',
-    'BulkPaymentForm',
+    'PaymentForm',
     'ServiceFormMixin',
     'ClientFieldsMixin',
     'ServiceFieldsMixin'

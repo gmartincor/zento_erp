@@ -20,7 +20,6 @@ from .views.service_renewal import service_renewal_view
 from .views.service_termination import service_termination_view, service_reactivation_view
 from .views.service_payment import (
     service_payment_view,
-    bulk_payment_view,
     ajax_get_suggested_amount,
     payment_options_view,
     service_payment_history_view,
@@ -91,7 +90,6 @@ urlpatterns = [
     path('services/<int:service_id>/reactivate/', service_reactivation_view, name='service-reactivate'),
     
     path('services/<int:service_id>/payment/', service_payment_view, name='service-payment'),
-    path('services/<int:service_id>/payment/bulk/', bulk_payment_view, name='bulk-payment'),
     path('services/<int:service_id>/payment/options/', payment_options_view, name='payment-options'),
     path('services/<int:service_id>/payment/history/', service_payment_history_view, name='service-payment-history'),
     path('services/<int:service_id>/payment/ajax/suggested-amount/<int:period_id>/', ajax_get_suggested_amount, name='ajax-suggested-amount'),

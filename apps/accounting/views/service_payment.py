@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from ..models import ClientService, ServicePayment
-from ..forms.service_payment_form import ServicePaymentForm, BulkPaymentForm
+from ..forms.service_payment_form import PaymentForm
 from ..services.payment_service import PaymentService
 from ..services.period_service import ServicePeriodManager
 
@@ -18,7 +18,7 @@ def service_payment_view(request, service_id):
     client_service = get_object_or_404(ClientService, id=service_id)
     
     if request.method == 'POST':
-        form = BulkPaymentForm(client_service=client_service, data=request.POST)
+        form = PaymentForm(client_service=client_service, data=request.POST)
         
         if form.is_valid():
             try:
@@ -42,7 +42,7 @@ def service_payment_view(request, service_id):
             except Exception as e:
                 messages.error(request, f"Error inesperado: {str(e)}")
     else:
-        form = BulkPaymentForm(client_service=client_service)
+        form = PaymentForm(client_service=client_service)
     
 
     pending_summary = ServicePeriodManager.get_unpaid_periods_summary(client_service)
@@ -60,48 +60,6 @@ def service_payment_view(request, service_id):
     }
     
     return render(request, 'accounting/service_payment_v2.html', context)
-
-
-@login_required
-@require_http_methods(["GET", "POST"])
-def bulk_payment_view(request, service_id):
-    """
-    Vista para procesar múltiples pagos de forma masiva.
-    """
-    client_service = get_object_or_404(ClientService, id=service_id)
-    
-    if request.method == 'POST':
-        form = BulkPaymentForm(client_service=client_service, data=request.POST)
-        
-        if form.is_valid():
-            try:
-                updated_periods = form.save()
-                
-                messages.success(
-                    request,
-                    f"Procesados {len(updated_periods)} pagos exitosamente. "
-                    f"Total de períodos actualizados: {len(updated_periods)}"
-                )
-                
-                return redirect('accounting:client_service_detail', service_id=service_id)
-                
-            except ValidationError as e:
-                messages.error(request, str(e))
-            except Exception as e:
-                messages.error(request, f"Error inesperado: {str(e)}")
-    else:
-        form = BulkPaymentForm(client_service=client_service)
-    
-    pending_summary = ServicePeriodManager.get_unpaid_periods_summary(client_service)
-    
-    context = {
-        'form': form,
-        'client_service': client_service,
-        'client': client_service.client,
-        'pending_periods_summary': pending_summary
-    }
-    
-    return render(request, 'accounting/bulk_payment.html', context)
 
 
 @login_required

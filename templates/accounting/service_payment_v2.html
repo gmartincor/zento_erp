@@ -53,13 +53,19 @@
                     <form method="post" id="payment-form">
                         {% csrf_token %}
                         
+                        <!-- Campo de períodos seleccionados usando el formulario Django -->
                         <div class="space-y-4 mb-6">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                {{ form.selected_periods.label }}
+                            </label>
+                            
                             {% for period in pending_periods %}
                             <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <label class="flex items-start cursor-pointer">
                                     <input type="checkbox" 
-                                           name="selected_periods" 
+                                           name="{{ form.selected_periods.name }}" 
                                            value="{{ period.id }}"
+                                           id="period_{{ period.id }}"
                                            class="mt-1 mr-3 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
                                     <div class="flex-1">
                                         <div class="flex items-center justify-between">
@@ -90,6 +96,12 @@
                                 </label>
                             </div>
                             {% endfor %}
+                            
+                            {% if form.selected_periods.errors %}
+                            <div class="text-red-600 text-sm mt-2">
+                                {{ form.selected_periods.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                         
                         <div class="border-t border-gray-200 dark:border-gray-600 pt-6">
@@ -97,39 +109,73 @@
                                 Detalles del Pago
                             </h4>
                             
+                            <!-- Checkbox para aplicar misma información de pago -->
+                            <div class="mb-4">
+                                <label class="flex items-center">
+                                    {{ form.apply_same_payment_info }}
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                        {{ form.apply_same_payment_info.label }}
+                                    </span>
+                                </label>
+                                {% if form.apply_same_payment_info.help_text %}
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    {{ form.apply_same_payment_info.help_text }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Método de Pago
+                                    <label for="{{ form.payment_method.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {{ form.payment_method.label }}
                                     </label>
-                                    <select name="payment_method" 
-                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                                        <option value="CASH">💵 Efectivo</option>
-                                        <option value="CARD">💳 Tarjeta</option>
-                                        <option value="TRANSFER">🏦 Transferencia</option>
-                                        <option value="BIZUM">📱 Bizum</option>
-                                    </select>
+                                    {{ form.payment_method }}
+                                    {% if form.payment_method.errors %}
+                                    <div class="text-red-600 text-sm mt-1">
+                                        {{ form.payment_method.errors }}
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Fecha de Pago
+                                    <label for="{{ form.payment_date.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {{ form.payment_date.label }}
                                     </label>
-                                    <input type="date" 
-                                           name="payment_date" 
-                                           value="{{ today|date:'Y-m-d' }}"
-                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                                    {{ form.payment_date }}
+                                    {% if form.payment_date.errors %}
+                                    <div class="text-red-600 text-sm mt-1">
+                                        {{ form.payment_date.errors }}
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             
+                            <!-- Campo opcional: Número de referencia -->
+                            {% if form.reference_number %}
                             <div class="mt-4">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Notas del Pago (opcional)
+                                <label for="{{ form.reference_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    {{ form.reference_number.label }}
                                 </label>
-                                <textarea name="payment_notes" 
-                                         rows="3"
-                                         placeholder="Añade cualquier nota relevante sobre este pago..."
-                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"></textarea>
+                                {{ form.reference_number }}
+                                {% if form.reference_number.errors %}
+                                <div class="text-red-600 text-sm mt-1">
+                                    {{ form.reference_number.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Campo de notas -->
+                            <div class="mt-4">
+                                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    {{ form.notes.label|default:"Notas del Pago (opcional)" }}
+                                </label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                <div class="text-red-600 text-sm mt-1">
+                                    {{ form.notes.errors }}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -250,11 +296,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('payment-form');
-    const checkboxes = document.querySelectorAll('input[name="selected_periods"]');
+    const checkboxes = document.querySelectorAll('input[name="{{ form.selected_periods.name }}"]');
     const submitButton = form.querySelector('button[type="submit"]');
     
     function updateSubmitButton() {
-        const selectedCount = document.querySelectorAll('input[name="selected_periods"]:checked').length;
+        const selectedCount = document.querySelectorAll('input[name="{{ form.selected_periods.name }}"]:checked').length;
         submitButton.disabled = selectedCount === 0;
         submitButton.textContent = selectedCount > 0 
             ? `Procesar ${selectedCount} período${selectedCount > 1 ? 's' : ''}`
