@@ -33,6 +33,19 @@ class ClientServiceTransactionManager:
                 client, form_data, business_line, category
             )
             
+            # Crear el primer período si se proporcionaron las fechas
+            period_start = form_data.get('period_start')
+            period_end = form_data.get('period_end')
+            
+            if period_start and period_end:
+                from .period_service import ServicePeriodManager
+                ServicePeriodManager.create_period(
+                    client_service=service,
+                    period_start=period_start,
+                    period_end=period_end,
+                    notes="Primer período del servicio"
+                )
+            
             return service
             
         except Exception as e:

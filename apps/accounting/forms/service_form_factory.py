@@ -40,6 +40,19 @@ class ServiceFormFactory:
 
 
 class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMixin, ServiceDateEditForm, forms.ModelForm):
+    
+    period_start = forms.DateField(
+        label="Fecha de inicio del primer período",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        help_text="Fecha de inicio del primer período de facturación"
+    )
+    
+    period_end = forms.DateField(
+        label="Fecha de fin del primer período", 
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        help_text="Fecha de fin del primer período de facturación"
+    )
+    
     class Meta:
         model = ClientService
         fields = [
@@ -57,6 +70,65 @@ class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMi
         self.setup_business_line_context(self.user, self.business_line, self.category)
         if self.source_service:
             self.setup_source_service_data()
+        self._setup_period_fields()
+    
+    def _setup_period_fields(self):
+        """Configura los campos de período según el tipo de formulario"""
+        # Solo mostrar campos de período en formularios de creación
+        if self.instance and self.instance.pk:
+            # Es un formulario de edición, ocultar campos de período
+            if 'period_start' in self.fields:
+                del self.fields['period_start']
+            if 'period_end' in self.fields:
+                del self.fields['period_end']
+        else:
+            # Es un formulario de creación, ocultar start_date y mostrar campos de período
+            if 'start_date' in self.fields:
+                del self.fields['start_date']
+            
+            from django.utils import timezone
+            today = timezone.now().date()
+            if 'period_start' in self.fields:
+                self.fields['period_start'].initial = today
+                # Configurar clases CSS
+                self.fields['period_start'].widget.attrs.update({
+                    'class': 'form-control',
+                    'type': 'date'
+                })
+            if 'period_end' in self.fields:
+                self.fields['period_end'].widget.attrs.update({
+                    'class': 'form-control', 
+                    'type': 'date'
+                })
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Validar campos de período si existen
+        period_start = cleaned_data.get('period_start')
+        period_end = cleaned_data.get('period_end')
+        
+        # Solo validar si estamos en un formulario de creación (los campos existen)
+        if 'period_start' in self.fields or 'period_end' in self.fields:
+            if not period_start:
+                raise forms.ValidationError({
+                    'period_start': 'Este campo es obligatorio.'
+                })
+            if not period_end:
+                raise forms.ValidationError({
+                    'period_end': 'Este campo es obligatorio.'
+                })
+            
+            if period_start and period_end:
+                if period_start >= period_end:
+                    raise forms.ValidationError({
+                        'period_end': 'La fecha de fin del período debe ser posterior a la fecha de inicio.'
+                    })
+                
+                # Establecer start_date del servicio igual al period_start
+                cleaned_data['start_date'] = period_start
+        
+        return cleaned_data
 
 
 class ClientServiceCreateForm(BaseClientServiceForm):

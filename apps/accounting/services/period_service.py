@@ -101,7 +101,8 @@ class ServicePeriodManager:
         
         total_days = sum(period.duration_days for period in pending_periods)
         total_months = total_days / 30
-        total_amount = sum(period.amount for period in pending_periods)
+        # Filter out None values when calculating total amount
+        total_amount = sum(period.amount for period in pending_periods if period.amount is not None)
         
         return {
             'periods': pending_periods,

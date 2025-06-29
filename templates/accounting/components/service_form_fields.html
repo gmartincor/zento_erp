@@ -1,3 +1,4 @@
+<!-- Configuración básica del servicio -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
         <label for="{{ form.price.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -27,99 +28,156 @@
             <br><strong>Deshabilitado:</strong> Bloqueado administrativamente.
         </p>
     </div>
+</div>
 
-    <div>
-        <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            {{ form.start_date.label }}
-        </label>
-        {{ form.start_date }}
-        {% if form.start_date.errors %}
-            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                {{ form.start_date.errors|first }}
-            </div>
-        {% endif %}
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            La fecha final se gestiona automáticamente a través de los períodos del servicio.
-        </p>
-    </div>
-
-    <div class="md:col-span-2">
-        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                    </svg>
+{% if form.period_start %}
+<div class="mt-6">
+    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Primer Período de Facturación</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="{{ form.period_start.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {{ form.period_start.label }}
+            </label>
+            {{ form.period_start }}
+            {% if form.period_start.errors %}
+                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ form.period_start.errors|first }}
                 </div>
-                <div class="ml-3">
-                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200">Gestión de Fechas</h4>
-                    <div class="mt-1 text-sm text-blue-700 dark:text-blue-300">
-                        <p>La fecha de finalización del servicio se establece automáticamente cuando se da de baja al cliente o finaliza el último período. Los períodos se gestionan manualmente a través de la renovación de servicios.</p>
-                    </div>
-                </div>
-            </div>
+            {% endif %}
+            {% if form.period_start.help_text %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {{ form.period_start.help_text }}
+                </p>
+            {% endif %}
         </div>
-    </div>
 
-    <!-- Control de Estado del Servicio -->
-    <div class="md:col-span-2">
-        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Control Individual del Servicio
-            </h4>
-            
-            <div class="flex items-start space-x-6">
-                <div class="flex items-center">
-                    {{ form.is_active }}
-                    <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                        {{ form.is_active.label }}
-                    </label>
+        <div>
+            <label for="{{ form.period_end.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {{ form.period_end.label }}
+            </label>
+            {{ form.period_end }}
+            {% if form.period_end.errors %}
+                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ form.period_end.errors|first }}
                 </div>
-                <div class="flex-1">
-                    <p class="text-xs text-gray-600 dark:text-gray-400">
-                        <strong>Congelación completa:</strong> Pausa el servicio y detiene la generación de períodos.
-                        <br><strong>Uso recomendado:</strong> Vacaciones largas, pausas indefinidas del cliente.
-                    </p>
-                </div>
-            </div>
-            
-            {% if form.is_active.errors %}
-                <div class="mt-2 text-sm text-red-600 dark:text-red-400">
-                    {{ form.is_active.errors|first }}
-                </div>
+            {% endif %}
+            {% if form.period_end.help_text %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {{ form.period_end.help_text }}
+                </p>
             {% endif %}
         </div>
     </div>
-
-    <div class="md:col-span-2">
-        <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            {{ form.notes.label }}
-        </label>
-        {{ form.notes }}
-        {% if form.notes.errors %}
-            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                {{ form.notes.errors|first }}
-            </div>
-        {% endif %}
-    </div>
-
-    {% if service.category == 'BLACK' %}
-    <div class="md:col-span-2">
-        <label for="{{ form.remanentes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            {{ form.remanentes.label }}
-        </label>
-        {{ form.remanentes }}
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Formato: {"concepto": 100.00, "concepto2": 50.00}
+    <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+        <p class="text-sm text-yellow-800 dark:text-yellow-200">
+            <strong>Nota:</strong> La fecha de inicio del servicio será igual a la fecha de inicio del primer período.
         </p>
-        {% if form.remanentes.errors %}
-            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                {{ form.remanentes.errors|first }}
+    </div>
+</div>
+{% endif %}
+
+<!-- Campos de fechas del servicio (solo en edición) -->
+{% if form.start_date %}
+<div class="mt-6">
+    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Fechas del Servicio</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {{ form.start_date.label }}
+            </label>
+            {{ form.start_date }}
+            {% if form.start_date.errors %}
+                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ form.start_date.errors|first }}
+                </div>
+            {% endif %}
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                La fecha final se gestiona automáticamente a través de los períodos del servicio.
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Información de gestión de fechas -->
+<div class="mt-6">
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200">Gestión de Fechas</h4>
+                <div class="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                    <p>La fecha de finalización del servicio se establece automáticamente cuando se da de baja al cliente o finaliza el último período. Los períodos se gestionan manualmente a través de la renovación de servicios.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Control de Estado del Servicio -->
+<div class="mt-6">
+    <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+        <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Control Individual del Servicio
+        </h4>
+        
+        <div class="flex items-start space-x-6">
+            <div class="flex items-center">
+                {{ form.is_active }}
+                <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                    {{ form.is_active.label }}
+                </label>
+            </div>
+            <div class="flex-1">
+                <p class="text-xs text-gray-600 dark:text-gray-400">
+                    <strong>Congelación completa:</strong> Pausa el servicio y detiene la generación de períodos.
+                    <br><strong>Uso recomendado:</strong> Vacaciones largas, pausas indefinidas del cliente.
+                </p>
+            </div>
+        </div>
+        
+        {% if form.is_active.errors %}
+            <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                {{ form.is_active.errors|first }}
             </div>
         {% endif %}
     </div>
+</div>
+
+<!-- Campo de notas -->
+<div class="mt-6">
+    <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {{ form.notes.label }}
+    </label>
+    {{ form.notes }}
+    {% if form.notes.errors %}
+        <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+            {{ form.notes.errors|first }}
+        </div>
     {% endif %}
 </div>
+
+<!-- Campo de remanentes (solo para categoría BLACK) -->
+{% if service.category == 'BLACK' %}
+<div class="mt-6">
+    <label for="{{ form.remanentes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {{ form.remanentes.label }}
+    </label>
+    {{ form.remanentes }}
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Formato: {"concepto": 100.00, "concepto2": 50.00}
+    </p>
+    {% if form.remanentes.errors %}
+        <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+            {{ form.remanentes.errors|first }}
+        </div>
+    {% endif %}
+</div>
+{% endif %}

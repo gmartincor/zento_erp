@@ -233,6 +233,11 @@ class ServiceCreateView(BaseServiceView, CreateView):
         try:
             service = form.save()
             self.object = service
+            messages.success(
+                self.request, 
+                f'Servicio creado exitosamente para {service.client.full_name}. '
+                f'Se ha creado el primer período de facturación. Ahora puedes procesarlo como pago.'
+            )
             return redirect(self.get_success_url())
         except Exception as e:
             form.add_error(None, f'Error al crear el servicio: {str(e)}')
@@ -244,10 +249,7 @@ class ServiceCreateView(BaseServiceView, CreateView):
     
     def get_success_url(self):
         if hasattr(self, 'object') and self.object:
-            _, line_path, category = self.get_business_line_data()
-            return reverse('accounting:service-edit', kwargs={
-                'line_path': line_path, 
-                'category': category.lower(),
+            return reverse('accounting:service-payment', kwargs={
                 'service_id': self.object.id
             })
         
