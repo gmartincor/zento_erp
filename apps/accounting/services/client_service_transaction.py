@@ -33,7 +33,8 @@ class ClientServiceTransactionManager:
                 client, form_data, business_line, category
             )
             
-            # Crear el primer período si se proporcionaron las fechas
+            service.refresh_from_db()
+            
             period_start = form_data.get('period_start')
             period_end = form_data.get('period_end')
             
@@ -128,11 +129,16 @@ class ClientServiceTransactionManager:
     
     @staticmethod
     def _create_service_from_data(client, form_data: Dict[str, Any], business_line, category):
+        price = form_data.get('price')
+        
+        if price is None or (isinstance(price, (int, float)) and price <= 0):
+            raise ValidationError(f"El precio del servicio es obligatorio y debe ser mayor que 0. Recibido: {price}")
+        
         service = ClientService(
             client=client,
             business_line=business_line,
             category=category,
-            price=form_data.get('price', 0.00),
+            price=price,
             start_date=form_data.get('start_date'),
             admin_status=form_data.get('admin_status', 'ENABLED'),
             notes=form_data.get('notes', '').strip(),

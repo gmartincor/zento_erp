@@ -89,9 +89,9 @@ class ServicePaymentForm(BaseServiceForm, PaymentFieldsMixin):
 
 class BulkPaymentForm(BaseServiceForm, PaymentFieldsMixin):
     
-    periods = forms.ModelMultipleChoiceField(
+    selected_periods = forms.ModelMultipleChoiceField(
         queryset=ServicePayment.objects.none(),
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+        required=True,
         label="Períodos a pagar"
     )
     
@@ -109,23 +109,23 @@ class BulkPaymentForm(BaseServiceForm, PaymentFieldsMixin):
         if self.client_service:
             from ..services.period_service import ServicePeriodManager
             pending_periods = ServicePeriodManager.get_pending_periods(self.client_service)
-            self.fields['periods'].queryset = pending_periods
+            self.fields['selected_periods'].queryset = pending_periods
     
     def clean(self):
         cleaned_data = super().clean()
         self.clean_payment_fields()
-        periods = cleaned_data.get('periods')
+        periods = cleaned_data.get('selected_periods')
         if not periods:
-            raise ValidationError({'periods': 'Debe seleccionar al menos un período'})
+            raise ValidationError({'selected_periods': 'Debe seleccionar al menos un período'})
         for period in periods:
             if not period.can_be_paid:
                 raise ValidationError({
-                    'periods': f'El período {period.period_start} - {period.period_end} no puede recibir pagos'
+                    'selected_periods': f'El período {period.period_start} - {period.period_end} no puede recibir pagos'
                 })
         return cleaned_data
     
     def save(self):
-        periods = self.cleaned_data['periods']
+        periods = self.cleaned_data['selected_periods']
         payment_info = {
             'payment_date': self.cleaned_data['payment_date'],
             'payment_method': self.cleaned_data['payment_method'],

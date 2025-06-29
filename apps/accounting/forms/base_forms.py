@@ -74,7 +74,7 @@ class PaymentFieldsMixin:
         )
     
     def clean_payment_fields(self):
-        cleaned_data = super().clean()
+        cleaned_data = self.cleaned_data
         
         payment_date = cleaned_data.get('payment_date')
         amount = cleaned_data.get('amount')

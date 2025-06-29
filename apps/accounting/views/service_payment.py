@@ -18,17 +18,16 @@ def service_payment_view(request, service_id):
     client_service = get_object_or_404(ClientService, id=service_id)
     
     if request.method == 'POST':
-        form = ServicePaymentForm(client_service=client_service, data=request.POST)
+        form = BulkPaymentForm(client_service=client_service, data=request.POST)
         
         if form.is_valid():
             try:
-                updated_period = form.save()
+                updated_periods = form.save()
                 
                 messages.success(
                     request,
-                    f"Pago procesado exitosamente. "
-                    f"Período {updated_period.period_start} - {updated_period.period_end} "
-                    f"marcado como pagado por {updated_period.amount}€"
+                    f"Procesados {len(updated_periods)} pagos exitosamente. "
+                    f"Total de períodos actualizados: {len(updated_periods)}"
                 )
                 
                 return redirect('accounting:client_service_detail', service_id=service_id)
@@ -43,7 +42,7 @@ def service_payment_view(request, service_id):
             except Exception as e:
                 messages.error(request, f"Error inesperado: {str(e)}")
     else:
-        form = ServicePaymentForm(client_service=client_service)
+        form = BulkPaymentForm(client_service=client_service)
     
 
     pending_summary = ServicePeriodManager.get_unpaid_periods_summary(client_service)

@@ -28,7 +28,7 @@ class ServicePeriodManager:
             period_end=period_end,
             status=ServicePayment.StatusChoices.PERIOD_CREATED,
             notes=notes,
-            amount=None,
+            amount=client_service.price,
             payment_date=None,
             payment_method=None
         )

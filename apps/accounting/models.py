@@ -474,6 +474,20 @@ class ServicePayment(TimeStampedModel):
         return 0
 
     @property
+    def period_number(self):
+        if not self.client_service_id:
+            return 1
+        earlier_periods = ServicePayment.objects.filter(
+            client_service=self.client_service,
+            period_start__lt=self.period_start
+        ).count()
+        return earlier_periods + 1
+
+    @property
+    def due_date(self):
+        return self.period_end
+
+    @property
     def is_active_period(self):
         if not self.period_start or not self.period_end:
             return False
