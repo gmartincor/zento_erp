@@ -44,11 +44,6 @@
                 </div>
                 {{ client.full_name }}
             </h1>
-            {% if client.email %}
-            <p class="text-gray-600 dark:text-gray-400 mt-2">
-                {{ client.email }}
-            </p>
-            {% endif %}
         </div>
         
         <div class="mt-4 lg:mt-0 flex flex-col sm:flex-row gap-3">
@@ -103,6 +98,12 @@
             </svg>
         </div>
         <div class="space-y-3">
+            {% if client.email %}
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600 dark:text-gray-400">Email</span>
+                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ client.email }}</span>
+            </div>
+            {% endif %}
             {% if client.dni %}
             <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600 dark:text-gray-400">DNI/NIE</span>
