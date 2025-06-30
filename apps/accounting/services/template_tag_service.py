@@ -58,3 +58,22 @@ class TemplateTagService:
         if hasattr(service, 'get_remanente_total'):
             return service.get_remanente_total()
         return 0
+    
+    @staticmethod
+    def build_service_edit_url(service: ClientService) -> str:
+        """Construye la URL de edición usando los datos reales del servicio"""
+        line_path = service.get_line_path()
+        category = service.category.lower()
+        
+        return reverse('accounting:service-edit', kwargs={
+            'line_path': line_path,
+            'category': category,
+            'service_id': service.id
+        })
+    
+    @staticmethod
+    def build_service_termination_url(service: ClientService) -> str:
+        """Construye la URL de finalización usando los datos reales del servicio"""
+        return reverse('accounting:service-terminate', kwargs={
+            'service_id': service.id
+        })

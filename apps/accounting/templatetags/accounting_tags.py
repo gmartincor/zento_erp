@@ -156,6 +156,16 @@ def get_reactivation_url(service, business_line=None, category=None):
     return TemplateTagService.build_reactivation_url(service, business_line, category)
 
 @register.simple_tag
+def get_service_edit_url(service):
+    """Genera la URL de edición usando los datos reales del servicio"""
+    return TemplateTagService.build_service_edit_url(service)
+
+@register.simple_tag
+def get_service_termination_url(service):
+    """Genera la URL de finalización usando los datos reales del servicio"""
+    return TemplateTagService.build_service_termination_url(service)
+
+@register.simple_tag
 def get_remanente_stats(business_line=None, client_service=None):
     """Obtiene estadísticas de remanentes para línea de negocio o servicio específico"""
     service = StatisticsService()
