@@ -289,7 +289,7 @@
                             {{ service.current_status|service_status_badge }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            {% if service|is_service_active %}
+                            {% if service|service_is_active %}
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                                 Activo
                             </span>

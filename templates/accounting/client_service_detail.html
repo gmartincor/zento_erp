@@ -44,7 +44,7 @@
                     Servicio {{ service.get_category_display }}
                 </h1>
                 {% category_badge service.category %}
-                {% if service|is_service_active %}
+                {% if service|service_is_active %}
                     <span class="px-3 py-1 text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
                         Activo
                     </span>
@@ -70,7 +70,7 @@
                 Volver al Historial
             </a>
             
-            {% if service|is_service_active %}
+            {% if service|service_is_active %}
             <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium flex items-center justify-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
                         <div class="text-sm">
-                            {% if service|is_service_active %}
+                            {% if service|service_is_active %}
                                 <span class="text-green-600 font-medium">Activo</span>
                             {% else %}
                                 <span class="text-red-600 font-medium">Inactivo</span>
