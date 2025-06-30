@@ -435,6 +435,18 @@ class ServicePayment(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+        
+        self._update_service_end_date()
+    
+    def _update_service_end_date(self):
+        if self.status == self.StatusChoices.PAID:
+            latest_period = self.client_service.payments.filter(
+                status=self.StatusChoices.PAID
+            ).order_by('-period_end').first()
+            
+            if latest_period and (not self.client_service.end_date or latest_period.period_end > self.client_service.end_date):
+                self.client_service.end_date = latest_period.period_end
+                self.client_service.save(update_fields=['end_date'])
 
     def __str__(self):
         return f"{self.client_service.client.full_name} - {self.amount}€ ({self.get_status_display()})"
