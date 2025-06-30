@@ -114,7 +114,6 @@
 </div>
 {% endif %}
 
-<!-- Información de gestión de fechas -->
 <div class="mt-6">
     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <div class="flex items-start">
@@ -167,7 +166,6 @@
     </div>
 </div>
 
-<!-- Campo de notas -->
 <div class="mt-6">
     <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {{ form.notes.label }}
@@ -180,7 +178,6 @@
     {% endif %}
 </div>
 
-<!-- Campo de remanentes (solo para categoría BLACK) -->
 {% if form.category.value == 'BLACK' or category == 'BLACK' %}
 <div class="mt-6" id="remanentes-section">
     <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
@@ -225,7 +222,6 @@
 </div>
 
 <script>
-// Mostrar/ocultar sección de remanentes según la categoría seleccionada
 document.addEventListener('DOMContentLoaded', function() {
     const categoryField = document.querySelector('select[name="category"]');
     const remanentesSection = document.getElementById('remanentes-section');
@@ -239,10 +235,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Aplicar al cargar la página
         toggleRemanentesSection();
         
-        // Aplicar cuando cambie la categoría
         categoryField.addEventListener('change', toggleRemanentesSection);
     }
 });
