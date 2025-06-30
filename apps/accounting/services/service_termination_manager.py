@@ -38,23 +38,8 @@ class ServiceTerminationManager:
         return service
     
     @staticmethod
-    @transaction.atomic
-    def reactivate_service(service: ClientService) -> ClientService:
-        if service.is_active:
-            raise ValidationError("El servicio ya está activo")
-        
-        service.is_active = True
-        service.end_date = None
-        service.save()
-        return service
-    
-    @staticmethod
     def can_terminate_service(service: ClientService) -> bool:
         return service.is_active
-    
-    @staticmethod
-    def can_reactivate_service(service: ClientService) -> bool:
-        return not service.is_active and service.end_date is not None
     
     @staticmethod
     def get_termination_date_limits(service: ClientService) -> dict:

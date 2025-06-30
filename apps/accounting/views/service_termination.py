@@ -28,9 +28,10 @@ class ServiceTerminationForm(forms.Form):
         max_length=255,
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white',
-            'placeholder': 'Motivo de la finalización (opcional)'
+            'placeholder': 'Ej: Cliente solicitó pausa, cambio de plan, finalización natural...'
         }),
-        label="Motivo"
+        label="Motivo de finalización",
+        help_text="Opcional: Anota el motivo para futuras referencias"
     )
     
     def __init__(self, service=None, *args, **kwargs):
@@ -44,18 +45,23 @@ class ServiceTerminationForm(forms.Form):
             if limits['max_date']:
                 max_date_str = limits['max_date'].strftime('%d/%m/%Y')
                 self.fields['termination_date'].help_text = (
-                    f"Selecciona hasta qué fecha finalizar el servicio. "
-                    f"Para finalizar en una fecha posterior al último período creado, "
-                    f"primero extiende el servicio creando un nuevo período."
+                    f"Puedes finalizar el servicio hasta el {max_date_str} (último período creado). "
+                    f"Para extender más allá de esta fecha, primero crea un nuevo período desde 'Renovar Servicio'."
                 )
                 self.fields['termination_date'].widget.attrs['max'] = limits['max_date'].isoformat()
             else:
                 self.fields['termination_date'].help_text = (
-                    "Selecciona la fecha de finalización del servicio. "
-                    "Este servicio no tiene períodos definidos aún."
+                    "Este servicio no tiene períodos definidos. "
+                    "Puedes finalizar en cualquier fecha o crear períodos desde 'Renovar Servicio'."
                 )
             
             if limits['min_date']:
+                min_date_str = limits['min_date'].strftime('%d/%m/%Y')
+                current_help = self.fields['termination_date'].help_text
+                self.fields['termination_date'].help_text = (
+                    f"La fecha mínima de finalización es {min_date_str} (inicio del servicio). "
+                    f"{current_help}"
+                )
                 self.fields['termination_date'].widget.attrs['min'] = limits['min_date'].isoformat()
     
     def clean_termination_date(self):
@@ -123,25 +129,3 @@ def service_termination_view(request, service_id):
     }
     
     return render(request, 'accounting/service_termination.html', context)
-
-
-@login_required
-@require_http_methods(["POST"])
-def service_reactivation_view(request, service_id):
-    service = get_object_or_404(ClientService, id=service_id)
-    
-    if not ServiceTerminationManager.can_reactivate_service(service):
-        messages.error(request, "El servicio no puede ser reactivado")
-    else:
-        try:
-            ServiceTerminationManager.reactivate_service(service)
-            messages.success(request, "Servicio reactivado exitosamente")
-        except ValidationError as e:
-            messages.error(request, str(e))
-        except Exception as e:
-            messages.error(request, f"Error inesperado: {str(e)}")
-    
-    return redirect('accounting:service-edit', 
-                   line_path=service.get_line_path(),
-                   category=service.category,
-                   service_id=service_id)
