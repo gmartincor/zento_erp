@@ -95,13 +95,17 @@ class ServiceTerminationManager:
         return limits
     
     @staticmethod
-    def validate_termination_date(service: ClientService, termination_date: date) -> None:
-        """
-        Valida que una fecha de finalización sea válida para el servicio.
+    def get_actual_end_date(service: ClientService) -> date:
+        limits = ServiceTerminationManager.get_termination_date_limits(service)
         
-        Raises:
-            ValidationError: Si la fecha no es válida
-        """
+        if limits['has_paid_periods']:
+            return limits['last_paid_date']
+        
+        return service.end_date
+    
+    @staticmethod
+    def validate_termination_date(service: ClientService, termination_date: date) -> None:
+  
         limits = ServiceTerminationManager.get_termination_date_limits(service)
         
         # Validar fecha mínima

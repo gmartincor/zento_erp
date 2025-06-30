@@ -77,8 +77,9 @@
                 </div>
                 <div>
                     <span class="text-gray-600 dark:text-gray-400">Activo hasta:</span>
+                    {% service_actual_end_date service as actual_end_date %}
                     <div class="font-medium text-gray-900 dark:text-white">
-                        {{ service.end_date|date:"d/m/Y"|default:"Sin definir" }}
+                        {{ actual_end_date|date:"d/m/Y"|default:"Sin definir" }}
                     </div>
                 </div>
             </div>

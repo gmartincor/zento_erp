@@ -1,6 +1,7 @@
 from django import template
 from django.utils.safestring import mark_safe
 from ..services.service_state_manager import ServiceStateManager
+from ..services.service_termination_manager import ServiceTerminationManager
 
 register = template.Library()
 
@@ -99,3 +100,30 @@ def service_is_active(service):
 @register.filter
 def service_is_expired(service):
     return ServiceStateManager.is_service_expired(service)
+
+
+@register.simple_tag
+def service_actual_end_date(service):
+    """
+    Obtiene la fecha de vigencia real del servicio basada en el último período pagado.
+    """
+    return ServiceTerminationManager.get_actual_end_date(service)
+
+
+@register.simple_tag 
+def service_vigency_info(service):
+    """
+    Obtiene información completa de vigencia del servicio mostrando
+    tanto la fecha administrativa como la fecha real pagada.
+    """
+    actual_end_date = ServiceTerminationManager.get_actual_end_date(service)
+    limits = ServiceTerminationManager.get_termination_date_limits(service)
+    
+    info = {
+        'actual_end_date': actual_end_date,
+        'administrative_end_date': service.end_date,
+        'has_paid_periods': limits['has_paid_periods'],
+        'is_consistent': actual_end_date == service.end_date if actual_end_date and service.end_date else True
+    }
+    
+    return info

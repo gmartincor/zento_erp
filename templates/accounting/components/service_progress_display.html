@@ -1,4 +1,4 @@
-{% load service_tags %}
+{% load service_tags service_status_tags %}
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -6,7 +6,6 @@
     </h3>
     
     <div class="space-y-4">
-        <!-- Paso 1: Creación del servicio -->
         <div class="flex items-center">
             <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
                 <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -19,7 +18,6 @@
             </div>
         </div>
         
-        <!-- Paso 2: Configuración del cliente -->
         <div class="flex items-center">
             <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
                 <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,7 +30,6 @@
             </div>
         </div>
         
-        <!-- Paso 3: Estado de pagos -->
         {% if has_payments %}
         <div class="flex items-center">
             <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
@@ -59,7 +56,6 @@
         </div>
         {% endif %}
         
-        <!-- Paso 4: Estado del servicio -->
         {% if is_active %}
         <div class="flex items-center">
             <div class="flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full">
@@ -69,8 +65,9 @@
             </div>
             <div class="ml-3">
                 <p class="text-sm font-medium text-gray-900 dark:text-white">Servicio Activo</p>
-                {% if service.end_date %}
-                <p class="text-sm text-gray-600 dark:text-gray-400">Vigente hasta {{ service.end_date|date:"d/m/Y" }}</p>
+                {% service_actual_end_date service as actual_end_date %}
+                {% if actual_end_date %}
+                <p class="text-sm text-gray-600 dark:text-gray-400">Vigente hasta {{ actual_end_date|date:"d/m/Y" }}</p>
                 {% endif %}
             </div>
         </div>

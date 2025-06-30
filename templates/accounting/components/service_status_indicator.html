@@ -1,10 +1,11 @@
-{% load service_tags %}
+{% load service_tags service_status_tags %}
 
 <div class="flex items-center space-x-2">
     {{ status|service_status_badge }}
-    {% if service.end_date %}
+    {% service_actual_end_date service as actual_end_date %}
+    {% if actual_end_date %}
         <span class="text-sm text-gray-600 dark:text-gray-400">
-            hasta {{ service.end_date|date:"d/m/Y" }}
+            hasta {{ actual_end_date|date:"d/m/Y" }}
         </span>
     {% endif %}
 </div>

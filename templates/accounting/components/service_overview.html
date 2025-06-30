@@ -67,12 +67,22 @@
         </div>
         {% endif %}
         
-        {% if service.end_date %}
+        {% service_actual_end_date service as actual_end_date %}
+        {% service_vigency_info service as vigency_info %}
+        
+        {% if actual_end_date %}
         <div class="flex justify-between items-center">
             <span class="text-sm text-gray-600 dark:text-gray-400">Vigencia hasta:</span>
-            <span class="text-sm font-medium {% with status_data=service.status_display_data %}{% if status_data.status == 'active' %}text-blue-600{% else %}text-gray-900 dark:text-white{% endif %}{% endwith %}">
-                {{ service.end_date|date:"d/m/Y" }}
-            </span>
+            <div class="text-right">
+                <span class="text-sm font-medium {% with status_data=service.status_display_data %}{% if status_data.status == 'active' %}text-blue-600{% else %}text-gray-900 dark:text-white{% endif %}{% endwith %}">
+                    {{ actual_end_date|date:"d/m/Y" }}
+                </span>
+                {% if not vigency_info.is_consistent %}
+                    <div class="text-xs text-amber-600 dark:text-amber-400">
+                        (Último período pagado)
+                    </div>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
     </div>
@@ -87,6 +97,28 @@
                 <div>
                     <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">Próximo Paso</h4>
                     <p class="text-sm text-blue-700 dark:text-blue-400 mt-1">{{ next_step_message }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% service_vigency_info service as vigency_info %}
+    {% if not vigency_info.is_consistent and vigency_info.has_paid_periods %}
+    <div class="mb-6">
+        <div class="bg-amber-50 dark:bg-amber-900/30 rounded-lg p-3">
+            <div class="flex items-start">
+                <svg class="w-5 h-5 text-amber-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <div>
+                    <h4 class="text-sm font-medium text-amber-800 dark:text-amber-300">Información de Vigencia</h4>
+                    <p class="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                        La vigencia mostrada corresponde al último período pagado. 
+                        {% if vigency_info.administrative_end_date %}
+                            Fecha administrativa: {{ vigency_info.administrative_end_date|date:"d/m/Y" }}
+                        {% endif %}
+                    </p>
                 </div>
             </div>
         </div>
