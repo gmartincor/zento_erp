@@ -20,7 +20,7 @@
         </div>
         
         <div class="mt-4 lg:mt-0">
-            <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
+            <a href="{% url 'accounting:category-services' line_path=service.get_line_path category=service.category|lower %}?view=grid" 
                class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -33,7 +33,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
+<div class="max-w-6xl mx-auto">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2">
             <form method="post" class="space-y-6">
@@ -41,19 +41,27 @@
                 
                 {% include 'accounting/components/form_errors.html' %}
                 
-                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Información del Cliente</h2>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-600 dark:text-gray-400">Nombre:</span>
+                                <div class="font-medium text-gray-900 dark:text-white">{{ service.client.full_name }}</div>
+                            </div>
+                            <div>
+                                <span class="text-gray-600 dark:text-gray-400">DNI/NIE:</span>
+                                <div class="font-medium text-gray-900 dark:text-white">{{ service.client.dni|default:"No especificado" }}</div>
+                            </div>
                         </div>
-                        <div class="ml-3">
-                            <h3 class="text-lg font-medium text-blue-800 dark:text-blue-200">
-                                Finalización del Servicio
-                            </h3>
-                            <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                                <p>La finalización marca el último día activo del servicio. Los períodos creados después de esta fecha quedarán cancelados, y los pagos realizados se mantienen válidos. Para continuar el servicio posteriormente, será necesario crear uno nuevo.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div class="md:col-span-1">
+                                <span class="text-gray-600 dark:text-gray-400">Email:</span>
+                                <div class="font-medium text-gray-900 dark:text-white break-all">{{ service.client.email|default:"No especificado" }}</div>
+                            </div>
+                            <div>
+                                <span class="text-gray-600 dark:text-gray-400">Género:</span>
+                                <div class="font-medium text-gray-900 dark:text-white">{{ service.client.get_gender_display|default:"No especificado" }}</div>
                             </div>
                         </div>
                     </div>
@@ -95,28 +103,16 @@
                     </div>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">
-                        <p class="flex items-center">
-                            <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            Esta acción finalizará permanentemente el servicio
-                        </p>
-                    </div>
-                    <div class="flex space-x-3">
-                        <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
-                           class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
-                            Cancelar
-                        </a>
-                        <button type="submit" 
-                                class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                            Finalizar Servicio
-                        </button>
-                    </div>
+                
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <a href="{% url 'accounting:category-services' line_path=service.get_line_path category=service.category|lower %}?view=grid" 
+                       class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
+                        Cancelar
+                    </a>
+                    <button type="submit" id="finalize-btn"
+                            class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium">
+                        Finalizar Servicio
+                    </button>
                 </div>
             </form>
         </div>
@@ -126,4 +122,16 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('finalize-btn').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    if (confirm('¿Estás seguro de que quieres finalizar este servicio? Esta acción marcará el servicio como inactivo.')) {
+        this.closest('form').submit();
+    }
+});
+</script>
 {% endblock %}

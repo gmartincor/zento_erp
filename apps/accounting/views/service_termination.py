@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from django.utils.safestring import mark_safe
 from django import forms
 from datetime import date
 
@@ -19,8 +20,7 @@ class ServiceTerminationForm(forms.Form):
             'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
         }),
         label="Fecha de finalización",
-        initial=date.today,
-        help_text="Último día en que el servicio estará activo"
+        initial=date.today
     )
     
     reason = forms.CharField(
@@ -43,25 +43,9 @@ class ServiceTerminationForm(forms.Form):
             limits = ServiceTerminationManager.get_termination_date_limits(service)
             
             if limits['max_date']:
-                max_date_str = limits['max_date'].strftime('%d/%m/%Y')
-                self.fields['termination_date'].help_text = (
-                    f"Puedes finalizar el servicio hasta el {max_date_str} (último período creado). "
-                    f"Para extender más allá de esta fecha, primero crea un nuevo período desde 'Renovar Servicio'."
-                )
                 self.fields['termination_date'].widget.attrs['max'] = limits['max_date'].isoformat()
-            else:
-                self.fields['termination_date'].help_text = (
-                    "Este servicio no tiene períodos definidos. "
-                    "Puedes finalizar en cualquier fecha o crear períodos desde 'Renovar Servicio'."
-                )
             
             if limits['min_date']:
-                min_date_str = limits['min_date'].strftime('%d/%m/%Y')
-                current_help = self.fields['termination_date'].help_text
-                self.fields['termination_date'].help_text = (
-                    f"La fecha mínima de finalización es {min_date_str} (inicio del servicio). "
-                    f"{current_help}"
-                )
                 self.fields['termination_date'].widget.attrs['min'] = limits['min_date'].isoformat()
     
     def clean_termination_date(self):
@@ -69,10 +53,24 @@ class ServiceTerminationForm(forms.Form):
         
         if self.service:
             from ..services.service_termination_manager import ServiceTerminationManager
-            try:
-                ServiceTerminationManager.validate_termination_date(self.service, termination_date)
-            except ValidationError as e:
-                raise forms.ValidationError(str(e))
+            limits = ServiceTerminationManager.get_termination_date_limits(self.service)
+            
+            if limits['max_date'] and termination_date > limits['max_date']:
+                max_date_str = limits['max_date'].strftime('%d/%m/%Y')
+                from django.utils.safestring import mark_safe
+                raise forms.ValidationError(
+                    mark_safe(
+                        f"La fecha máxima de finalización es el {max_date_str} (último período creado). "
+                        f"Para extender más allá de esta fecha, primero "
+                        f"<a href='/accounting/services/{self.service.id}/renewal/' class='text-blue-600 hover:text-blue-800 underline'>crea un nuevo período</a>."
+                    )
+                )
+            
+            if limits['min_date'] and termination_date < limits['min_date']:
+                min_date_str = limits['min_date'].strftime('%d/%m/%Y')
+                raise forms.ValidationError(
+                    f"La fecha mínima de finalización es el {min_date_str} (inicio del servicio)."
+                )
         
         return termination_date
 
