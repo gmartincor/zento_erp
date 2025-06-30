@@ -66,7 +66,14 @@ class ServiceStateManager:
             return 'no_periods'
         
         if has_pending_periods:
-            return 'pending_payment'
+            has_paid_periods = service.payments.filter(status=ServicePayment.StatusChoices.PAID).exists()
+            if has_paid_periods:
+                if cls.is_service_expired(service):
+                    return 'expired'
+                else:
+                    return 'active'
+            else:
+                return 'pending_payment'
         
         if cls.is_service_expired(service):
             return 'expired'
@@ -229,3 +236,29 @@ class ServiceStateManager:
                 with transaction.atomic():
                     service.is_active = False
                     service.save(update_fields=['is_active', 'modified'])
+    
+    @classmethod
+    def get_service_detailed_info(cls, service: ClientService) -> Dict[str, Any]:
+        status = cls.get_service_status(service)
+        
+        pending_periods = service.payments.filter(
+            status__in=[ServicePayment.StatusChoices.PERIOD_CREATED, ServicePayment.StatusChoices.PENDING]
+        ).order_by('period_start')
+        
+        paid_periods = service.payments.filter(
+            status=ServicePayment.StatusChoices.PAID
+        ).order_by('-period_end')
+        
+        last_period = cls._get_last_period(service)
+        last_paid_period = paid_periods.first() if paid_periods.exists() else None
+        
+        return {
+            'status': status,
+            'pending_periods': pending_periods,
+            'paid_periods': paid_periods,
+            'last_period': last_period,
+            'last_paid_period': last_paid_period,
+            'total_vigency_until': last_period.period_end if last_period else None,
+            'paid_vigency_until': last_paid_period.period_end if last_paid_period else None,
+            'has_mixed_periods': pending_periods.exists() and paid_periods.exists()
+        }

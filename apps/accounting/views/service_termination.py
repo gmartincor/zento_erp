@@ -43,11 +43,11 @@ class ServiceTerminationForm(forms.Form):
             limits = ServiceTerminationManager.get_termination_date_limits(service)
             
             # Personalizar el help_text según los límites
-            if limits['has_paid_periods']:
-                max_date_str = limits['last_paid_date'].strftime('%d/%m/%Y')
+            if limits['max_date']:
+                max_date_str = limits['max_date'].strftime('%d/%m/%Y')
                 self.fields['termination_date'].help_text = (
                     f"Último día en que el servicio estará activo. "
-                    f"No puede ser posterior al último período pagado ({max_date_str})"
+                    f"No puede ser posterior al último período creado ({max_date_str})"
                 )
                 # Establecer el máximo permitido en el widget HTML
                 self.fields['termination_date'].widget.attrs['max'] = limits['max_date'].isoformat()

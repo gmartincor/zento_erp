@@ -19,10 +19,8 @@ class ServiceTerminationManager:
         termination_date = termination_date or timezone.now().date()
         today = timezone.now().date()
         
-        # Validar la fecha de finalización
         ServiceTerminationManager.validate_termination_date(service, termination_date)
         
-        # La fecha de finalización es el último día que el servicio está activo
         service.end_date = termination_date
         
         if termination_date <= today:
@@ -60,29 +58,15 @@ class ServiceTerminationManager:
     
     @staticmethod
     def get_termination_date_limits(service: ClientService) -> dict:
-        """
-        Obtiene los límites de fecha para la finalización de un servicio.
-        
-        Returns:
-            dict: {
-                'min_date': fecha mínima permitida (día después del inicio),
-                'max_date': fecha máxima permitida (último período pagado),
-                'has_paid_periods': si tiene períodos pagados,
-                'last_paid_date': fecha del último período pagado
-            }
-        """
         limits = {
             'min_date': None,
             'max_date': None,
             'has_paid_periods': False,
             'last_paid_date': None
         }
-        
-        # Fecha mínima: día después del inicio del servicio
         if service.start_date:
             limits['min_date'] = service.start_date + timedelta(days=1)
         
-        # Fecha máxima: último período creado (incluye creados, pendientes y pagados)
         last_created_payment = service.payments.filter(
             status__in=[
                 ServicePayment.StatusChoices.PERIOD_CREATED,
@@ -106,12 +90,8 @@ class ServiceTerminationManager:
     
     @staticmethod
     def get_actual_end_date(service: ClientService) -> date:
-        limits = ServiceTerminationManager.get_termination_date_limits(service)
-        
-        if limits['has_paid_periods']:
-            return limits['last_paid_date']
-        
-        return service.end_date
+        last_period = service.payments.order_by('-period_end').first()
+        return last_period.period_end if last_period else service.end_date
     
     @staticmethod
     def validate_termination_date(service: ClientService, termination_date: date) -> None:

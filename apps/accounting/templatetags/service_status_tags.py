@@ -104,26 +104,53 @@ def service_is_expired(service):
 
 @register.simple_tag
 def service_actual_end_date(service):
-    """
-    Obtiene la fecha de vigencia real del servicio basada en el último período pagado.
-    """
-    return ServiceTerminationManager.get_actual_end_date(service)
+    last_period = service.payments.order_by('-period_end').first()
+    return last_period.period_end if last_period else service.end_date
 
 
 @register.simple_tag 
 def service_vigency_info(service):
-    """
-    Obtiene información completa de vigencia del servicio mostrando
-    tanto la fecha administrativa como la fecha real pagada.
-    """
-    actual_end_date = ServiceTerminationManager.get_actual_end_date(service)
-    limits = ServiceTerminationManager.get_termination_date_limits(service)
+    actual_end_date = service.payments.order_by('-period_end').first()
+    actual_end_date = actual_end_date.period_end if actual_end_date else service.end_date
+    
+    paid_end_date = service.payments.filter(status='PAID').order_by('-period_end').first()
+    paid_end_date = paid_end_date.period_end if paid_end_date else None
     
     info = {
         'actual_end_date': actual_end_date,
+        'paid_end_date': paid_end_date,
         'administrative_end_date': service.end_date,
-        'has_paid_periods': limits['has_paid_periods'],
+        'has_paid_periods': paid_end_date is not None,
         'is_consistent': actual_end_date == service.end_date if actual_end_date and service.end_date else True
     }
     
     return info
+
+
+@register.simple_tag
+def service_pending_periods(service):
+    return service.payments.filter(
+        status__in=['PERIOD_CREATED', 'PENDING']
+    ).order_by('period_start')
+
+@register.simple_tag
+def service_payment_summary(service):
+    pending_periods = service.payments.filter(
+        status__in=['PERIOD_CREATED', 'PENDING']
+    ).order_by('period_start')
+    
+    paid_periods = service.payments.filter(
+        status='PAID'
+    ).order_by('-period_end')
+    
+    total_paid = sum(p.amount for p in paid_periods if p.amount)
+    total_pending = sum(p.amount for p in pending_periods if p.amount)
+    
+    return {
+        'pending_periods': pending_periods,
+        'paid_periods': paid_periods,
+        'total_paid': total_paid,
+        'total_pending': total_pending,
+        'paid_count': paid_periods.count(),
+        'pending_count': pending_periods.count()
+    }
