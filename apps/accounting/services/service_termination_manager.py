@@ -17,9 +17,12 @@ class ServiceTerminationManager:
             raise ValidationError("El servicio ya está inactivo")
         
         termination_date = termination_date or timezone.now().date()
+        today = timezone.now().date()
         
-        service.is_active = False
         service.end_date = termination_date
+        
+        if termination_date <= today:
+            service.is_active = False
         
         if reason:
             current_notes = service.notes or ""

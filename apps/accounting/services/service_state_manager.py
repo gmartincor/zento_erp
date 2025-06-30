@@ -12,14 +12,8 @@ class ServiceStateManager:
     
     @classmethod
     def is_service_active(cls, service) -> bool:
-        """
-        Un servicio está activo si:
-        1. is_active=True (no pausado individualmente)
-        2. admin_status='ENABLED' (no suspendido administrativamente)
-        3. Tiene períodos válidos
+        cls._auto_deactivate_if_scheduled(service)
         
-        NOTA: is_active=False tiene prioridad total (servicio congelado)
-        """
         if not service.is_active:
             return False
         
@@ -34,6 +28,8 @@ class ServiceStateManager:
     
     @classmethod
     def is_service_expired(cls, service: ClientService) -> bool:
+        cls._auto_deactivate_if_scheduled(service)
+        
         if not service.is_active:
             return True
         
@@ -53,21 +49,14 @@ class ServiceStateManager:
     
     @classmethod
     def get_service_status(cls, service) -> str:
-        """
-        Estados simplificados con lógica clara:
-        1. is_active=False → 'inactive' (prioridad máxima - servicio congelado)
-        2. admin_status='SUSPENDED' → 'suspended' (restricciones administrativas)
-        3. Resto → estados operacionales normales
-        """
-        # Prioridad 1: Servicio pausado/congelado
+        cls._auto_deactivate_if_scheduled(service)
+        
         if not service.is_active:
             return 'inactive'
         
-        # Prioridad 2: Restricciones administrativas
         if service.admin_status == 'SUSPENDED':
             return 'suspended'
         
-        # Prioridad 3: Estados operacionales normales
         last_period = cls._get_last_period(service)
         has_pending_periods = service.payments.filter(
             status__in=['PERIOD_CREATED', 'PENDING']
@@ -228,3 +217,25 @@ class ServiceStateManager:
         
         status = cls.get_service_status(service)
         return status in ['renewal_due', 'expiring_soon', 'expired']
+    
+    @classmethod
+    def _auto_deactivate_if_scheduled(cls, service):
+        from django.db import transaction
+        
+        if service.is_active and service.end_date:
+            today = DateCalculator.get_today()
+            if service.end_date <= today:
+                with transaction.atomic():
+                    service.is_active = False
+                    service.save(update_fields=['is_active', 'modified'])
+    
+    @classmethod
+    def _auto_deactivate_if_scheduled(cls, service):
+        from django.db import transaction
+        
+        if service.is_active and service.end_date:
+            today = DateCalculator.get_today()
+            if service.end_date <= today:
+                with transaction.atomic():
+                    service.is_active = False
+                    service.save(update_fields=['is_active', 'modified'])
