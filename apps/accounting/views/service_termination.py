@@ -81,7 +81,8 @@ def service_termination_view(request, service_id):
         'form': form,
         'service': service,
         'breadcrumb_path': breadcrumb_path,
-        'page_title': 'Finalizar Servicio'
+        'page_title': 'Finalizar Servicio',
+        'hide_terminate_button': True
     }
     
     return render(request, 'accounting/service_termination.html', context)

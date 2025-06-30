@@ -72,8 +72,6 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
         }
     
     def _get_expiring_services(self, accessible_lines):
-        from apps.accounting.services.service_state_manager import ServiceStateManager
-        
         services = ClientService.objects.by_business_lines(accessible_lines)
         expiring = []
         

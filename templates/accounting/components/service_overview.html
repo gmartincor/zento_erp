@@ -119,12 +119,13 @@
     </div>
     {% endif %}
     
+    {% if not hide_terminate_button %}
     <div class="mb-6">
         <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-1 mb-3">
             Gestión del Servicio
         </h4>
         <div class="space-y-2">
-            {% if service|is_service_active %}
+            {% if service|service_is_active %}
                 <a href="{% url 'accounting:service-terminate' service_id=service.id %}" 
                    class="w-full inline-flex items-center justify-center px-3 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +133,8 @@
                     </svg>
                     Finalizar Servicio
                 </a>
-            {% else %}
+            {% endif %}
+            {% if not service|service_is_active %}
                 {% if service.end_date %}
                     <form method="post" action="{% url 'accounting:service-reactivate' service_id=service.id %}">
                         {% csrf_token %}
@@ -156,6 +158,7 @@
             {% endif %}
         </div>
     </div>
+    {% endif %}
     
     {% include 'accounting/components/late_payments_info.html' %}
 </div>

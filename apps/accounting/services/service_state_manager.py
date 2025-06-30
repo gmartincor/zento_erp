@@ -228,14 +228,3 @@ class ServiceStateManager:
                 with transaction.atomic():
                     service.is_active = False
                     service.save(update_fields=['is_active', 'modified'])
-    
-    @classmethod
-    def _auto_deactivate_if_scheduled(cls, service):
-        from django.db import transaction
-        
-        if service.is_active and service.end_date:
-            today = DateCalculator.get_today()
-            if service.end_date <= today:
-                with transaction.atomic():
-                    service.is_active = False
-                    service.save(update_fields=['is_active', 'modified'])
