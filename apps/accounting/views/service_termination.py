@@ -38,26 +38,23 @@ class ServiceTerminationForm(forms.Form):
         self.service = service
         
         if service:
-            # Obtener límites de fecha usando el manager
             from ..services.service_termination_manager import ServiceTerminationManager
             limits = ServiceTerminationManager.get_termination_date_limits(service)
             
-            # Personalizar el help_text según los límites
             if limits['max_date']:
                 max_date_str = limits['max_date'].strftime('%d/%m/%Y')
                 self.fields['termination_date'].help_text = (
-                    f"Último día en que el servicio estará activo. "
-                    f"No puede ser posterior al último período creado ({max_date_str})"
+                    f"Selecciona hasta qué fecha finalizar el servicio. "
+                    f"Para finalizar en una fecha posterior al último período creado, "
+                    f"primero extiende el servicio creando un nuevo período."
                 )
-                # Establecer el máximo permitido en el widget HTML
                 self.fields['termination_date'].widget.attrs['max'] = limits['max_date'].isoformat()
             else:
                 self.fields['termination_date'].help_text = (
-                    "Último día en que el servicio estará activo. "
-                    "Este servicio no tiene períodos pagados."
+                    "Selecciona la fecha de finalización del servicio. "
+                    "Este servicio no tiene períodos definidos aún."
                 )
             
-            # Establecer el mínimo en el widget HTML
             if limits['min_date']:
                 self.fields['termination_date'].widget.attrs['min'] = limits['min_date'].isoformat()
     
@@ -65,7 +62,6 @@ class ServiceTerminationForm(forms.Form):
         termination_date = self.cleaned_data['termination_date']
         
         if self.service:
-            # Usar la validación centralizada del manager
             from ..services.service_termination_manager import ServiceTerminationManager
             try:
                 ServiceTerminationManager.validate_termination_date(self.service, termination_date)

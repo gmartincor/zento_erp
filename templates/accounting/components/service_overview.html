@@ -18,74 +18,10 @@
     </div>
     
     {% service_payment_summary service as payment_summary %}
-    {% if payment_summary.pending_count > 0 %}
-    <div class="mb-6">
-        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-1 mb-3">
-            Pagos Pendientes
-        </h4>
-        <div class="space-y-2">
-            {% for period in payment_summary.pending_periods %}
-            <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-sm font-medium text-gray-900 dark:text-white">
-                            📅 {{ period.period_start|date:"d/m/Y" }} - {{ period.period_end|date:"d/m/Y" }}
-                        </div>
-                        <div class="text-xs text-gray-600 dark:text-gray-400">
-                            Estado: {{ period.get_status_display }}
-                        </div>
-                    </div>
-                    <div class="text-sm font-semibold text-yellow-600">
-                        {% if period.amount %}💰 {{ period.amount|floatformat:2 }}€{% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
     
     <div class="space-y-3 mb-6">
         <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-1">
-            Información Financiera
-        </h4>
-        
-        <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Precio Base:</span>
-            <span class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ service.price|floatformat:2 }}€
-            </span>
-        </div>
-        
-        {% if service.payment_count > 0 %}
-        <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Total Pagado:</span>
-            <span class="text-sm font-medium text-green-600">
-                {{ payment_summary.total_paid|floatformat:2 }}€ ({{ payment_summary.paid_count }} pago{{ payment_summary.paid_count|pluralize }})
-            </span>
-        </div>
-        {% if payment_summary.pending_count > 0 %}
-        <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Pendiente de pago:</span>
-            <span class="text-sm font-medium text-yellow-600">
-                {{ payment_summary.total_pending|floatformat:2 }}€ ({{ payment_summary.pending_count }} período{{ payment_summary.pending_count|pluralize }})
-            </span>
-        </div>
-        {% endif %}
-        {% else %}
-        <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Pagos:</span>
-            <span class="text-sm font-medium text-yellow-600">
-                Sin pagos registrados
-            </span>
-        </div>
-        {% endif %}
-    </div>
-    
-    {% if payment_summary.paid_count > 0 %}
-    <div class="space-y-3 mb-6">
-        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-1">
-            Vigencia del Servicio Pagado
+            Estado del Servicio
         </h4>
         
         {% service_vigency_info service as vigency_info %}
@@ -94,55 +30,65 @@
             <div class="flex items-center justify-between">
                 <div>
                     <div class="text-sm font-medium text-gray-900 dark:text-white">
-                        Período activo pagado
+                        ✅ Activo hasta {{ vigency_info.paid_end_date|date:"d/m/Y" }}
                     </div>
                     <div class="text-xs text-gray-600 dark:text-gray-400">
-                        Vigente hasta {{ vigency_info.paid_end_date|date:"d/m/Y" }}
+                        Período pagado y vigente
                     </div>
                 </div>
-                <div class="text-sm font-semibold text-green-600">✅ Pagado</div>
+                <div class="text-sm font-semibold text-green-600">{{ payment_summary.total_paid|floatformat:2 }}€</div>
             </div>
+        </div>
+        {% endif %}
+        
+        {% if payment_summary.pending_count > 0 %}
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3">
+            {% for period in payment_summary.pending_periods %}
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                        ⏳ {{ period.period_start|date:"d/m/Y" }} - {{ period.period_end|date:"d/m/Y" }}
+                    </div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                        Período pendiente de pago
+                    </div>
+                </div>
+                <div class="text-sm font-semibold text-yellow-600">
+                    {% if period.amount %}{{ period.amount|floatformat:2 }}€{% endif %}
+                </div>
+            </div>
+            {% endfor %}
         </div>
         {% endif %}
     </div>
-    {% endif %}
-    
+
     <div class="space-y-3 mb-6">
         <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-1">
-            Información del Servicio
+            Resumen Financiero
         </h4>
         
-        <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Creado:</span>
-            <span class="text-sm text-gray-900 dark:text-white">
-                {{ service.created|date:"d/m/Y" }}
-            </span>
-        </div>
-        
-        {% if service.start_date %}
-        <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Inicio:</span>
-            <span class="text-sm text-gray-900 dark:text-white">
-                {{ service.start_date|date:"d/m/Y" }}
-            </span>
-        </div>
-        {% endif %}
-        
-        {% service_actual_end_date service as actual_end_date %}
-        
-        {% if actual_end_date %}
-        <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Vigencia total hasta:</span>
-            <div class="text-right">
-                <span class="text-sm font-medium text-blue-600">
-                    {{ actual_end_date|date:"d/m/Y" }}
-                </span>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                    (Último período creado)
-                </div>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <span class="text-gray-600 dark:text-gray-400">Precio base:</span>
+                <div class="font-medium">{{ service.price|floatformat:2 }}€</div>
             </div>
+            {% if payment_summary.paid_count > 0 %}
+            <div>
+                <span class="text-gray-600 dark:text-gray-400">Pagado:</span>
+                <div class="font-medium text-green-600">{{ payment_summary.total_paid|floatformat:2 }}€</div>
+            </div>
+            {% endif %}
+            {% if payment_summary.pending_count > 0 %}
+            <div>
+                <span class="text-gray-600 dark:text-gray-400">Pendiente:</span>
+                <div class="font-medium text-yellow-600">{{ payment_summary.total_pending|floatformat:2 }}€</div>
+            </div>
+            <div>
+                <span class="text-gray-600 dark:text-gray-400">Períodos:</span>
+                <div class="font-medium">{{ payment_summary.pending_count }} sin pagar</div>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
     
     {% if next_step_message %}
@@ -155,28 +101,6 @@
                 <div>
                     <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">Próximo Paso</h4>
                     <p class="text-sm text-blue-700 dark:text-blue-400 mt-1">{{ next_step_message }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    {% service_vigency_info service as vigency_info %}
-    {% if not vigency_info.is_consistent and vigency_info.has_paid_periods %}
-    <div class="mb-6">
-        <div class="bg-amber-50 dark:bg-amber-900/30 rounded-lg p-3">
-            <div class="flex items-start">
-                <svg class="w-5 h-5 text-amber-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                </svg>
-                <div>
-                    <h4 class="text-sm font-medium text-amber-800 dark:text-amber-300">Información de Vigencia</h4>
-                    <p class="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                        La vigencia mostrada corresponde al último período pagado. 
-                        {% if vigency_info.administrative_end_date %}
-                            Fecha administrativa: {{ vigency_info.administrative_end_date|date:"d/m/Y" }}
-                        {% endif %}
-                    </p>
                 </div>
             </div>
         </div>
