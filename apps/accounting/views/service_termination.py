@@ -20,7 +20,7 @@ class ServiceTerminationForm(forms.Form):
         }),
         label="Fecha de finalización",
         initial=date.today,
-        help_text="Fecha en que el servicio se da de baja definitivamente"
+        help_text="Último día en que el servicio estará activo"
     )
     
     reason = forms.CharField(
@@ -32,6 +32,47 @@ class ServiceTerminationForm(forms.Form):
         }),
         label="Motivo"
     )
+    
+    def __init__(self, service=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.service = service
+        
+        if service:
+            # Obtener límites de fecha usando el manager
+            from ..services.service_termination_manager import ServiceTerminationManager
+            limits = ServiceTerminationManager.get_termination_date_limits(service)
+            
+            # Personalizar el help_text según los límites
+            if limits['has_paid_periods']:
+                max_date_str = limits['last_paid_date'].strftime('%d/%m/%Y')
+                self.fields['termination_date'].help_text = (
+                    f"Último día en que el servicio estará activo. "
+                    f"No puede ser posterior al último período pagado ({max_date_str})"
+                )
+                # Establecer el máximo permitido en el widget HTML
+                self.fields['termination_date'].widget.attrs['max'] = limits['max_date'].isoformat()
+            else:
+                self.fields['termination_date'].help_text = (
+                    "Último día en que el servicio estará activo. "
+                    "Este servicio no tiene períodos pagados."
+                )
+            
+            # Establecer el mínimo en el widget HTML
+            if limits['min_date']:
+                self.fields['termination_date'].widget.attrs['min'] = limits['min_date'].isoformat()
+    
+    def clean_termination_date(self):
+        termination_date = self.cleaned_data['termination_date']
+        
+        if self.service:
+            # Usar la validación centralizada del manager
+            from ..services.service_termination_manager import ServiceTerminationManager
+            try:
+                ServiceTerminationManager.validate_termination_date(self.service, termination_date)
+            except ValidationError as e:
+                raise forms.ValidationError(str(e))
+        
+        return termination_date
 
 
 @login_required
@@ -50,7 +91,7 @@ def service_termination_view(request, service_id):
     breadcrumb_path = mixin.get_breadcrumb_path(service.business_line, service.category)
     
     if request.method == 'POST':
-        form = ServiceTerminationForm(request.POST)
+        form = ServiceTerminationForm(service, request.POST)
         
         if form.is_valid():
             try:
@@ -75,7 +116,7 @@ def service_termination_view(request, service_id):
             except Exception as e:
                 messages.error(request, f"Error inesperado: {str(e)}")
     else:
-        form = ServiceTerminationForm()
+        form = ServiceTerminationForm(service)
     
     context = {
         'form': form,

@@ -224,7 +224,8 @@ class ServiceStateManager:
         
         if service.is_active and service.end_date:
             today = DateCalculator.get_today()
-            if service.end_date <= today:
+            # El servicio se desactiva al día siguiente de su fecha de finalización
+            if service.end_date < today:
                 with transaction.atomic():
                     service.is_active = False
                     service.save(update_fields=['is_active', 'modified'])
