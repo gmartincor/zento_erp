@@ -11,6 +11,7 @@ from .flexible_payment_form import FlexiblePaymentForm
 from .service_renewal_form import ServiceRenewalForm as NewServiceRenewalForm
 from .service_payment_form import PaymentForm
 from .form_mixins import ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMixin
+from .refund_form import RefundForm
 
 __all__ = [
     'ServiceFormFactory',
@@ -27,5 +28,6 @@ __all__ = [
     'PaymentForm',
     'ServiceFormMixin',
     'ClientFieldsMixin',
-    'ServiceFieldsMixin'
+    'ServiceFieldsMixin',
+    'RefundForm'
 ]

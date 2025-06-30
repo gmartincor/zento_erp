@@ -12,7 +12,8 @@ from .views import (
     BusinessLineDeleteView,
     BusinessLineManagementDetailView,
     PaymentManagementView,
-    ExpiringServicesView
+    ExpiringServicesView,
+    PaymentRefundView
 )
 from .views.payment_history import payment_history_view
 from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
@@ -98,5 +99,6 @@ urlpatterns = [
     path('services/<int:service_id>/periods/<int:period_id>/cancel/', cancel_period_view, name='cancel-period'),
     
     path('payments/<int:payment_id>/', payment_detail_view, name='payment-detail'),
+    path('payments/<int:payment_id>/refund/', PaymentRefundView.as_view(), name='payment-refund'),
     
 ]

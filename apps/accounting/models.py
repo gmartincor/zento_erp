@@ -406,6 +406,14 @@ class ServicePayment(TimeStampedModel):
         verbose_name="Remanente",
         help_text="Cantidad de remanente aplicado (positivo o negativo)"
     )
+    
+    refunded_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Monto reembolsado",
+        help_text="Cantidad reembolsada del pago original"
+    )
 
     class Meta:
         db_table = 'service_payments'
@@ -573,13 +581,30 @@ class ServicePayment(TimeStampedModel):
             self.notes = f"{self.notes}\nCancelado: {reason}" if self.notes else f"Cancelado: {reason}"
         self.save()
 
-    def refund(self, reason=None):
+    def refund(self, refund_amount=None, reason=None):
         if self.status == self.StatusChoices.PAID:
-            self.status = self.StatusChoices.REFUNDED
+            if refund_amount is None:
+                refund_amount = self.amount
+            
+            if refund_amount > self.amount:
+                raise ValidationError("El monto de reembolso no puede ser mayor al monto original")
+            
+            self.refunded_amount = (self.refunded_amount or 0) + refund_amount
+            
+            if self.refunded_amount >= self.amount:
+                self.status = self.StatusChoices.REFUNDED
+            
             if reason:
-                self.notes = f"{self.notes}\nReembolsado: {reason}" if self.notes else f"Reembolsado: {reason}"
+                self.notes = f"{self.notes}\nReembolsado: {refund_amount} - {reason}" if self.notes else f"Reembolsado: {refund_amount} - {reason}"
             self.save()
 
     def get_payment_timing_analysis(self):
         from .services.payment_service import PaymentService
         return PaymentService.analyze_payment_timing(self)
+
+    @property
+    def net_amount(self):
+        """Calcula el pago neto después de reembolsos"""
+        if self.amount is None:
+            return None
+        return self.amount - (self.refunded_amount or 0)

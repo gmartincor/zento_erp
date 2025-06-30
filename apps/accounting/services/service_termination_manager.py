@@ -82,13 +82,23 @@ class ServiceTerminationManager:
         if service.start_date:
             limits['min_date'] = service.start_date + timedelta(days=1)
         
-        # Fecha máxima: último período pagado
+        # Fecha máxima: último período creado (incluye creados, pendientes y pagados)
+        last_created_payment = service.payments.filter(
+            status__in=[
+                ServicePayment.StatusChoices.PERIOD_CREATED,
+                ServicePayment.StatusChoices.PENDING,
+                ServicePayment.StatusChoices.PAID
+            ]
+        ).order_by('-period_end').first()
+        
         last_paid_payment = service.payments.filter(
             status=ServicePayment.StatusChoices.PAID
         ).order_by('-period_end').first()
         
+        if last_created_payment:
+            limits['max_date'] = last_created_payment.period_end
+        
         if last_paid_payment:
-            limits['max_date'] = last_paid_payment.period_end
             limits['has_paid_periods'] = True
             limits['last_paid_date'] = last_paid_payment.period_end
         
@@ -114,10 +124,10 @@ class ServiceTerminationManager:
                 f"La fecha de finalización debe ser posterior al {service.start_date.strftime('%d/%m/%Y')}"
             )
         
-        # Validar fecha máxima (solo si hay períodos pagados)
-        if limits['has_paid_periods'] and termination_date > limits['max_date']:
+        # Validar fecha máxima (solo si hay períodos creados)
+        if limits['max_date'] and termination_date > limits['max_date']:
             raise ValidationError(
-                f"No puedes finalizar el servicio más allá del último período pagado "
-                f"({limits['last_paid_date'].strftime('%d/%m/%Y')}). "
-                f"Si necesitas extender el servicio, primero realiza el pago del período correspondiente."
+                f"No puedes finalizar el servicio más allá del último período creado "
+                f"({limits['max_date'].strftime('%d/%m/%Y')}). "
+                f"Si necesitas extender el servicio, primero crea un nuevo período."
             )

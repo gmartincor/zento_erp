@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Reembolsar Pago{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-6">Reembolsar Pago</h1>
+            
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <h3 class="font-semibold text-gray-800 mb-2">Información del Pago</h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Cliente:</span>
+                        <span class="font-medium">{{ payment.client_service.client.full_name }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Monto original:</span>
+                        <span class="font-medium">${{ payment.amount }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Ya reembolsado:</span>
+                        <span class="font-medium">${{ payment.refunded_amount|default:0 }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Disponible para reembolso:</span>
+                        <span class="font-medium text-green-600">${{ payment.net_amount }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                {{ form|crispy }}
+                
+                <div class="flex space-x-4">
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md">
+                        Procesar Reembolso
+                    </button>
+                    <a href="{% url 'accounting:payment-detail' payment.id %}" 
+                       class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-md">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
