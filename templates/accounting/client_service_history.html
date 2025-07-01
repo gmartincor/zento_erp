@@ -274,14 +274,28 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {% if service|service_is_active %}
+                            {% load service_status_tags %}
+                            {% service_vigency_info service as vigency %}
                             <div>
-                                <div class="font-medium">{{ service.created|date:"d/m/Y" }}</div>
-                                <div class="text-xs">Fecha de inicio</div>
+                                <div class="font-medium">
+                                    {{ service.created|date:"d/m/Y" }}
+                                    {% if vigency.actual_end_date %}
+                                        - {{ vigency.actual_end_date|date:"d/m/Y" }}
+                                    {% endif %}
+                                </div>
                             </div>
                         {% else %}
+                            {% load service_status_tags %}
+                            {% service_vigency_info service as vigency %}
                             <div>
-                                <div class="font-medium">{{ service.end_date|date:"d/m/Y"|default:"N/A" }}</div>
-                                <div class="text-xs">Fecha de fin</div>
+                                <div class="font-medium">
+                                    {{ service.created|date:"d/m/Y" }}
+                                    {% if service.end_date %}
+                                        - {{ service.end_date|date:"d/m/Y" }}
+                                    {% elif vigency.actual_end_date %}
+                                        - {{ vigency.actual_end_date|date:"d/m/Y" }}
+                                    {% endif %}
+                                </div>
                             </div>
                         {% endif %}
                     </td>
