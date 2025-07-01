@@ -296,7 +296,7 @@
                         <div>
                             <div class="text-sm font-medium text-gray-900 dark:text-white">
                                 {% load accounting_tags %}
-                                {% payment_amount_display payment show_details=False %}
+                                {% payment_amount_display payment show_details=True %}
                             </div>
                             <div class="text-xs text-gray-600 dark:text-gray-400">
                                 {{ payment.payment_date|date:"d/m/Y" }}
