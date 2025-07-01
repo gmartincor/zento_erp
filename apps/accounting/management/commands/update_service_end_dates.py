@@ -4,7 +4,7 @@ from apps.accounting.models import ClientService, ServicePayment
 
 
 class Command(BaseCommand):
-    help = 'Actualiza el end_date de los servicios basado en sus últimos períodos pagados'
+    help = 'Actualiza el end_date de los servicios basado en sus últimos períodos (pagados o no)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -25,12 +25,16 @@ class Command(BaseCommand):
             services = ClientService.objects.all()
             
             for service in services:
-                latest_paid_period = service.payments.filter(
-                    status=ServicePayment.StatusChoices.PAID
+                latest_period = service.payments.filter(
+                    status__in=[
+                        ServicePayment.StatusChoices.PERIOD_CREATED,
+                        ServicePayment.StatusChoices.PENDING,
+                        ServicePayment.StatusChoices.PAID
+                    ]
                 ).order_by('-period_end').first()
                 
-                if latest_paid_period:
-                    new_end_date = latest_paid_period.period_end
+                if latest_period:
+                    new_end_date = latest_period.period_end
                     
                     if not service.end_date or service.end_date != new_end_date:
                         self.stdout.write(

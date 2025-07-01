@@ -152,24 +152,7 @@ def cancel_period_view(request, service_id, period_id):
     
     try:
         period.status = ServicePayment.StatusChoices.CANCELLED
-        period.save(update_fields=['status', 'modified'])
-        
-
-        last_active_period = client_service.payments.filter(
-            status__in=[
-                ServicePayment.StatusChoices.PAID,
-                ServicePayment.StatusChoices.PERIOD_CREATED,
-                ServicePayment.StatusChoices.PENDING
-            ]
-        ).exclude(id=period.id).order_by('-period_end').first()
-        
-        if last_active_period:
-            client_service.end_date = last_active_period.period_end
-        else:
-
-            pass
-        
-        client_service.save(update_fields=['end_date', 'modified'])
+        period.save()
         
         messages.success(
             request,
