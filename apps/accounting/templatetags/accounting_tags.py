@@ -156,54 +156,37 @@ def get_reactivation_url(service, business_line=None, category=None):
     return TemplateTagService.build_reactivation_url(service, business_line, category)
 
 @register.simple_tag
-def get_service_edit_url(service):
-    """Genera la URL de edición usando los datos reales del servicio"""
-    return TemplateTagService.build_service_edit_url(service)
-
-@register.simple_tag
-def get_service_termination_url(service):
-    """Genera la URL de finalización usando los datos reales del servicio"""
-    return TemplateTagService.build_service_termination_url(service)
-
-@register.simple_tag
 def get_remanente_stats(business_line=None, client_service=None):
-    """Obtiene estadísticas de remanentes para línea de negocio o servicio específico"""
     service = StatisticsService()
     return service.calculate_remanente_stats(business_line=business_line, client_service=client_service)
 
 @register.simple_tag
 def get_service_remanentes_summary(client_service):
-    """Resumen de remanentes para un servicio específico"""
     service = StatisticsService()
     return service.get_service_remanente_summary(client_service)
 
 @register.filter
 def remanente_badge_class(has_remanentes):
-    """Clase CSS para badge de remanentes"""
     if has_remanentes:
         return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
     return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
 
 @register.filter
 def dict_get(dictionary, key):
-    """Obtiene un valor de un diccionario por clave dinámica"""
     if hasattr(dictionary, 'get'):
         return dictionary.get(key)
     return None
 
 @register.filter
 def startswith(value, prefix):
-    """Verifica si un string comienza con un prefijo determinado"""
     return str(value).startswith(str(prefix))
 
 @register.filter
 def add_string(value, string):
-    """Concatena dos strings"""
     return str(value) + str(string)
 
 @register.filter
 def has_fields_starting_with(form_fields, prefix):
-    """Verifica si un formulario tiene campos que comienzan con un prefijo"""
     for field_name in form_fields.keys():
         if field_name.startswith(prefix):
             return True
@@ -211,13 +194,49 @@ def has_fields_starting_with(form_fields, prefix):
 
 @register.filter
 def split(value, delimiter):
-    """Divide un string por un delimitador"""
     return str(value).split(str(delimiter))
 
 @register.filter
 def get_item(list_value, index):
-    """Obtiene un elemento de una lista por índice"""
     try:
         return list_value[int(index)]
     except (IndexError, ValueError, TypeError):
         return ""
+
+@register.simple_tag
+def get_service_edit_url(service):
+    return TemplateTagService.build_service_edit_url(service)
+
+@register.simple_tag
+def get_service_termination_url(service):
+    return TemplateTagService.build_service_termination_url(service)
+
+@register.inclusion_tag('accounting/components/payment_amount_display.html')
+def payment_amount_display(payment, show_details=True):
+    return {
+        'payment': payment,
+        'show_details': show_details,
+        'has_refund': payment.refunded_amount and payment.refunded_amount > 0,
+        'original_amount': payment.amount,
+        'refunded_amount': payment.refunded_amount or 0,
+        'net_amount': payment.net_amount
+    }
+
+@register.filter
+def payment_status_badge(payment):
+    status_config = {
+        'PAID': ('bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', 'Pagado'),
+        'PENDING': ('bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', 'Pendiente'),
+        'OVERDUE': ('bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200', 'Vencido'),
+        'CANCELLED': ('bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200', 'Cancelado'),
+        'REFUNDED': ('bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200', 'Reembolsado'),
+        'PERIOD_CREATED': ('bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', 'Período creado')
+    }
+    
+    css_class, display_text = status_config.get(payment.status, ('bg-gray-100 text-gray-800', payment.get_status_display()))
+    
+    return format_html(
+        '<span class="px-2 py-1 text-xs font-medium rounded-full {}">{}</span>',
+        css_class,
+        display_text
+    )

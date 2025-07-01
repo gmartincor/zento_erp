@@ -4,11 +4,12 @@ from django.core.exceptions import PermissionDenied, ValidationError
 
 from apps.business_lines.models import BusinessLine
 from apps.accounting.models import ClientService, ServicePayment
+from .revenue_calculation_utils import RevenueCalculationMixin
 
 User = get_user_model()
 
 
-class BusinessLineService:
+class BusinessLineService(RevenueCalculationMixin):
     def get_accessible_lines(self, user):
         return BusinessLine.objects.select_related('parent').filter(is_active=True)
     
@@ -109,8 +110,8 @@ class BusinessLineService:
         )
         
         stats = payments_query.aggregate(
-            total_revenue=Sum('amount'),
-            avg_price=Avg('amount'),
+            total_revenue=self.get_net_revenue_aggregation(),
+            avg_price=self.get_avg_net_revenue_aggregation(),
         )
         
         service_stats = services_query.aggregate(
@@ -120,8 +121,8 @@ class BusinessLineService:
         )
         
         payment_category_stats = payments_query.aggregate(
-            white_revenue=Sum('amount', filter=Q(client_service__category='WHITE')),
-            black_revenue=Sum('amount', filter=Q(client_service__category='BLACK')),
+            white_revenue=self.get_net_revenue_with_filter(Q(client_service__category='WHITE')),
+            black_revenue=self.get_net_revenue_with_filter(Q(client_service__category='BLACK')),
         )
         
         stats.update(service_stats)

@@ -13,6 +13,7 @@ from apps.business_lines.models import BusinessLine
 from apps.accounting.models import Client, ClientService
 from apps.accounting.utils import BusinessLineNavigator, ServiceStatisticsCalculator
 from apps.accounting.services.service_state_manager import ServiceStateManager
+from apps.accounting.services.revenue_calculation_utils import RevenueCalculationMixin
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
     BusinessLineHierarchyMixin,
@@ -60,7 +61,7 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
         total_revenue = ServicePayment.objects.filter(
             client_service__in=active_services,
             status=ServicePayment.StatusChoices.PAID
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or Decimal('0')
         
         unique_clients = active_services.values('client').distinct().count()
         

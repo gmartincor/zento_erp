@@ -5,9 +5,10 @@ from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 
 from apps.accounting.models import ServicePayment, ClientService
+from .revenue_calculation_utils import RevenueCalculationMixin
 
 
-class RevenueAnalyticsService:
+class RevenueAnalyticsService(RevenueCalculationMixin):
     
     class PeriodType:
         CURRENT_MONTH = 'current_month'
@@ -50,9 +51,9 @@ class RevenueAnalyticsService:
         )
         
         revenue_stats = payments_query.aggregate(
-            total_revenue=Sum('amount'),
+            total_revenue=self.get_net_revenue_aggregation(),
             payment_count=Count('id'),
-            avg_payment=Avg('amount')
+            avg_payment=self.get_avg_net_revenue_aggregation()
         )
         
         period_info = self._get_period_description(period_type, start_date, end_date)
@@ -87,9 +88,9 @@ class RevenueAnalyticsService:
         payments_list = list(payments_query.order_by('-payment_date'))
         
         revenue_stats = payments_query.aggregate(
-            total_revenue=Sum('amount'),
+            total_revenue=self.get_net_revenue_aggregation(),
             payment_count=Count('id'),
-            avg_payment=Avg('amount')
+            avg_payment=self.get_avg_net_revenue_aggregation()
         )
         
         period_info = self._get_period_description(period_type, start_date, end_date)

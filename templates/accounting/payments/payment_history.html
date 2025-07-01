@@ -121,7 +121,8 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                        {{ payment.amount|format_currency:"€" }}
+                                        {% load accounting_tags %}
+                                        {% payment_amount_display payment show_details=False %}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

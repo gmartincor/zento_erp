@@ -1,10 +1,20 @@
 from typing import List, Dict, Optional, Any
 from django.db import models
-from django.db.models import QuerySet, Q, Sum, Count, F
+from django.db.models import QuerySet, Q, Sum, Count, F, Value
+from django.db.models.functions import Coalesce
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 
 User = get_user_model()
+
+def get_net_revenue_aggregation():
+    return Sum(F('amount') - Coalesce(F('refunded_amount'), Value(0, output_field=models.DecimalField())))
+
+def get_net_revenue_with_filter(filter_condition):
+    return Sum(
+        F('amount') - Coalesce(F('refunded_amount'), Value(0, output_field=models.DecimalField())),
+        filter=filter_condition
+    )
 
 
 class BusinessLineQuerySet(models.QuerySet):
@@ -148,9 +158,9 @@ class BusinessLineManager(models.Manager):
         payment_stats = ServicePayment.objects.filter(
             client_service__in=services
         ).aggregate(
-            total_revenue=Sum('amount'),
-            white_revenue=Sum('amount', filter=Q(client_service__category='WHITE')),
-            black_revenue=Sum('amount', filter=Q(client_service__category='BLACK'))
+            total_revenue=get_net_revenue_aggregation(),
+            white_revenue=get_net_revenue_with_filter(Q(client_service__category='WHITE')),
+            black_revenue=get_net_revenue_with_filter(Q(client_service__category='BLACK'))
         )
         
         stats = {**service_stats, **payment_stats}

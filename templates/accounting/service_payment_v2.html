@@ -295,7 +295,8 @@
                     <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
                         <div>
                             <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                {{ payment.amount|format_currency:"€" }}
+                                {% load accounting_tags %}
+                                {% payment_amount_display payment show_details=False %}
                             </div>
                             <div class="text-xs text-gray-600 dark:text-gray-400">
                                 {{ payment.payment_date|date:"d/m/Y" }}

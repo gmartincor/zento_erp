@@ -21,10 +21,20 @@ class RefundForm(forms.Form):
     def __init__(self, payment, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.payment = payment
+        
+        base_class = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+        
         self.fields['refund_amount'].widget.attrs.update({
+            'class': base_class,
+            'type': 'number',
             'max': str(payment.amount - (payment.refunded_amount or 0)),
             'step': '0.01',
             'placeholder': f'Máximo: {payment.amount - (payment.refunded_amount or 0)}'
+        })
+        
+        self.fields['reason'].widget.attrs.update({
+            'class': base_class,
+            'placeholder': 'Describe el motivo del reembolso...'
         })
     
     def clean_refund_amount(self):

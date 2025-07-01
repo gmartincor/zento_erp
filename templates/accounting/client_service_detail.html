@@ -193,9 +193,8 @@
                 <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center space-x-3">
-                            <div class="text-lg font-semibold text-gray-900 dark:text-white">
-                                {{ payment.amount|format_currency:"€" }}
-                            </div>
+                            {% load accounting_tags %}
+                            {% payment_amount_display payment show_details=True %}
                             {% if payment.was_paid_on_time %}
                                 <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
                                     En plazo
@@ -204,6 +203,14 @@
                                 <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full">
                                     Tardío
                                 </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center">
+                            {% if payment.status == 'PAID' and payment.net_amount > 0 %}
+                            <a href="{% url 'accounting:payment-refund' payment_id=payment.id %}"
+                               class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium">
+                                Reembolsar
+                            </a>
                             {% endif %}
                         </div>
                     </div>

@@ -1,0 +1,27 @@
+{% load presentation_tags %}
+
+<div class="flex items-center justify-between">
+    <div class="flex flex-col">
+        {% if has_refund and show_details %}
+            <div class="text-lg font-semibold text-gray-900 dark:text-white">
+                {{ net_amount|format_currency:"€" }}
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+                Original: {{ original_amount|format_currency:"€" }} 
+                <span class="text-red-600 dark:text-red-400">(-{{ refunded_amount|format_currency:"€" }})</span>
+            </div>
+        {% else %}
+            <div class="text-lg font-semibold text-gray-900 dark:text-white">
+                {% if has_refund %}{{ net_amount|format_currency:"€" }}{% else %}{{ original_amount|format_currency:"€" }}{% endif %}
+            </div>
+        {% endif %}
+    </div>
+    
+    {% if has_refund %}
+        <div class="ml-2">
+            <span class="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded-full">
+                Reembolsado
+            </span>
+        </div>
+    {% endif %}
+</div>

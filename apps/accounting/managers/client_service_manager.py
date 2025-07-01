@@ -3,10 +3,23 @@ from decimal import Decimal
 from datetime import date, timedelta
 from django.db import models
 from django.db.models import QuerySet, Q, Sum, Count, Avg, F, Case, When, Value
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+def get_net_revenue_aggregation():
+    return Sum(F('amount') - Coalesce(F('refunded_amount'), Value(0, output_field=models.DecimalField())))
+
+def get_avg_net_revenue_aggregation():
+    return Avg(F('amount') - Coalesce(F('refunded_amount'), Value(0, output_field=models.DecimalField())))
+
+def get_net_revenue_with_filter(filter_condition):
+    return Sum(
+        F('amount') - Coalesce(F('refunded_amount'), Value(0, output_field=models.DecimalField())),
+        filter=filter_condition
+    )
 
 
 class ClientServiceQuerySet(models.QuerySet):
@@ -157,8 +170,8 @@ class ClientServiceManager(models.Manager):
         )
         
         revenue_stats = paid_payments.aggregate(
-            total_revenue=Sum('amount'),
-            avg_payment=Avg('amount')
+            total_revenue=get_net_revenue_aggregation(),
+            avg_payment=get_avg_net_revenue_aggregation()
         )
         
         category_stats = {}
@@ -168,7 +181,7 @@ class ClientServiceManager(models.Manager):
             
             category_stats[cat_choice.value] = {
                 'count': cat_services.count(),
-                'revenue': cat_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+                'revenue': cat_payments.aggregate(total=get_net_revenue_aggregation())['total'] or Decimal('0')
             }
         
         return {
@@ -203,8 +216,8 @@ class ClientServiceManager(models.Manager):
         payment_stats = ServicePayment.objects.filter(
             client_service__in=services
         ).aggregate(
-            total_revenue=Sum('amount'),
-            avg_price=Avg('amount')
+            total_revenue=get_net_revenue_aggregation(),
+            avg_price=get_avg_net_revenue_aggregation()
         )
         
         category_stats = {
@@ -212,13 +225,13 @@ class ClientServiceManager(models.Manager):
                 client_service__in=services.filter(category='WHITE')
             ).aggregate(
                 count=Count('client_service__id', distinct=True),
-                revenue=Sum('amount')
+                revenue=get_net_revenue_aggregation()
             ),
             'BLACK': ServicePayment.objects.filter(
                 client_service__in=services.filter(category='BLACK')
             ).aggregate(
                 count=Count('client_service__id', distinct=True),
-                revenue=Sum('amount')
+                revenue=get_net_revenue_aggregation()
             )
         }
         
@@ -251,9 +264,9 @@ class ClientServiceManager(models.Manager):
         payment_stats = ServicePayment.objects.filter(
             client_service__in=services
         ).aggregate(
-            total_revenue=Sum('amount'),
-            white_revenue=Sum('amount', filter=Q(client_service__category='white')),
-            black_revenue=Sum('amount', filter=Q(client_service__category='black'))
+            total_revenue=get_net_revenue_aggregation(),
+            white_revenue=get_net_revenue_with_filter(Q(client_service__category='white')),
+            black_revenue=get_net_revenue_with_filter(Q(client_service__category='black'))
         )
         
         stats = {**service_stats, **payment_stats}
@@ -296,7 +309,7 @@ class ClientServiceManager(models.Manager):
             revenue_stats = ServicePayment.objects.filter(
                 client_service__in=services
             ).aggregate(
-                total_revenue=Sum('amount')
+                total_revenue=get_net_revenue_aggregation()
             )
             
             client_data.append({
@@ -336,7 +349,7 @@ class ClientServiceManager(models.Manager):
                 client_service__in=services,
                 payment_method=method_choice.value,
                 status=ServicePayment.StatusChoices.PAID
-            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            ).aggregate(total=get_net_revenue_aggregation())['total'] or Decimal('0')
             
             revenue_data[method_choice.value] = revenue
         
@@ -361,7 +374,7 @@ class ClientServiceManager(models.Manager):
             )
             
             revenue_stats = payments.aggregate(
-                total_revenue=Sum('amount'),
+                total_revenue=get_net_revenue_aggregation(),
                 total_payments=Count('id')
             )
             

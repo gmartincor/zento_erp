@@ -9,16 +9,17 @@ from apps.business_lines.models import BusinessLine
 from apps.accounting.models import ClientService, ServicePayment
 from apps.accounting.services.navigation_service import HierarchicalNavigationService
 from apps.core.constants import SERVICE_CATEGORIES
+from .revenue_calculation_utils import RevenueCalculationMixin
 
 
-class CategoryStatsService:
+class CategoryStatsService(RevenueCalculationMixin):
     def calculate_category_summary(self, services: QuerySet) -> Dict[str, Any]:
         from apps.accounting.models import ServicePayment
         
         category_data = ServicePayment.objects.filter(
             client_service__in=services
         ).values('client_service__category').annotate(
-            total_amount=Sum('amount'),
+            total_amount=self.get_net_revenue_aggregation(),
             service_count=Count('client_service__id', distinct=True)
         ).order_by('-total_amount')
         
@@ -63,7 +64,7 @@ class CategoryStatsService:
             category_stats = ServicePayment.objects.filter(
                 client_service__in=category_services
             ).aggregate(
-                total_revenue=Sum('amount'),
+                total_revenue=self.get_net_revenue_aggregation(),
                 total_services=Count('client_service__id', distinct=True)
             )
             
@@ -76,7 +77,7 @@ class CategoryStatsService:
         return stats_by_category
 
 
-class ClientStatsService:
+class ClientStatsService(RevenueCalculationMixin):
     def calculate_client_summary(self, services: QuerySet) -> Dict[str, Any]:
         client_data = ServicePayment.objects.filter(
             client_service__in=services
@@ -85,7 +86,7 @@ class ClientStatsService:
             'client_service__client__name',
             'client_service__client__email'
         ).annotate(
-            total_amount=Sum('amount'),
+            total_amount=self.get_net_revenue_aggregation(),
             service_count=Count('client_service__id', distinct=True)
         ).order_by('-total_amount')
         
@@ -116,7 +117,7 @@ class ClientStatsService:
         }
 
 
-class BusinessLineStatsService:
+class BusinessLineStatsService(RevenueCalculationMixin):
     def calculate_global_stats(self, business_lines: QuerySet) -> Dict[str, Any]:
         all_services = ClientService.objects.filter(
             business_line__in=business_lines,
@@ -126,7 +127,7 @@ class BusinessLineStatsService:
         global_stats = ServicePayment.objects.filter(
             client_service__in=all_services
         ).aggregate(
-            total_revenue=Sum('amount'),
+            total_revenue=self.get_net_revenue_aggregation(),
             total_services=Count('client_service__id', distinct=True)
         )
         
@@ -146,9 +147,9 @@ class BusinessLineStatsService:
         basic_stats = ServicePayment.objects.filter(
             client_service__in=services
         ).aggregate(
-            total_revenue=Sum('amount'),
+            total_revenue=self.get_net_revenue_aggregation(),
             total_services=Count('client_service__id', distinct=True),
-            avg_service_value=Avg('amount')
+            avg_service_value=self.get_avg_net_revenue_aggregation()
         )
         
         category_stats = CategoryStatsService().calculate_category_summary(services)
@@ -159,7 +160,7 @@ class BusinessLineStatsService:
         recent_stats = ServicePayment.objects.filter(
             client_service__in=recent_services
         ).aggregate(
-            recent_revenue=Sum('amount'),
+            recent_revenue=self.get_net_revenue_aggregation(),
             recent_services=Count('client_service__id', distinct=True)
         )
         

@@ -8,6 +8,7 @@ from datetime import timedelta
 from apps.accounting.models import ClientService, ServicePayment
 from apps.accounting.services.service_state_manager import ServiceStateManager
 from apps.accounting.services.payment_service import PaymentService
+from apps.accounting.services.revenue_calculation_utils import RevenueCalculationMixin
 from apps.core.mixins import BusinessLinePermissionMixin
 
 
@@ -42,7 +43,7 @@ class PaymentManagementView(LoginRequiredMixin, BusinessLinePermissionMixin, Lis
         accessible_lines = self.get_allowed_business_lines()
         
         total_payments = self.get_queryset().aggregate(
-            total=Sum('amount'),
+            total=RevenueCalculationMixin.get_net_revenue_aggregation(),
             count=Count('id')
         )
         

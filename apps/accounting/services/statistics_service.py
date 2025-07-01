@@ -5,9 +5,10 @@ from datetime import datetime, timedelta
 
 from apps.business_lines.models import BusinessLine
 from apps.accounting.models import ClientService, ServicePayment
+from .revenue_calculation_utils import RevenueCalculationMixin, RevenueCalculationUtils
 
 
-class StatisticsService:
+class StatisticsService(RevenueCalculationMixin):
     def calculate_business_line_stats(self, business_line, include_children=True):
         services_query = self._get_services_for_line(business_line, include_children)
         
@@ -17,7 +18,7 @@ class StatisticsService:
         )
         
         stats = paid_payments.aggregate(
-            total_revenue=Sum('amount'),
+            total_revenue=self.get_net_revenue_aggregation(),
             total_payments=Count('id')
         )
         
@@ -31,10 +32,10 @@ class StatisticsService:
         category_revenue = {
             'white_revenue': paid_payments.filter(
                 client_service__category='WHITE'
-            ).aggregate(total=Sum('amount'))['total'] or Decimal('0'),
+            ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0'),
             'black_revenue': paid_payments.filter(
                 client_service__category='BLACK'
-            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0')
         }
         
         total_remanentes = self._calculate_remanente_totals(
@@ -58,7 +59,7 @@ class StatisticsService:
         payments_query = self._apply_payment_date_filters(payments_query, year, month)
         
         period_stats = payments_query.aggregate(
-            total_revenue=Sum('amount'),
+            total_revenue=self.get_net_revenue_aggregation(),
             total_payments=Count('id')
         )
         
@@ -70,10 +71,10 @@ class StatisticsService:
         category_revenue = {
             'white_revenue': payments_query.filter(
                 client_service__category='WHITE'
-            ).aggregate(total=Sum('amount'))['total'] or Decimal('0'),
+            ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0'),
             'black_revenue': payments_query.filter(
                 client_service__category='BLACK'
-            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0')
         }
         
         period_info = self._get_period_info(year, month)
@@ -98,9 +99,9 @@ class StatisticsService:
         )
         
         stats = payments_query.aggregate(
-            total_revenue=Sum('amount'),
+            total_revenue=self.get_net_revenue_aggregation(),
             payment_count=Count('id'),
-            avg_payment=Avg('amount')
+            avg_payment=self.get_avg_net_revenue_aggregation()
         )
         
         service_stats = services_query.aggregate(
@@ -133,9 +134,9 @@ class StatisticsService:
                 'client_service__client__dni'
             )
             .annotate(
-                total_revenue=Sum('amount'),
+                total_revenue=self.get_net_revenue_aggregation(),
                 payment_count=Count('id'),
-                avg_payment=Avg('amount')
+                avg_payment=self.get_avg_net_revenue_aggregation()
             )
             .order_by('-total_revenue')[:limit]
         )

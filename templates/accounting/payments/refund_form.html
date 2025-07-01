@@ -1,51 +1,93 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load presentation_tags %}
 
 {% block title %}Reembolsar Pago{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold text-gray-900 mb-6">Reembolsar Pago</h1>
-            
-            <div class="bg-gray-50 p-4 rounded-lg mb-6">
-                <h3 class="font-semibold text-gray-800 mb-2">Información del Pago</h3>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <span class="text-gray-600">Cliente:</span>
-                        <span class="font-medium">{{ payment.client_service.client.full_name }}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Monto original:</span>
-                        <span class="font-medium">${{ payment.amount }}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Ya reembolsado:</span>
-                        <span class="font-medium">${{ payment.refunded_amount|default:0 }}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Disponible para reembolso:</span>
-                        <span class="font-medium text-green-600">${{ payment.net_amount }}</span>
-                    </div>
+<div class="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Reembolsar Pago</h1>
+        
+        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-6">
+            <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">Información del Pago</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-600 dark:text-gray-400">Cliente:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{ payment.client_service.client.full_name }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600 dark:text-gray-400">Monto original:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{ payment.amount|format_currency:"€" }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600 dark:text-gray-400">Ya reembolsado:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{ payment.refunded_amount|default:0|format_currency:"€" }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600 dark:text-gray-400">Disponible para reembolso:</span>
+                    <span class="font-medium text-green-600">{{ payment.net_amount|format_currency:"€" }}</span>
                 </div>
             </div>
-
-            <form method="post" class="space-y-6">
-                {% csrf_token %}
-                {{ form|crispy }}
-                
-                <div class="flex space-x-4">
-                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md">
-                        Procesar Reembolso
-                    </button>
-                    <a href="{% url 'accounting:payment-detail' payment.id %}" 
-                       class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-md">
-                        Cancelar
-                    </a>
-                </div>
-            </form>
         </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label for="{{ form.refund_amount.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {{ form.refund_amount.label }}
+                </label>
+                {{ form.refund_amount }}
+                {% if form.refund_amount.help_text %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.refund_amount.help_text }}</p>
+                {% endif %}
+                {% if form.refund_amount.errors %}
+                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ form.refund_amount.errors|first }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.reason.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {{ form.reason.label }}
+                </label>
+                {{ form.reason }}
+                {% if form.reason.errors %}
+                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {{ form.reason.errors|first }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <a href="{% url 'accounting:client-service-detail' service_id=payment.client_service.id %}" 
+                   class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        id="confirm-refund-btn"
+                        class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors font-medium">
+                    Procesar Reembolso
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const confirmBtn = document.getElementById('confirm-refund-btn');
+    
+    if (confirmBtn && form) {
+        confirmBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (window.confirm('¿Estás seguro de que quieres procesar este reembolso? Esta acción no se puede deshacer.')) {
+                form.submit();
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -12,6 +12,7 @@ from apps.business_lines.models import BusinessLine
 from apps.accounting.models import ClientService, ServicePayment
 from apps.accounting.services.template_service import TemplateDataService
 from apps.accounting.services.presentation_service import PresentationService
+from apps.accounting.services.revenue_calculation_utils import RevenueCalculationMixin
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
     BusinessLineHierarchyMixin
@@ -122,10 +123,10 @@ class BusinessLineHierarchyView(
                     white_count = white_services.count()
                     black_revenue = ServicePayment.objects.filter(
                         client_service__in=black_services
-                    ).aggregate(total=Sum('amount'))['total'] or 0
+                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                     white_revenue = ServicePayment.objects.filter(
                         client_service__in=white_services
-                    ).aggregate(total=Sum('amount'))['total'] or 0
+                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                     category_items = []
                     category_items.append({
                         'name': 'BLACK',
@@ -175,7 +176,7 @@ class BusinessLineHierarchyView(
                     ).count()
                     current_line_revenue = ServicePayment.objects.filter(
                         client_service__business_line__id__in=descendant_ids
-                    ).aggregate(total=Sum('amount'))['total'] or 0
+                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                     context.update({
                         'current_line': current_line,
                         'children': accessible_children,
@@ -206,7 +207,7 @@ class BusinessLineHierarchyView(
             from apps.accounting.models import ServicePayment
             total_revenue = ServicePayment.objects.filter(
                 client_service__business_line__in=accessible_lines
-            ).aggregate(total=Sum('amount'))['total'] or 0
+            ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
             context.update({
                 'business_lines': root_lines,
                 'items': root_lines,

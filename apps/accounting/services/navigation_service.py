@@ -3,9 +3,10 @@ from django.urls import reverse
 from django.contrib.auth.models import AbstractUser
 
 from apps.business_lines.models import BusinessLine
+from .revenue_calculation_utils import RevenueCalculationMixin
 
 
-class HierarchicalNavigationService:
+class HierarchicalNavigationService(RevenueCalculationMixin):
     def __init__(self):
         self.base_breadcrumb_config = {
             'dashboard': {'name': 'Dashboard', 'url': 'dashboard:home'},
@@ -122,9 +123,9 @@ class HierarchicalNavigationService:
         payment_stats = ServicePayment.objects.filter(
             client_service__in=services
         ).aggregate(
-            total_revenue=Sum('amount'),
-            white_revenue=Sum('amount', filter=Q(client_service__category='WHITE')),
-            black_revenue=Sum('amount', filter=Q(client_service__category='BLACK'))
+            total_revenue=self.get_net_revenue_aggregation(),
+            white_revenue=self.get_net_revenue_with_filter(Q(client_service__category='WHITE')),
+            black_revenue=self.get_net_revenue_with_filter(Q(client_service__category='BLACK'))
         )
         
         stats = {**service_stats, **payment_stats}

@@ -1,8 +1,9 @@
 from django.db.models import QuerySet, Q, Sum, Count, Avg
 from apps.accounting.models import ServicePayment, ClientService
+from .revenue_calculation_utils import RevenueCalculationMixin
 
 
-class HistoryService:
+class HistoryService(RevenueCalculationMixin):
     
     @staticmethod
     def get_client_services_history(client_id: int, filters: dict = None) -> QuerySet:
@@ -76,9 +77,9 @@ class HistoryService:
                 client_service__in=services,
                 status=ServicePayment.StatusChoices.PAID
             ).aggregate(
-                total_revenue=Sum('amount'),
-                white_revenue=Sum('amount', filter=Q(client_service__category='white')),
-                black_revenue=Sum('amount', filter=Q(client_service__category='black'))
+                total_revenue=RevenueCalculationMixin.get_net_revenue_aggregation(),
+                white_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category='white')),
+                black_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category='black'))
             )
             
             summary.update({
@@ -94,10 +95,10 @@ class HistoryService:
             summary.update({
                 'total_payments': payments.count(),
                 'total_paid': payments.aggregate(
-                    total=Sum('amount')
+                    total=RevenueCalculationMixin.get_net_revenue_aggregation()
                 )['total'] or Decimal('0'),
                 'average_payment': payments.aggregate(
-                    avg=Avg('amount')
+                    avg=RevenueCalculationMixin.get_avg_net_revenue_aggregation()
                 )['avg'] or Decimal('0'),
             })
             

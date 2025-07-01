@@ -138,10 +138,14 @@ class PaymentService:
     
     @staticmethod
     def get_service_total_paid(client_service: ClientService) -> Decimal:
+        from django.db.models import Case, When, F, Sum
+        
         total = client_service.payments.filter(
-            status=ServicePayment.StatusChoices.PAID,
+            status__in=[ServicePayment.StatusChoices.PAID, ServicePayment.StatusChoices.REFUNDED],
             amount__isnull=False
-        ).aggregate(total=models.Sum('amount'))['total']
+        ).aggregate(
+            total=Sum(F('amount') - F('refunded_amount'))
+        )['total']
         return total or Decimal('0.00')
     
     @staticmethod
