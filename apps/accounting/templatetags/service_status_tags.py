@@ -102,29 +102,29 @@ def service_is_expired(service):
     return ServiceStateManager.is_service_expired(service)
 
 
-@register.simple_tag
-def service_actual_end_date(service):
-    last_period = service.payments.order_by('-period_end').first()
-    return last_period.period_end if last_period else service.end_date
-
-
 @register.simple_tag 
 def service_vigency_info(service):
-    actual_end_date = service.payments.order_by('-period_end').first()
-    actual_end_date = actual_end_date.period_end if actual_end_date else service.end_date
+    last_paid_period = service.payments.filter(status='PAID').order_by('-period_end').first()
+    paid_end_date = last_paid_period.period_end if last_paid_period else None
     
-    paid_end_date = service.payments.filter(status='PAID').order_by('-period_end').first()
-    paid_end_date = paid_end_date.period_end if paid_end_date else None
+    has_discrepancy = False
+    discrepancy_type = None
+    discrepancy_days = 0
     
-    info = {
-        'actual_end_date': actual_end_date,
+    if service.end_date and paid_end_date:
+        if service.end_date != paid_end_date:
+            has_discrepancy = True
+            discrepancy_days = abs((service.end_date - paid_end_date).days)
+            discrepancy_type = 'early_termination' if service.end_date < paid_end_date else 'late_payment'
+    
+    return {
+        'end_date': service.end_date,
         'paid_end_date': paid_end_date,
-        'administrative_end_date': service.end_date,
         'has_paid_periods': paid_end_date is not None,
-        'is_consistent': actual_end_date == service.end_date if actual_end_date and service.end_date else True
+        'has_discrepancy': has_discrepancy,
+        'discrepancy_type': discrepancy_type,
+        'discrepancy_days': discrepancy_days
     }
-    
-    return info
 
 
 @register.simple_tag

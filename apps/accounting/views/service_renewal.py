@@ -17,7 +17,6 @@ from apps.core.mixins import BusinessLineHierarchyMixin
 def service_renewal_view(request, service_id):
     client_service = get_object_or_404(ClientService, id=service_id)
     
-    # Crear una instancia del mixin para obtener el breadcrumb
     mixin = BusinessLineHierarchyMixin()
     breadcrumb_path = mixin.get_breadcrumb_path(
         client_service.business_line, 

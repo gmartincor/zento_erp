@@ -75,8 +75,7 @@ class ServiceTerminationManager:
     
     @staticmethod
     def get_actual_end_date(service: ClientService) -> date:
-        last_period = service.payments.order_by('-period_end').first()
-        return last_period.period_end if last_period else service.end_date
+        return service.end_date
     
     @staticmethod
     def validate_termination_date(service: ClientService, termination_date: date) -> None:

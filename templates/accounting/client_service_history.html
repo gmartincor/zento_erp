@@ -279,8 +279,8 @@
                             <div>
                                 <div class="font-medium">
                                     {{ service.created|date:"d/m/Y" }}
-                                    {% if vigency.actual_end_date %}
-                                        - {{ vigency.actual_end_date|date:"d/m/Y" }}
+                                    {% if vigency.end_date %}
+                                        - {{ vigency.end_date|date:"d/m/Y" }}
                                     {% endif %}
                                 </div>
                             </div>
@@ -292,8 +292,8 @@
                                     {{ service.created|date:"d/m/Y" }}
                                     {% if service.end_date %}
                                         - {{ service.end_date|date:"d/m/Y" }}
-                                    {% elif vigency.actual_end_date %}
-                                        - {{ vigency.actual_end_date|date:"d/m/Y" }}
+                                    {% elif vigency.end_date %}
+                                        - {{ vigency.end_date|date:"d/m/Y" }}
                                     {% endif %}
                                 </div>
                             </div>

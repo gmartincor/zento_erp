@@ -319,6 +319,8 @@ class ClientService(TimeStampedModel):
     def get_date_edit_info(self):
         from .services.service_manager import ServiceManager
         return ServiceManager.get_date_edit_restrictions(self)
+    
+
 
 
 class ServicePayment(TimeStampedModel):
@@ -447,14 +449,8 @@ class ServicePayment(TimeStampedModel):
         self._update_service_end_date()
     
     def _update_service_end_date(self):
-        if self.status == self.StatusChoices.PAID:
-            latest_period = self.client_service.payments.filter(
-                status=self.StatusChoices.PAID
-            ).order_by('-period_end').first()
-            
-            if latest_period and (not self.client_service.end_date or latest_period.period_end > self.client_service.end_date):
-                self.client_service.end_date = latest_period.period_end
-                self.client_service.save(update_fields=['end_date'])
+        """Este método ya no es necesario. Los servicios mantienen su end_date administrativo separado del paid_end_date"""
+        pass
 
     def __str__(self):
         return f"{self.client_service.client.full_name} - {self.amount}€ ({self.get_status_display()})"

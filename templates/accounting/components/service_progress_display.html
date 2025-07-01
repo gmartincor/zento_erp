@@ -65,9 +65,8 @@
             </div>
             <div class="ml-3">
                 <p class="text-sm font-medium text-gray-900 dark:text-white">Servicio Activo</p>
-                {% service_actual_end_date service as actual_end_date %}
-                {% if actual_end_date %}
-                <p class="text-sm text-gray-600 dark:text-gray-400">Vigente hasta {{ actual_end_date|date:"d/m/Y" }}</p>
+                {% if service.end_date %}
+                <p class="text-sm text-gray-600 dark:text-gray-400">Vigente hasta {{ service.end_date|date:"d/m/Y" }}</p>
                 {% endif %}
             </div>
         </div>
