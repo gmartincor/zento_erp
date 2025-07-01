@@ -7,7 +7,7 @@ from .date_calculator import DateCalculator
 
 class ServiceStateManager:
     
-    RENEWAL_WARNING_DAYS = 30
+    RENEWAL_WARNING_DAYS = 15
     EXPIRING_SOON_DAYS = 7
     
     @classmethod
