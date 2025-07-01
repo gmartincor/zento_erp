@@ -28,7 +28,7 @@ class ServiceManager:
         if payment_info['has_paid']:
             return DateEditRestrictions(
                 can_edit_dates=False,
-                restriction_reason="Las fechas del servicio no se pueden editar ya que el servicio tiene pagos registrados",
+                restriction_reason="Las fechas del servicio no se pueden editar debido a que el servicio tiene pagos registrados",
                 has_payments=True
             )
         

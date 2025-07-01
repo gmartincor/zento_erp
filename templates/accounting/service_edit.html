@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Editar Servicio - {{ service.client.full_name }} - Nutrition Pro CRM{% endblock %}
 
@@ -36,7 +37,7 @@
 <div class="max-w-6xl mx-auto">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2">
-            <form method="post" class="space-y-6">
+            <form method="post" data-service-form class="space-y-6">
                 {% csrf_token %}
                 
                 {% include 'accounting/components/form_errors.html' %}
@@ -72,4 +73,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/form-confirmations.js' %}"></script>
 {% endblock %}
