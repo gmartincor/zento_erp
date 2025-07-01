@@ -3,6 +3,7 @@ from datetime import date
 from django.utils import timezone
 
 from ..models import ClientService
+from ..services.service_manager import ServiceManager
 
 
 class ServiceDateEditForm(forms.ModelForm):
@@ -14,8 +15,9 @@ class ServiceDateEditForm(forms.ModelForm):
             self._setup_date_fields()
     
     def _setup_date_fields(self):
-        if self.instance.payments.exists():
-            self._disable_date_fields("No se puede modificar la fecha de inicio porque el servicio tiene períodos asociados")
+        restrictions = ServiceManager.get_date_edit_restrictions(self.instance)
+        if not restrictions.can_edit_dates:
+            self._disable_date_fields(restrictions.restriction_reason)
         else:
             self._setup_editable_date_fields()
     
@@ -34,11 +36,10 @@ class ServiceDateEditForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             start_date = cleaned_data.get('start_date')
             
-            if self.instance.payments.exists():
+            restrictions = ServiceManager.get_date_edit_restrictions(self.instance)
+            if not restrictions.can_edit_dates:
                 if start_date != self.instance.start_date:
-                    raise forms.ValidationError(
-                        'No se puede modificar la fecha de inicio porque el servicio tiene períodos asociados'
-                    )
+                    raise forms.ValidationError(restrictions.restriction_reason)
         
         return cleaned_data
     
