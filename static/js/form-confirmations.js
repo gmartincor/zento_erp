@@ -18,15 +18,20 @@ class FormConfirmationHandler {
         return `
             <div class="space-y-3">
                 <p class="text-gray-700">¿Estás seguro de que quieres desactivar este servicio?</p>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                    <h4 class="font-semibold text-red-800 mb-2">Acción Irreversible:</h4>
+                    <p class="text-sm text-red-700">Una vez desactivado, NO podrás volver a editar este servicio.</p>
+                </div>
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                     <h4 class="font-semibold text-yellow-800 mb-2">Esta acción:</h4>
                     <ul class="text-sm text-yellow-700 space-y-1">
                         <li>• Cancelará todos los períodos pendientes</li>
                         <li>• Ajustará la fecha de fin automáticamente</li>
                         <li>• El servicio dejará de aparecer como activo</li>
+                        <li>• Bloqueará futuras ediciones del servicio</li>
                     </ul>
                 </div>
-                <p class="text-sm text-gray-600">Los períodos ya pagados se mantendrán intactos.</p>
+                <p class="text-sm text-gray-600">Los períodos ya pagados se mantendrán intactos y el servicio aparecerá en el historial del cliente.</p>
             </div>
         `;
     }
