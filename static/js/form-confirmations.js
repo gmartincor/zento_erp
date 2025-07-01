@@ -9,6 +9,14 @@ class FormConfirmationHandler {
                 confirmText: 'Desactivar Servicio',
                 cancelText: 'Cancelar'
             },
+            serviceTermination: {
+                selector: 'form[data-termination-form]',
+                submitButton: '#finalize-btn',
+                title: 'Confirmar Finalización del Servicio',
+                message: this.getServiceTerminationMessage(),
+                confirmText: 'Finalizar Servicio',
+                cancelText: 'Cancelar'
+            },
             ...config
         };
         this.initializeHandlers();
@@ -36,10 +44,34 @@ class FormConfirmationHandler {
         `;
     }
 
+    getServiceTerminationMessage() {
+        return `
+            <div class="space-y-3">
+                <p class="text-gray-700">¿Estás seguro de que quieres finalizar este servicio en la fecha especificada?</p>
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <h4 class="font-semibold text-amber-800 mb-2">Esta acción:</h4>
+                    <ul class="text-sm text-amber-700 space-y-1">
+                        <li>• Establecerá la fecha de finalización del servicio</li>
+                        <li>• Marcará el servicio como inactivo</li>
+                        <li>• Cancelará períodos pendientes posteriores a esta fecha</li>
+                        <li>• El servicio aparecerá en el historial del cliente</li>
+                    </ul>
+                </div>
+                <p class="text-sm text-gray-600">Los períodos ya pagados anteriores a la fecha de finalización se mantendrán intactos.</p>
+            </div>
+        `;
+    }
+
     initializeHandlers() {
-        document.addEventListener('DOMContentLoaded', () => {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.setupServiceDeactivationConfirmation();
+                this.setupServiceTerminationConfirmation();
+            });
+        } else {
             this.setupServiceDeactivationConfirmation();
-        });
+            this.setupServiceTerminationConfirmation();
+        }
     }
 
     setupServiceDeactivationConfirmation() {
@@ -62,6 +94,49 @@ class FormConfirmationHandler {
                 });
             }
         });
+    }
+
+    setupServiceTerminationConfirmation() {
+        const config = this.config.serviceTermination;
+        const form = document.querySelector(config.selector);
+        const submitButton = document.querySelector(config.submitButton);
+        
+        if (!form || !submitButton) return;
+
+        let confirmationShown = false;
+        
+        submitButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            if (!this.validateTerminationForm(form)) {
+                return;
+            }
+            
+            if (!confirmationShown) {
+                confirmationShown = true;
+                this.showConfirmation(config, () => {
+                    confirmationShown = false;
+                    form.submit();
+                });
+            }
+        });
+    }
+
+    validateTerminationForm(form) {
+        const dateField = form.querySelector('input[name="termination_date"]');
+        
+        if (!dateField || !dateField.value) {
+            alert('Por favor, selecciona una fecha de finalización.');
+            if (dateField) dateField.focus();
+            return false;
+        }
+        
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return false;
+        }
+        
+        return true;
     }
 
     showConfirmation(config, onConfirm) {
@@ -87,6 +162,9 @@ class FormConfirmationHandler {
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
         
+        // Usar rojo para todas las acciones destructivas (desactivar y finalizar)
+        const buttonClass = 'bg-red-600 hover:bg-red-700';
+        
         modal.innerHTML = `
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                 <div class="px-6 py-4 border-b border-gray-200">
@@ -97,7 +175,7 @@ class FormConfirmationHandler {
                     <button type="button" class="cancel-btn px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         ${cancelText}
                     </button>
-                    <button type="button" class="confirm-btn px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700">
+                    <button type="button" class="confirm-btn px-4 py-2 text-sm font-medium text-white ${buttonClass} border border-transparent rounded-md">
                         ${confirmText}
                     </button>
                 </div>

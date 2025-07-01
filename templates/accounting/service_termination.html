@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ page_title }} - {{ service.client.full_name }} - Nutrition Pro CRM{% endblock %}
 
@@ -36,7 +37,7 @@
 <div class="max-w-6xl mx-auto">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2">
-            <form method="post" class="space-y-6">
+            <form method="post" class="space-y-6" data-termination-form>
                 {% csrf_token %}
                 
                 {% include 'accounting/components/form_errors.html' %}
@@ -125,28 +126,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.getElementById('finalize-btn').addEventListener('click', function(e) {
-    const form = this.closest('form');
-    const dateField = form.querySelector('input[name="termination_date"]');
-    
-    if (!dateField.value) {
-        alert('Por favor, selecciona una fecha de finalización.');
-        dateField.focus();
-        e.preventDefault();
-        return;
-    }
-    
-    if (!form.checkValidity()) {
-        e.preventDefault();
-        return;
-    }
-    
-    e.preventDefault();
-    
-    if (confirm('¿Estás seguro de que quieres finalizar este servicio? Esta acción marcará el servicio como inactivo.')) {
-        form.submit();
-    }
-});
-</script>
+<script src="{% static 'js/form-confirmations.js' %}"></script>
 {% endblock %}

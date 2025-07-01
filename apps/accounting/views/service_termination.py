@@ -5,6 +5,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django.utils.safestring import mark_safe
+from django.urls import reverse
 from django import forms
 from datetime import date
 
@@ -81,9 +82,7 @@ def service_termination_view(request, service_id):
     
     if not ServiceTerminationManager.can_terminate_service(service):
         messages.error(request, "El servicio ya está inactivo")
-        return redirect('accounting:category-services', 
-                       line_path=service.get_line_path(),
-                       category=service.category) + '?view=grid'
+        return redirect(f"{reverse('accounting:category-services', kwargs={'line_path': service.get_line_path(), 'category': service.category})}?view=grid")
     
     mixin = BusinessLineHierarchyMixin()
     breadcrumb_path = mixin.get_breadcrumb_path(service.business_line, service.category)
@@ -104,9 +103,7 @@ def service_termination_view(request, service_id):
                     f"Servicio finalizado exitosamente el {form.cleaned_data['termination_date'].strftime('%d/%m/%Y')}"
                 )
                 
-                return redirect('accounting:category-services', 
-                               line_path=service.get_line_path(),
-                               category=service.category) + '?view=grid'
+                return redirect(f"{reverse('accounting:category-services', kwargs={'line_path': service.get_line_path(), 'category': service.category})}?view=grid")
                 
             except ValidationError as e:
                 messages.error(request, str(e))
