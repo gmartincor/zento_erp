@@ -95,7 +95,12 @@
                 </div>
 
                 {% if form.renewal_type.value == 'with_payment' or request.POST.renewal_type == 'with_payment' %}
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6" data-payment-section>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6" id="payment-section" style="display: none;">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Información de Pago</h2>
+                    {% include 'accounting/components/payment_form_fields.html' %}
+                </div>
+                {% else %}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6" id="payment-section" style="display: none;">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Información de Pago</h2>
                     {% include 'accounting/components/payment_form_fields.html' %}
                 </div>
@@ -134,12 +139,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const renewalTypeInputs = document.querySelectorAll('input[name="renewal_type"]');
     const endDateInput = document.querySelector('input[name="end_date"]');
     const currentEndDate = '{{ client_service.end_date|date:"Y-m-d" }}';
+    const paymentSection = document.getElementById('payment-section');
     
     function togglePaymentFields() {
         const withPayment = document.querySelector('input[name="renewal_type"][value="with_payment"]').checked;
-        const paymentSection = document.querySelector('[data-payment-section]');
+        
         if (paymentSection) {
             paymentSection.style.display = withPayment ? 'block' : 'none';
+            
+            const paymentFields = paymentSection.querySelectorAll('input, select');
+            paymentFields.forEach(field => {
+                if (withPayment) {
+                    if (field.name === 'amount' || field.name === 'payment_date' || field.name === 'payment_method') {
+                        field.required = true;
+                    }
+                } else {
+                    field.required = false;
+                    field.value = '';
+                }
+            });
         }
     }
     

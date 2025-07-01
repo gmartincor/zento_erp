@@ -37,10 +37,8 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
         if self.client_service:
             self._set_minimum_date()
         
-        renewal_type = self.data.get('renewal_type', self.initial.get('renewal_type', 'period_only'))
-        if renewal_type == 'with_payment':
-            self.add_payment_fields()
-            self._set_suggested_amount()
+        self.add_payment_fields()
+        self._set_suggested_amount()
     
     def _set_minimum_date(self):
         last_period = ServicePeriodManager.get_last_period(self.client_service)
@@ -70,6 +68,10 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
         renewal_type = cleaned_data.get('renewal_type')
         if renewal_type == 'with_payment':
             self.clean_payment_fields()
+        else:
+            for field in ['amount', 'payment_date', 'payment_method']:
+                if field in self.errors:
+                    del self.errors[field]
         return cleaned_data
     
     def save(self):
@@ -130,3 +132,16 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
         if suggested_amount and 'amount' in self.fields:
             self.fields['amount'].initial = suggested_amount
             self.fields['amount'].help_text = f"Sugerido: {suggested_amount}€ (basado en pagos anteriores)"
+            
+    def is_valid(self):
+        is_valid = super().is_valid()
+        renewal_type = self.data.get('renewal_type')
+        
+        if renewal_type != 'with_payment':
+            payment_fields = ['amount', 'payment_date', 'payment_method']
+            for field in payment_fields:
+                if field in self.errors:
+                    del self.errors[field]
+            is_valid = len(self.errors) == 0
+                    
+        return is_valid
