@@ -127,10 +127,25 @@
 {% block extra_js %}
 <script>
 document.getElementById('finalize-btn').addEventListener('click', function(e) {
+    const form = this.closest('form');
+    const dateField = form.querySelector('input[name="termination_date"]');
+    
+    if (!dateField.value) {
+        alert('Por favor, selecciona una fecha de finalización.');
+        dateField.focus();
+        e.preventDefault();
+        return;
+    }
+    
+    if (!form.checkValidity()) {
+        e.preventDefault();
+        return;
+    }
+    
     e.preventDefault();
     
     if (confirm('¿Estás seguro de que quieres finalizar este servicio? Esta acción marcará el servicio como inactivo.')) {
-        this.closest('form').submit();
+        form.submit();
     }
 });
 </script>
