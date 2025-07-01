@@ -17,7 +17,7 @@ def payment_history_view(request):
     analytics_service = RevenueAnalyticsService()
     
     filters = {
-        'business_line': request.GET.get('business_line'),
+        'search': request.GET.get('search'),
         'category': request.GET.get('category'),
         'service_id': request.GET.get('service'),
     }
@@ -49,7 +49,7 @@ def payment_history_view(request):
         ],
         'selected_period': period_type,
         'filters': {
-            'business_line': filters['business_line'],
+            'search': filters['search'],
             'category': filters['category'],
             'service': filters['service_id'],
         }

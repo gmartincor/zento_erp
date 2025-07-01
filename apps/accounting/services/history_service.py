@@ -32,9 +32,10 @@ class HistoryService(RevenueCalculationMixin):
         ).order_by('-payment_date')
         
         if filters:
-            if filters.get('business_line'):
+            if filters.get('search'):
                 queryset = queryset.filter(
-                    client_service__business_line__slug=filters['business_line']
+                    Q(client_service__client__full_name__icontains=filters['search']) |
+                    Q(client_service__business_line__name__icontains=filters['search'])
                 )
             if filters.get('category'):
                 queryset = queryset.filter(

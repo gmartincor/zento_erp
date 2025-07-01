@@ -14,14 +14,15 @@
         </div>
     </div>
     
-    <!-- Filtros -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="get" class="flex flex-wrap gap-4">
+            <div class="flex-1 min-w-64">
+                <input type="text" name="search" value="{{ request.GET.search }}" 
+                       placeholder="Buscar por cliente o línea de negocio..."
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+            </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Período
-                </label>
-                <select name="period" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                <select name="period" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                     {% for period_value, period_label in available_periods %}
                         <option value="{{ period_value }}" {% if period_value == selected_period %}selected{% endif %}>
                             {{ period_label }}
@@ -29,32 +30,16 @@
                     {% endfor %}
                 </select>
             </div>
-            
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Línea de Negocio
-                </label>
-                <input type="text" name="business_line" value="{{ filters.business_line|default:'' }}" 
-                       placeholder="Nombre de línea de negocio..."
-                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Categoría
-                </label>
-                <select name="category" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Todas</option>
+                <select name="category" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todas las categorías</option>
                     <option value="white" {% if filters.category == 'white' %}selected{% endif %}>WHITE</option>
                     <option value="black" {% if filters.category == 'black' %}selected{% endif %}>BLACK</option>
                 </select>
             </div>
-            
-            <div class="flex items-end">
-                <button type="submit" class="w-full px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors">
-                    Filtrar
-                </button>
-            </div>
+            <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                Filtrar
+            </button>
         </form>
     </div>
     
