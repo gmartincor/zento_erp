@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load accounting_tags %}
 
 {% block title %}{{ page_title }}{% endblock %}
 
@@ -67,7 +68,7 @@
                             <div class="text-sm text-gray-900 dark:text-white">{{ payment.client_service.business_line.name }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 dark:text-white">€{{ payment.amount }}</div>
+                            <div class="text-sm text-gray-900 dark:text-white">{% payment_amount_display payment %}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-white">{{ payment.payment_date|date:"d/m/Y" }}</div>
