@@ -84,7 +84,20 @@
         {% endif %}
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ line.name }}</h3>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ line.name }}</h3>
+                        
+                        {% if line.is_active %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            Activo
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                            Inactivo
+                        </span>
+                        {% endif %}
+                    </div>
+                    
                     {% if line.children_count > 0 %}
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
                         {{ line.children_count }} sublíneas
