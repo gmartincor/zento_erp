@@ -12,6 +12,7 @@ from apps.business_lines.models import BusinessLine
 from apps.accounting.models import ClientService, ServicePayment
 from apps.accounting.services.template_service import TemplateDataService
 from apps.accounting.services.presentation_service import PresentationService
+from apps.accounting.services.business_line_service import BusinessLineService
 from apps.accounting.services.revenue_calculation_utils import RevenueCalculationMixin
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
@@ -105,10 +106,6 @@ class BusinessLineHierarchyView(
             context.update(hierarchy_context)
             current_line = hierarchy_context.get('business_line')
             if current_line:
-                from apps.accounting.services.business_line_service import BusinessLineService
-                from apps.accounting.models import ClientService, ServicePayment
-                from django.db.models import Sum, Count, Q
-                
                 business_line_service = BusinessLineService()
                 children = BusinessLine.objects.filter(parent=current_line)
                 accessible_children = business_line_service.get_accessible_lines(self.request.user).filter(
@@ -117,8 +114,8 @@ class BusinessLineHierarchyView(
                 if not accessible_children.exists():
                     descendant_ids = current_line.get_descendant_ids()
                     services = ClientService.objects.filter(business_line__id__in=descendant_ids)
-                    black_services = services.filter(category='black')  # Usar lowercase
-                    white_services = services.filter(category='white')  # Usar lowercase
+                    black_services = services.filter(category='black')
+                    white_services = services.filter(category='white')
                     black_count = black_services.count()
                     white_count = white_services.count()
                     black_revenue = ServicePayment.objects.filter(
@@ -169,14 +166,48 @@ class BusinessLineHierarchyView(
                         }
                     })
                 else:
-                    # Para líneas con sublíneas, incluir servicios de todas las sublíneas
                     descendant_ids = current_line.get_descendant_ids()
-                    current_line_services = ClientService.objects.filter(
-                        business_line__id__in=descendant_ids
-                    ).count()
-                    current_line_revenue = ServicePayment.objects.filter(
+                    
+                    payments = ServicePayment.objects.filter(
                         client_service__business_line__id__in=descendant_ids
+                    )
+                    
+                    white_revenue = payments.filter(
+                        client_service__category='white'
                     ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+                    
+                    black_revenue = payments.filter(
+                        client_service__category='black'
+                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+                    
+                    white_services = ClientService.objects.filter(
+                        business_line__id__in=descendant_ids, category='white'
+                    ).count()
+                    
+                    black_services = ClientService.objects.filter(
+                        business_line__id__in=descendant_ids, category='black'
+                    ).count()
+                    
+                    for child in accessible_children:
+                        child_descendant_ids = child.get_descendant_ids()
+                        child_payments = ServicePayment.objects.filter(
+                            client_service__business_line__id__in=child_descendant_ids
+                        )
+                        child.white_revenue = child_payments.filter(
+                            client_service__category='white'
+                        ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+                        child.black_revenue = child_payments.filter(
+                            client_service__category='black'
+                        ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+                        child.total_revenue = child.white_revenue + child.black_revenue
+                        child.white_services = ClientService.objects.filter(
+                            business_line__id__in=child_descendant_ids, category='white'
+                        ).count()
+                        child.black_services = ClientService.objects.filter(
+                            business_line__id__in=child_descendant_ids, category='black'
+                        ).count()
+                        child.total_services = child.white_services + child.black_services
+                    
                     context.update({
                         'current_line': current_line,
                         'children': accessible_children,
@@ -188,26 +219,52 @@ class BusinessLineHierarchyView(
                         'show_hierarchy': True,
                         'view_type': 'business_lines',
                         'level_stats': {
-                            'current_line_services': current_line_services,
-                            'current_line_revenue': current_line_revenue,
+                            'white_revenue': white_revenue,
+                            'black_revenue': black_revenue,
+                            'white_services': white_services,
+                            'black_services': black_services,
                             'children_count': accessible_children.count(),
                         }
                     })
         else:
-            from apps.accounting.services.business_line_service import BusinessLineService
-            from apps.accounting.models import ClientService, ServicePayment
-            from django.db.models import Sum, Count
-            
             business_line_service = BusinessLineService()
             accessible_lines = business_line_service.get_accessible_lines(self.request.user)
             root_lines = business_line_service.get_root_lines_for_user(self.request.user)
-            total_services = ClientService.objects.filter(
-                business_line__in=accessible_lines
-            ).count()
-            from apps.accounting.models import ServicePayment
-            total_revenue = ServicePayment.objects.filter(
+            
+            payments = ServicePayment.objects.filter(
                 client_service__business_line__in=accessible_lines
+            )
+            white_revenue = payments.filter(
+                client_service__category='white'
             ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+            black_revenue = payments.filter(
+                client_service__category='black'
+            ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+            
+            total_lines = accessible_lines.count()
+            avg_white_per_line = white_revenue / max(total_lines, 1)
+            avg_black_per_line = black_revenue / max(total_lines, 1)
+            
+            for line in root_lines:
+                line_descendant_ids = line.get_descendant_ids()
+                line_payments = ServicePayment.objects.filter(
+                    client_service__business_line__id__in=line_descendant_ids
+                )
+                line.white_revenue = line_payments.filter(
+                    client_service__category='white'
+                ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+                line.black_revenue = line_payments.filter(
+                    client_service__category='black'
+                ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+                line.total_revenue = line.white_revenue + line.black_revenue
+                line.white_services = ClientService.objects.filter(
+                    business_line__id__in=line_descendant_ids, category='white'
+                ).count()
+                line.black_services = ClientService.objects.filter(
+                    business_line__id__in=line_descendant_ids, category='black'
+                ).count()
+                line.total_services = line.white_services + line.black_services
+            
             context.update({
                 'business_lines': root_lines,
                 'items': root_lines,
@@ -218,10 +275,11 @@ class BusinessLineHierarchyView(
                 'show_hierarchy': True,
                 'view_type': 'business_lines',
                 'level_stats': {
-                    'total_lines': accessible_lines.count(),
-                    'total_revenue': total_revenue,
-                    'total_services': total_services,
-                    'avg_revenue_per_line': total_revenue / max(accessible_lines.count(), 1),
+                    'total_lines': total_lines,
+                    'white_revenue': white_revenue,
+                    'black_revenue': black_revenue,
+                    'avg_white_per_line': avg_white_per_line,
+                    'avg_black_per_line': avg_black_per_line,
                 }
             })
         return context
