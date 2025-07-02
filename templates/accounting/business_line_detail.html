@@ -42,15 +42,7 @@
                                 Nivel {% if business_line %}{{ business_line.level }}{% elif current_line %}{{ current_line.level }}{% else %}1{% endif %}
                             </span>
 
-                            <!-- Slug Badge -->
-                            {% if business_line.slug or current_line.slug %}
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                                </svg>
-                                <span class="font-mono">{% if business_line.slug %}{{ business_line.slug }}{% else %}{{ current_line.slug }}{% endif %}</span>
-                            </span>
-                            {% endif %}
+
 
                             <!-- Status Badge -->
                             {% if business_line.is_active or current_line.is_active %}
@@ -63,13 +55,7 @@
                             </span>
                             {% endif %}
 
-                            <!-- Remanente Badge -->
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-                                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                                Compatible con Remanentes
-                            </span>
+
                         </div>
 
                         <!-- Description -->
@@ -347,7 +333,7 @@
                 <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                <span class="text-sm font-medium">Ver Todas</span>
+                <span class="text-sm font-medium">Ver todas las líneas</span>
             </a>
             <a href="{% url 'accounting:category-services' line_path=line_path category='white' %}"
                class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors">
@@ -363,13 +349,7 @@
                 </svg>
                 <span class="text-sm font-medium">Reportes Black</span>
             </a>
-            <button type="button" 
-                    class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
-                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span class="text-sm font-medium">Exportar Datos</span>
-            </button>
+
         </div>
     </div>
     {% endif %}
