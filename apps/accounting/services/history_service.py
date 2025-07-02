@@ -6,24 +6,49 @@ from .revenue_calculation_utils import RevenueCalculationMixin
 class HistoryService(RevenueCalculationMixin):
     
     @staticmethod
-    def get_client_services_history(client_id: int, filters: dict = None) -> QuerySet:
+    def _apply_common_filters(queryset: QuerySet, filters: dict, is_payment_query: bool = False) -> QuerySet:
+        if not filters:
+            return queryset
+            
+        if filters.get('search'):
+            if is_payment_query:
+                search_fields = [
+                    'client_service__client__full_name__icontains',
+                    'client_service__business_line__name__icontains'
+                ]
+            else:
+                search_fields = [
+                    'client__full_name__icontains',
+                    'business_line__name__icontains'
+                ]
+            
+            search_q = Q()
+            for field in search_fields:
+                search_q |= Q(**{field: filters['search']})
+            queryset = queryset.filter(search_q)
+            
+        if filters.get('category'):
+            category_field = 'client_service__category' if is_payment_query else 'category'
+            queryset = queryset.filter(**{category_field: filters['category']})
+            
+        return queryset
+    
+    @classmethod
+    def get_client_services_history(cls, client_id: int, filters: dict = None) -> QuerySet:
         queryset = ClientService.objects.filter(
             client_id=client_id
         ).select_related(
             'client', 'business_line', 'business_line__parent'
         ).prefetch_related('payments').order_by('-created')
         
-        if filters:
-            if filters.get('is_active') is not None:
-                is_active = filters['is_active'].lower() == 'true'
-                queryset = queryset.filter(is_active=is_active)
-            if filters.get('category'):
-                queryset = queryset.filter(category=filters['category'])
-                
-        return queryset
+        if filters and filters.get('is_active') is not None:
+            is_active = filters['is_active'].lower() == 'true'
+            queryset = queryset.filter(is_active=is_active)
+            
+        return cls._apply_common_filters(queryset, filters)
     
-    @staticmethod
-    def get_global_payments_history(filters: dict = None) -> QuerySet:
+    @classmethod
+    def get_global_payments_history(cls, filters: dict = None) -> QuerySet:
         queryset = ServicePayment.objects.filter(
             status=ServicePayment.StatusChoices.PAID
         ).select_related(
@@ -31,20 +56,10 @@ class HistoryService(RevenueCalculationMixin):
             'client_service__business_line'
         ).order_by('-payment_date')
         
-        if filters:
-            if filters.get('search'):
-                queryset = queryset.filter(
-                    Q(client_service__client__full_name__icontains=filters['search']) |
-                    Q(client_service__business_line__name__icontains=filters['search'])
-                )
-            if filters.get('category'):
-                queryset = queryset.filter(
-                    client_service__category=filters['category'].upper()
-                )
-            if filters.get('service_id'):
-                queryset = queryset.filter(
-                    client_service_id=filters['service_id']
-                )
+        queryset = cls._apply_common_filters(queryset, filters, is_payment_query=True)
+        
+        if filters and filters.get('service_id'):
+            queryset = queryset.filter(client_service_id=filters['service_id'])
                 
         return queryset
     
