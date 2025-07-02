@@ -128,3 +128,11 @@ class BusinessLine(TimeStampedModel):
         for child in children:
             id_set.add(child.id)
             child._collect_descendant_ids(id_set)
+
+    def update_active_status(self):
+        from apps.business_lines.services import BusinessLineService
+        BusinessLineService.update_business_line_status(self)
+    
+    def propagate_status_to_ancestors(self):
+        if self.parent:
+            self.parent.update_active_status()
