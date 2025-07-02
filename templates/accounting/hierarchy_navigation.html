@@ -16,6 +16,16 @@
         </div>
         
         <div class="flex space-x-3">
+            <form method="get" class="inline-flex">
+                <select name="status" 
+                        onchange="this.form.submit()"
+                        class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Activas</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactivas</option>
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Todas</option>
+                </select>
+            </form>
+            
             <a href="{% url 'accounting:create' %}" 
                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

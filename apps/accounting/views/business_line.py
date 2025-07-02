@@ -64,6 +64,13 @@ class BusinessLineListView(
     def get_queryset(self):
         base_queryset = BusinessLine.objects.select_related('parent').all()
         filtered_queryset = self.filter_business_lines_by_permission(base_queryset)
+        
+        status_filter = self.request.GET.get('status', 'active')
+        if status_filter == 'active':
+            filtered_queryset = filtered_queryset.filter(is_active=True)
+        elif status_filter == 'inactive':
+            filtered_queryset = filtered_queryset.filter(is_active=False)
+        
         search_query = self.request.GET.get('search', '')
         if search_query:
             filtered_queryset = filtered_queryset.filter(
@@ -76,11 +83,13 @@ class BusinessLineListView(
         context = super().get_context_data(**kwargs)
         template_service = TemplateDataService()
         search_query = self.request.GET.get('search', '')
+        status_filter = self.request.GET.get('status', 'active')
         list_context = template_service.prepare_business_line_list_context(
             business_lines=self.get_queryset(),
             search_query=search_query
         )
         context.update(list_context)
+        context['status_filter'] = status_filter
         return context
 
 
@@ -229,6 +238,12 @@ class BusinessLineHierarchyView(
             accessible_lines = business_line_service.get_accessible_lines(self.request.user)
             root_lines = business_line_service.get_root_lines_for_user(self.request.user)
             
+            status_filter = self.request.GET.get('status', 'active')
+            if status_filter == 'active':
+                root_lines = root_lines.filter(is_active=True)
+            elif status_filter == 'inactive':
+                root_lines = root_lines.filter(is_active=False)
+            
             payments = ServicePayment.objects.filter(
                 client_service__business_line__in=accessible_lines
             )
@@ -268,6 +283,7 @@ class BusinessLineHierarchyView(
                 'subtitle': 'Administra y visualiza tus líneas de negocio',
                 'show_hierarchy': True,
                 'view_type': 'business_lines',
+                'status_filter': status_filter,
                 'level_stats': {
                     'total_lines': total_lines,
                     'white_revenue': white_revenue,
