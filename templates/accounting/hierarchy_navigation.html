@@ -87,15 +87,7 @@
                     <div class="flex items-center gap-2">
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ line.name }}</h3>
                         
-                        {% if line.is_active %}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                            Activo
-                        </span>
-                        {% else %}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                            Inactivo
-                        </span>
-                        {% endif %}
+                        {% include 'accounting/components/status_badge.html' with is_active=line.is_active %}
                     </div>
                     
                     {% if line.children_count > 0 %}

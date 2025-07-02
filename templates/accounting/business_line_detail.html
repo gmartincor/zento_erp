@@ -45,14 +45,10 @@
 
 
                             <!-- Status Badge -->
-                            {% if business_line.is_active or current_line.is_active %}
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                Activo
-                            </span>
-                            {% else %}
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                Inactivo
-                            </span>
+                            {% if business_line %}
+                                {% include 'accounting/components/status_badge.html' with is_active=business_line.is_active %}
+                            {% elif current_line %}
+                                {% include 'accounting/components/status_badge.html' with is_active=current_line.is_active %}
                             {% endif %}
 
 

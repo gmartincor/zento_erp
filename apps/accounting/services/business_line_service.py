@@ -11,7 +11,7 @@ User = get_user_model()
 
 class BusinessLineService(RevenueCalculationMixin):
     def get_accessible_lines(self, user):
-        return BusinessLine.objects.select_related('parent').filter(is_active=True)
+        return BusinessLine.objects.select_related('parent').all()
     
     def get_root_lines_for_user(self, user):
         return self.get_accessible_lines(user).filter(level=1)
@@ -25,8 +25,7 @@ class BusinessLineService(RevenueCalculationMixin):
         if len(path_parts) == 1:
             return BusinessLine.objects.select_related('parent').get(
                 slug=path_parts[0], 
-                level=1, 
-                is_active=True
+                level=1
             )
         
         current_line = None
@@ -34,15 +33,13 @@ class BusinessLineService(RevenueCalculationMixin):
             if i == 0:
                 current_line = BusinessLine.objects.select_related('parent').get(
                     slug=slug, 
-                    level=1, 
-                    is_active=True
+                    level=1
                 )
             else:
                 current_line = BusinessLine.objects.select_related('parent').get(
                     slug=slug,
                     parent=current_line,
-                    level=i + 1,
-                    is_active=True
+                    level=i + 1
                 )
         
         return current_line

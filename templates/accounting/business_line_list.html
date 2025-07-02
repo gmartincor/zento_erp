@@ -149,7 +149,7 @@
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Líneas Activas</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Líneas</p>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_lines_count|default:0 }}</p>
                     <p class="text-sm text-blue-600 dark:text-blue-400">En toda la jerarquía</p>
                 </div>
@@ -203,6 +203,9 @@
                             <h4 class="text-lg font-medium text-gray-900 dark:text-white">
                                 {{ line.name }}
                             </h4>
+                            <div class="flex items-center mt-1">
+                                {% include 'accounting/components/status_badge.html' with is_active=line.is_active %}
+                            </div>
                             {% if line.description %}
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                     {{ line.description }}

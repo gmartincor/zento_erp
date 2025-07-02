@@ -62,15 +62,15 @@ class BusinessLineListView(
     paginate_by = 20
     
     def get_queryset(self):
-        base_queryset = BusinessLine.objects.select_related('parent').filter(is_active=True)
-        filtered_queryset = self.filter_by_business_line_access(base_queryset)
+        base_queryset = BusinessLine.objects.select_related('parent').all()
+        filtered_queryset = self.filter_business_lines_by_permission(base_queryset)
         search_query = self.request.GET.get('search', '')
         if search_query:
             filtered_queryset = filtered_queryset.filter(
                 Q(name__icontains=search_query) |
                 Q(description__icontains=search_query)
             )
-        return filtered_queryset
+        return filtered_queryset.order_by('-is_active', 'name')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

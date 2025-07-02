@@ -124,7 +124,7 @@ class BusinessLine(TimeStampedModel):
         return descendant_ids
     
     def _collect_descendant_ids(self, id_set):
-        children = BusinessLine.objects.filter(parent=self, is_active=True)
+        children = BusinessLine.objects.filter(parent=self)
         for child in children:
             id_set.add(child.id)
             child._collect_descendant_ids(id_set)
