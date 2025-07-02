@@ -1,6 +1,6 @@
 from django.urls import path, re_path
+from django.views.generic import RedirectView
 from .views import (
-    AccountingDashboardView,
     BusinessLineCreateView,
     CategorySummaryView,
     ClientRevenueView,
@@ -31,7 +31,8 @@ from .views.payment_detail import payment_detail_view
 app_name = 'accounting'
 
 urlpatterns = [
-    path('', AccountingDashboardView.as_view(), name='index'),
+    # Redirect root accounting URL to business lines management
+    path('', RedirectView.as_view(pattern_name='accounting:business-lines', permanent=True), name='index'),
     path('create/', BusinessLineCreateView.as_view(), name='create'),
     path('create/<int:parent>/', BusinessLineCreateView.as_view(), name='create-child'),
     path('revenue/categories/', CategorySummaryView.as_view(), name='revenue-categories'),

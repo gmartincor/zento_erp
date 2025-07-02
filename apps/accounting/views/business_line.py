@@ -212,9 +212,9 @@ class BusinessLineHierarchyView(
                 'business_lines': root_lines,
                 'items': root_lines,
                 'accessible_lines': accessible_lines,
-                'page_title': 'Navegación Jerárquica',
-                'page_subtitle': 'Explora la estructura de líneas de negocio',
-                'subtitle': 'Explora la estructura de líneas de negocio',
+                'page_title': 'Gestión por Líneas de Negocio',
+                'page_subtitle': 'Administra y visualiza tus líneas de negocio',
+                'subtitle': 'Administra y visualiza tus líneas de negocio',
                 'show_hierarchy': True,
                 'view_type': 'business_lines',
                 'level_stats': {
