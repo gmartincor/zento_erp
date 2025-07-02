@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load service_tags accounting_tags presentation_tags %}
+{% load service_tags accounting_tags presentation_tags service_status_tags %}
 
 {% block title %}Nuevo Pago - {{ service.client.full_name }} - Nutrition Pro CRM{% endblock %}
 
@@ -55,7 +55,7 @@
                 <div class="space-y-3">
                     <div>
                         <span class="text-sm text-gray-600 dark:text-gray-400">Estado:</span>
-                        <div class="mt-1">{{ service.current_status|service_status_badge }}</div>
+                        <div class="mt-1">{{ service|service_status_badge_filter }}</div>
                     </div>
                     
                     <div>

@@ -92,67 +92,11 @@ class ServiceStateManager:
     
     @classmethod
     def get_status_display_data(cls, service: ClientService) -> Dict[str, Any]:
+        from .status_display_service import StatusDisplayService
         status = cls.get_service_status(service)
         days_left = cls.days_until_expiry(service)
         
-        status_map = {
-            'active': {
-                'label': 'Activo',
-                'class': 'badge-success',
-                'icon': 'check-circle',
-                'color': 'green'
-            },
-            'no_periods': {
-                'label': 'Sin períodos',
-                'class': 'badge-warning',
-                'icon': 'calendar-plus',
-                'color': 'yellow'
-            },
-            'pending_payment': {
-                'label': 'Pago pendiente',
-                'class': 'badge-info',
-                'icon': 'credit-card',
-                'color': 'blue'
-            },
-            'renewal_due': {
-                'label': f'Renovar en {days_left} días' if days_left > 0 else 'Renovar pronto',
-                'class': 'badge-warning',
-                'icon': 'exclamation-triangle',
-                'color': 'yellow'
-            },
-            'expiring_soon': {
-                'label': cls._get_expiring_label(days_left),
-                'class': 'badge-danger',
-                'icon': 'clock',
-                'color': 'orange'
-            },
-            'expired': {
-                'label': cls._get_expired_label(days_left),
-                'class': 'badge-danger',
-                'icon': 'x-circle',
-                'color': 'red'
-            },
-            'inactive': {
-                'label': 'Pausado',
-                'class': 'badge-secondary',
-                'icon': 'pause-circle',
-                'color': 'gray'
-            },
-            'suspended': {
-                'label': 'Suspendido',
-                'class': 'badge-warning',
-                'icon': 'ban',
-                'color': 'orange'
-            }
-        }
-        
-        base_data = status_map.get(status, status_map['inactive'])
-        base_data.update({
-            'status': status,
-            'days_left': days_left
-        })
-        
-        return base_data
+        return StatusDisplayService.get_service_status_display(status, days_left)
     
     @classmethod
     def _get_expiring_label(cls, days_left: int) -> str:
@@ -176,17 +120,8 @@ class ServiceStateManager:
     
     @classmethod
     def get_status_display(cls, status: str) -> str:
-        status_labels = {
-            'active': 'Activo',
-            'no_periods': 'Sin Períodos',
-            'pending_payment': 'Pago Pendiente',
-            'renewal_due': 'Renovar Pronto',
-            'expiring_soon': 'Vence Pronto',
-            'expired': 'Vencido',
-            'inactive': 'Pausado',
-            'suspended': 'Suspendido'
-        }
-        return status_labels.get(status, 'Desconocido')
+        from .status_display_service import StatusDisplayService
+        return StatusDisplayService.get_service_status_display(status)['label']
     
     @classmethod
     def get_status_priority(cls, status: str) -> int:

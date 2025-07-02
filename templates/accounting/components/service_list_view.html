@@ -1,4 +1,4 @@
-{% load presentation_tags service_tags %}
+{% load presentation_tags service_tags service_status_tags %}
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -38,7 +38,7 @@
                         {% include 'accounting/components/service_dates.html' with service=service compact=True %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        {{ service.current_status|service_status_badge }}
+                        {{ service|service_status_badge_filter }}
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
                         {% include 'accounting/components/service_list_notes_cell.html' with service=service %}

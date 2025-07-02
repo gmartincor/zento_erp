@@ -289,7 +289,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% load service_tags %}
-                            {{ service.current_status|service_status_badge }}
+                            {{ service|service_status_badge_filter }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% if service|service_is_active %}
