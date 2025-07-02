@@ -7,18 +7,14 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
-    <!-- Enhanced Breadcrumb Navigation -->
     {% include 'accounting/components/enhanced_breadcrumb.html' with breadcrumb_path=breadcrumb_path show_stats=True %}
 
-    <!-- Header Section -->
     <div class="mb-6 flex justify-between items-start">
         <div>
-            <!-- Page Title -->
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ page_title }}</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-2">{{ page_subtitle }}</p>
         </div>
         
-        <!-- Action Button -->
         <div class="flex space-x-3">
             <a href="{% url 'accounting:create' %}" 
                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
@@ -30,9 +26,8 @@
         </div>
     </div>
 
-    <!-- Level Statistics -->
     {% if level_stats %}
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {% if view_type == 'business_lines' %}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center">
@@ -64,8 +59,8 @@
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex items-center">
-                <div class="p-2 bg-gray-100 dark:bg-gray-900 rounded-lg">
-                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                     </svg>
                 </div>
@@ -75,52 +70,19 @@
                 </div>
             </div>
         </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                    <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Promedio WHITE/Línea</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.avg_white_per_line|format_currency:"$" }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Promedio BLACK/Línea</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.avg_black_per_line|format_currency:"$" }}</p>
-                </div>
-            </div>
-        </div>
         {% endif %}
     </div>
     {% endif %}
 
-    <!-- Navigation Grid -->
     {% if view_type == 'business_lines' %}
-    <!-- Business Lines Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for line in items %}
         {% if line_path %}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer" 
-             onclick="window.location.href='/accounting/business-lines/{{ line_path }}/{{ line.slug }}/'">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
         {% else %}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer" 
-             onclick="window.location.href='/accounting/business-lines/{{ line.slug }}/'">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
         {% endif %}
             <div class="p-6">
-                <!-- Line Header -->
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ line.name }}</h3>
                     {% if line.children_count > 0 %}
@@ -130,9 +92,7 @@
                     {% endif %}
                 </div>
 
-                <!-- Stats -->
                 <div class="grid grid-cols-2 gap-3 mb-4">
-                    <!-- WHITE Stats -->
                     <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
                         <div class="text-xs font-medium text-green-700 dark:text-green-400 mb-1">WHITE</div>
                         <div class="text-sm font-bold text-green-800 dark:text-green-300">
@@ -143,38 +103,35 @@
                         </div>
                     </div>
                     
-                    <!-- BLACK Stats -->
-                    <div class="bg-gray-50 dark:bg-gray-900/20 rounded-lg p-3">
-                        <div class="text-xs font-medium text-gray-700 dark:text-gray-400 mb-1">BLACK</div>
-                        <div class="text-sm font-bold text-gray-800 dark:text-gray-300">
+                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+                        <div class="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">BLACK</div>
+                        <div class="text-sm font-bold text-purple-800 dark:text-purple-300">
                             {{ line.black_revenue|default:"0"|format_currency:"$" }}
                         </div>
-                        <div class="text-xs text-gray-600 dark:text-gray-500">
+                        <div class="text-xs text-purple-600 dark:text-purple-500">
                             {{ line.black_services|default:"0" }} servicios
                         </div>
                     </div>
                 </div>
-                
-                <!-- Total Summary -->
-                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-4">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-medium text-blue-700 dark:text-blue-400">Total</span>
-                        <div class="text-right">
-                            <div class="text-sm font-bold text-blue-800 dark:text-blue-300">
-                                {{ line.total_revenue|default:"0"|format_currency:"$" }}
-                            </div>
-                            <div class="text-xs text-blue-600 dark:text-blue-500">
-                                {{ line.total_services|default:"0" }} servicios
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Navigation Arrow -->
                 <div class="mt-4 flex justify-end">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
+                    {% if line_path %}
+                    <a href="/accounting/business-lines/{{ line_path }}/{{ line.slug }}/" 
+                       class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200">
+                        Ver línea
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                    {% else %}
+                    <a href="/accounting/business-lines/{{ line.slug }}/" 
+                       class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200">
+                        Ver línea
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -193,21 +150,18 @@
     {% endif %}
 
     {% if view_type == 'categories' %}
-    <!-- Categories Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {% for category in items %}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer" 
              onclick="window.location.href='{% url 'accounting:category-services' line_path=line_path category=category.category|lower %}'">
             <div class="p-6">
-                <!-- Category Header -->
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ category.name }}</h3>
-                    <span class="bg-{% if category.category == 'WHITE' %}green{% else %}gray{% endif %}-100 text-{% if category.category == 'WHITE' %}green{% else %}gray{% endif %}-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-{% if category.category == 'WHITE' %}green{% else %}gray{% endif %}-900 dark:text-{% if category.category == 'WHITE' %}green{% else %}gray{% endif %}-300">
+                    <span class="bg-{% if category.category == 'WHITE' %}green{% else %}purple{% endif %}-100 text-{% if category.category == 'WHITE' %}green{% else %}purple{% endif %}-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-{% if category.category == 'WHITE' %}green{% else %}purple{% endif %}-900 dark:text-{% if category.category == 'WHITE' %}green{% else %}purple{% endif %}-300">
                         {{ category.category }}
                     </span>
                 </div>
 
-                <!-- Stats -->
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <span class="text-sm text-gray-600 dark:text-gray-400">Ingresos:</span>
@@ -235,7 +189,6 @@
                     </div>
                 </div>
 
-                <!-- Navigation Arrow -->
                 <div class="mt-4 flex justify-end">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -244,7 +197,6 @@
             </div>
         </div>
         {% empty %}
-        <!-- No categories/services message -->
         <div class="col-span-full">
             <div class="text-center py-12">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -270,7 +222,6 @@
     {% endif %}
 
     {% if view_type == 'clients' %}
-    <!-- Clients Table -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Lista de Clientes</h2>
@@ -350,7 +301,6 @@
     </div>
     {% endif %}
 
-    <!-- Back Navigation -->
     {% if navigation_level > 0 %}
     <div class="mt-8 flex justify-start">
         <a href="{{ back_url }}" 
