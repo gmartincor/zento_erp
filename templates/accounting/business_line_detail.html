@@ -68,7 +68,6 @@
                 </div>
             </div>
 
-            <!-- Right side: Admin Action Buttons -->
             <div class="flex-shrink-0">
                 {% if user.is_authenticated and user.role == 'ADMIN' and line_path %}
                     <div class="flex flex-col sm:flex-row gap-2">
@@ -321,33 +320,36 @@
     </div>
     {% endif %}
 
-    <!-- Quick Actions Panel (only if has children or is leaf) -->
     {% if children.exists or not children.exists %}
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            Acciones Rápidas
-        </h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <a href="{% url 'accounting:business-lines' %}" 
-               class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-                <span class="text-sm font-medium">Ver todas las líneas</span>
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                Acciones Rápidas
+            </h2>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 justify-items-center">
+                <a href="{% url 'accounting:business-lines' %}" 
+                   class="flex items-center justify-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-full">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                    <span class="text-sm font-medium">Ver todas las líneas</span>
             </a>
             <a href="{% url 'accounting:category-services' line_path=line_path category='white' %}"
-               class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors">
+               class="flex items-center justify-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors w-full">
                 <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                <span class="text-sm font-medium">Reportes White</span>
+                <span class="text-sm font-medium">Total reportes White - {% if business_line %}{{ business_line.name }}{% elif current_line %}{{ current_line.name }}{% endif %}</span>
             </a>
             <a href="{% url 'accounting:category-services' line_path=line_path category='black' %}"
-               class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+               class="flex items-center justify-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors w-full">
                 <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                <span class="text-sm font-medium">Reportes Black</span>
+                <span class="text-sm font-medium">Total reportes Black - {% if business_line %}{{ business_line.name }}{% elif current_line %}{{ current_line.name }}{% endif %}</span>
             </a>
 
         </div>
