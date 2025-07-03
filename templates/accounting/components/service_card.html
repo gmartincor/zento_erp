@@ -61,10 +61,18 @@
                 </div>
             </div>
             
-            <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-2">
                 <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600 dark:text-gray-400">Estado:</span>
-                    {% include 'accounting/components/service_status_badge.html' %}
+                    <span class="text-gray-600 dark:text-gray-400">Estado Operacional:</span>
+                    {% service_operational_status_badge service %}
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Estado Pagos:</span>
+                    {% service_payment_status_badge service %}
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Estado Renovación:</span>
+                    {% service_status_badge service %}
                 </div>
             </div>
             

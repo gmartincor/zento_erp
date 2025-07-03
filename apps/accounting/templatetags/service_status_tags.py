@@ -165,3 +165,20 @@ def service_operational_status_badge(service):
         'label': 'Activo' if is_active else 'Inactivo',
         'css_class': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' if is_active else 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
     }
+
+
+@register.simple_tag
+def service_payment_status_badge(service):
+    from ..services.status_display_service import StatusDisplayService
+    
+    latest_payment = service.payments.order_by('-created').first()
+    if not latest_payment:
+        status_data = StatusDisplayService.get_payment_status_display('AWAITING_START')
+    else:
+        status_data = StatusDisplayService.get_payment_status_display(latest_payment.status)
+    
+    return mark_safe(
+        f'<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {status_data["class"]}">'
+        f'{status_data["label"]}'
+        f'</span>'
+    )
