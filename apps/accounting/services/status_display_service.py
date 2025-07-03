@@ -5,8 +5,8 @@ from apps.accounting.models import ServicePayment
 class StatusDisplayService:
     
     PAYMENT_STATUS_LABELS = {
-        'AWAITING_START': 'Pendiente de pago',
-        'UNPAID_ACTIVE': 'Sin pagar',
+        'AWAITING_START': 'Periodo creado sin pago',
+        'UNPAID_ACTIVE': 'Pendiente de pago',
         'PAID': 'Pagado',
         'OVERDUE': 'Vencido',
         'REFUNDED': 'Reembolsado'

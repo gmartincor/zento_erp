@@ -326,8 +326,8 @@ class ClientService(TimeStampedModel):
 class ServicePayment(TimeStampedModel):
     
     class StatusChoices(models.TextChoices):
-        AWAITING_START = 'AWAITING_START', 'Pendiente de pago'
-        UNPAID_ACTIVE = 'UNPAID_ACTIVE', 'Sin pagar'
+        AWAITING_START = 'AWAITING_START', 'Periodo creado sin pago'
+        UNPAID_ACTIVE = 'UNPAID_ACTIVE', 'Pendiente de pago'
         PAID = 'PAID', 'Pagado'
         OVERDUE = 'OVERDUE', 'Vencido'
         CANCELLED = 'CANCELLED', 'Cancelado'

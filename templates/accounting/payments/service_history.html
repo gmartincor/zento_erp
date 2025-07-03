@@ -143,7 +143,7 @@
                                         <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
                                             {{ payment.get_status_display }}
                                         </span>
-                                    {% elif payment.status == 'PENDING' %}
+                                    {% elif payment.status == 'AWAITING_START' or payment.status == 'UNPAID_ACTIVE' %}
                                         <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">
                                             {{ payment.get_status_display }}
                                         </span>

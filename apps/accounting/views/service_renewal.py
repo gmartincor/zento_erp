@@ -35,7 +35,7 @@ def service_renewal_view(request, service_id):
                     messages.success(
                         request, 
                         f"Servicio {action} exitosamente hasta {period.period_end}. "
-                        f"Se creó un período pendiente de pago."
+                        f"Se creó un período para el pago futuro."
                     )
                 else:
                     action = "activado" if not client_service.end_date else "extendido"

@@ -117,9 +117,9 @@
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                                     Pagado
                                 </span>
-                            {% elif payment.status == 'PENDING' %}
+                            {% elif payment.status == 'AWAITING_START' or payment.status == 'UNPAID_ACTIVE' %}
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                    Pendiente
+                                    Pendiente de pago
                                 </span>
                             {% elif payment.status == 'OVERDUE' %}
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">

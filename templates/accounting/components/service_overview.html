@@ -31,7 +31,7 @@
                 ⏳ {{ period.period_start|date:"d/m/Y" }} - {{ period.period_end|date:"d/m/Y" }}
             </div>
             <div class="text-xs text-gray-600 dark:text-gray-400">
-                Período pendiente de pago
+                Período con pago pendiente
             </div>
             {% if not forloop.last %}<div class="mt-2"></div>{% endif %}
             {% endfor %}
@@ -62,7 +62,7 @@
             </div>
             <div>
                 <span class="text-gray-600 dark:text-gray-400">Períodos:</span>
-                <div class="font-medium">{{ payment_summary.pending_count }} sin pagar</div>
+                <div class="font-medium">{{ payment_summary.pending_count }} pendientes</div>
             </div>
             {% endif %}
         </div>
