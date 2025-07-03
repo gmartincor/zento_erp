@@ -232,45 +232,7 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        {% with status=service.current_status %}
-                            {% if status == "active" %}
-                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
-                                    Activo
-                                </span>
-                            {% elif status == "renewal_due" %}
-                                <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">
-                                    Renovar en {{ service.days_until_expiry }} días
-                                </span>
-                            {% elif status == "expiring_soon" %}
-                                <span class="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded-full">
-                                    Vence en {{ service.days_until_expiry }} días
-                                </span>
-                            {% elif status == "expired" %}
-                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full">
-                                    Vencido
-                                </span>
-                            {% elif status == "pending_payment" %}
-                                <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full">
-                                    Pago pendiente
-                                </span>
-                            {% elif status == "no_periods" %}
-                                <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">
-                                    Sin períodos
-                                </span>
-                            {% elif status == "inactive" %}
-                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 rounded-full">
-                                    Pausado
-                                </span>
-                            {% elif status == "suspended" %}
-                                <span class="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded-full">
-                                    Suspendido
-                                </span>
-                            {% else %}
-                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 rounded-full">
-                                    {{ service.get_status_display }}
-                                </span>
-                            {% endif %}
-                        {% endwith %}
+                        {% service_status_badge service %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {% if service|service_is_active %}
@@ -302,7 +264,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <a href="{% url 'accounting:client-service-detail' service_id=service.id %}" 
                            class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">
-                            Ver
+                            Ver Pagos
                         </a>
                         {% if service|service_is_active %}
                         <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 

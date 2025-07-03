@@ -23,7 +23,7 @@ class StatusDisplayService:
     SERVICE_STATUS_LABELS = {
         'active': 'Activo',
         'no_periods': 'Sin períodos',
-        'renewal_due': 'Renovar pronto',
+        'renewal_pending': 'Pendiente de renovación',
         'expiring_soon': 'Vence pronto',
         'expired': 'Vencido',
         'inactive': 'Pausado',
@@ -33,7 +33,7 @@ class StatusDisplayService:
     SERVICE_STATUS_CLASSES = {
         'active': 'bg-green-100 text-green-800',
         'no_periods': 'bg-slate-100 text-slate-800',
-        'renewal_due': 'bg-yellow-100 text-yellow-800',
+        'renewal_pending': 'bg-yellow-100 text-yellow-800',
         'expiring_soon': 'bg-orange-100 text-orange-800',
         'expired': 'bg-red-100 text-red-800',
         'inactive': 'bg-gray-100 text-gray-800',
@@ -50,19 +50,6 @@ class StatusDisplayService:
     @classmethod
     def get_service_status_display(cls, status: str, days_left: int = None) -> Dict[str, str]:
         label = cls.SERVICE_STATUS_LABELS.get(status, status)
-        
-        if status == 'renewal_due' and days_left is not None:
-            label = f'Renovar en {days_left} días' if days_left > 0 else 'Renovar pronto'
-        elif status == 'expiring_soon' and days_left is not None:
-            if days_left > 0:
-                label = f'Vence en {days_left} días'
-            else:
-                label = 'Vencido hoy'
-        elif status == 'expired' and days_left is not None:
-            if days_left < 0:
-                label = f'Vencido hace {abs(days_left)} días'
-            else:
-                label = 'Vencido'
         
         return {
             'label': label,

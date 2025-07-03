@@ -72,7 +72,7 @@ class ServiceStateManager:
         if days_left <= cls.EXPIRING_SOON_DAYS:
             return 'expiring_soon'
         elif days_left <= cls.RENEWAL_WARNING_DAYS:
-            return 'renewal_due'
+            return 'renewal_pending'
         else:
             return 'active'
     
@@ -87,8 +87,14 @@ class ServiceStateManager:
         from .status_display_service import StatusDisplayService
         status = cls.get_service_status(service)
         days_left = cls.days_until_expiry(service)
+        display_data = StatusDisplayService.get_service_status_display(status, days_left)
         
-        return StatusDisplayService.get_service_status_display(status, days_left)
+        return {
+            'status': status,
+            'label': display_data['label'],
+            'class': display_data['class'],
+            'priority': cls.get_status_priority(status)
+        }
     
     @classmethod
     def _get_expiring_label(cls, days_left: int) -> str:
@@ -120,7 +126,7 @@ class ServiceStateManager:
         priorities = {
             'expired': 1,
             'expiring_soon': 2,
-            'renewal_due': 3,
+            'renewal_pending': 3,
             'pending': 4,
             'no_periods': 5,
             'suspended': 6,
@@ -150,7 +156,7 @@ class ServiceStateManager:
             return False
         
         status = cls.get_service_status(service)
-        return status in ['renewal_due', 'expiring_soon', 'expired']
+        return status in ['renewal_pending', 'expiring_soon', 'expired']
     
     @classmethod
     def _auto_deactivate_if_scheduled(cls, service):

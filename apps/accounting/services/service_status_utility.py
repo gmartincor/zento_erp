@@ -22,7 +22,7 @@ class ServiceStatusUtility:
         return {
             'active': base_queryset.with_status('active').count(),
             'expiring_soon': base_queryset.with_status('expiring_soon').count(),
-            'renewal_due': base_queryset.with_status('renewal_due').count(),
+            'renewal_pending': base_queryset.with_status('renewal_pending').count(),
             'expired': base_queryset.with_status('expired').count(),
             'suspended': base_queryset.with_status('suspended').count(),
             'inactive': base_queryset.with_status('inactive').count(),
@@ -37,8 +37,8 @@ class ServiceStatusUtility:
                 'service': service,
                 'status': status_data['status'],
                 'status_display': status_data['label'],
-                'status_color': status_data['color'],
-                'priority': status_data.get('priority', 0)
+                'status_color': status_data['class'],
+                'priority': status_data['priority']
             })
         
         return sorted(result, key=lambda x: x['priority'])
