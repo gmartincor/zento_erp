@@ -3,83 +3,62 @@
 <form method="get" class="space-y-4">
     <input type="hidden" name="view" value="{{ request.GET.view|default:'grid' }}">
     
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente</label>
-            <input type="text" name="client" value="{{ request.GET.client|default:'' }}"
-                   placeholder="Buscar por cliente..." 
-                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-        </div>
-        
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado Operacional</label>
-            <select name="operational_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="">Todos los estados</option>
-                <option value="active" {% if request.GET.operational_status == 'active' %}selected{% endif %}>Activos</option>
-                <option value="inactive" {% if request.GET.operational_status == 'inactive' %}selected{% endif %}>Inactivos</option>
-                <option value="suspended" {% if request.GET.operational_status == 'suspended' %}selected{% endif %}>Suspendidos</option>
-            </select>
-        </div>
-        
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado de Pagos</label>
-            <select name="payment_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="">Todos los estados</option>
-                <option value="PAID" {% if request.GET.payment_status == 'PAID' %}selected{% endif %}>Pagado</option>
-                <option value="AWAITING_START" {% if request.GET.payment_status == 'AWAITING_START' %}selected{% endif %}>Periodo creado sin pago</option>
-                <option value="UNPAID_ACTIVE" {% if request.GET.payment_status == 'UNPAID_ACTIVE' %}selected{% endif %}>Pendiente de pago</option>
-                <option value="OVERDUE" {% if request.GET.payment_status == 'OVERDUE' %}selected{% endif %}>Vencido</option>
-                <option value="REFUNDED" {% if request.GET.payment_status == 'REFUNDED' %}selected{% endif %}>Reembolsado</option>
-                <option value="no_payments" {% if request.GET.payment_status == 'no_payments' %}selected{% endif %}>Sin pagos</option>
-            </select>
-        </div>
-        
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado de Renovación</label>
-            <select name="renewal_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="">Todos los estados</option>
-                <option value="active" {% if request.GET.renewal_status == 'active' %}selected{% endif %}>Al día</option>
-                <option value="no_periods" {% if request.GET.renewal_status == 'no_periods' %}selected{% endif %}>Sin períodos</option>
-                <option value="renewal_pending" {% if request.GET.renewal_status == 'renewal_pending' %}selected{% endif %}>Pendiente de renovación</option>
-                <option value="expiring_soon" {% if request.GET.renewal_status == 'expiring_soon' %}selected{% endif %}>Vence pronto</option>
-                <option value="expired" {% if request.GET.renewal_status == 'expired' %}selected{% endif %}>Vencido</option>
-                <option value="inactive" {% if request.GET.renewal_status == 'inactive' %}selected{% endif %}>Pausado</option>
-                <option value="suspended" {% if request.GET.renewal_status == 'suspended' %}selected{% endif %}>Suspendido</option>
-            </select>
-        </div>
-    </div>
-    
-    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-2 sm:mb-0">
-                Filtros aplicables de forma conjunta
+    <div class="flex flex-col lg:flex-row lg:items-end gap-4">
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente</label>
+                <input type="text" name="client" value="{{ request.GET.client|default:'' }}"
+                       placeholder="Buscar por cliente..." 
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
             </div>
-            <div class="flex space-x-3">
-                <button type="submit" 
-                        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                    Aplicar Filtros
-                </button>
-                <a href="?" 
-                   class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-4 py-2">
-                    Limpiar
-                </a>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado Operacional</label>
+                <select name="operational_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todos los estados</option>
+                    <option value="active" {% if request.GET.operational_status == 'active' %}selected{% endif %}>Activos</option>
+                    <option value="inactive" {% if request.GET.operational_status == 'inactive' %}selected{% endif %}>Inactivos</option>
+                    <option value="suspended" {% if request.GET.operational_status == 'suspended' %}selected{% endif %}>Suspendidos</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado de Pagos</label>
+                <select name="payment_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todos los estados</option>
+                    <option value="PAID" {% if request.GET.payment_status == 'PAID' %}selected{% endif %}>Pagado</option>
+                    <option value="AWAITING_START" {% if request.GET.payment_status == 'AWAITING_START' %}selected{% endif %}>Periodo creado sin pago</option>
+                    <option value="UNPAID_ACTIVE" {% if request.GET.payment_status == 'UNPAID_ACTIVE' %}selected{% endif %}>Pendiente de pago</option>
+                    <option value="OVERDUE" {% if request.GET.payment_status == 'OVERDUE' %}selected{% endif %}>Vencido</option>
+                    <option value="REFUNDED" {% if request.GET.payment_status == 'REFUNDED' %}selected{% endif %}>Reembolsado</option>
+                    <option value="no_payments" {% if request.GET.payment_status == 'no_payments' %}selected{% endif %}>Sin pagos</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado de Renovación</label>
+                <select name="renewal_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todos los estados</option>
+                    <option value="active" {% if request.GET.renewal_status == 'active' %}selected{% endif %}>Al día</option>
+                    <option value="no_periods" {% if request.GET.renewal_status == 'no_periods' %}selected{% endif %}>Sin períodos</option>
+                    <option value="renewal_pending" {% if request.GET.renewal_status == 'renewal_pending' %}selected{% endif %}>Pendiente de renovación</option>
+                    <option value="expiring_soon" {% if request.GET.renewal_status == 'expiring_soon' %}selected{% endif %}>Vence pronto</option>
+                    <option value="expired" {% if request.GET.renewal_status == 'expired' %}selected{% endif %}>Vencido</option>
+                    <option value="inactive" {% if request.GET.renewal_status == 'inactive' %}selected{% endif %}>Pausado</option>
+                    <option value="suspended" {% if request.GET.renewal_status == 'suspended' %}selected{% endif %}>Suspendido</option>
+                </select>
             </div>
         </div>
-    </div>
-    
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-        <div class="text-xs text-gray-600 dark:text-gray-400">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <div>
-                    <strong>Estado Operacional:</strong> Control administrativo del servicio (activo, inactivo, suspendido)
-                </div>
-                <div>
-                    <strong>Estado de Pagos:</strong> Estados de pagos según aparecen en /accounting/payments/
-                </div>
-                <div>
-                    <strong>Estado de Renovación:</strong> Estados según aparecen en /accounting/expiring-services/
-                </div>
-            </div>
+        
+        <div class="flex space-x-3 lg:ml-4">
+            <a href="?" 
+               class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-4 py-2">
+                Limpiar
+            </a>
+            <button type="submit" 
+                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                Aplicar Filtros
+            </button>
         </div>
     </div>
 </form>

@@ -54,36 +54,7 @@
         </div>
         {% endif %}
         
-        {% if filter_summary %}
-        <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div class="flex items-center justify-between mb-2">
-                <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200">Filtros aplicados:</h4>
-                <a href="?" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200">
-                    Limpiar todos
-                </a>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                {% for filter_name, filter_value in filter_summary.items %}
-                {% if filter_name == 'Cliente' %}
-                    {% remove_filter_url request 'client' as remove_url %}
-                    {% filter_badge filter_name filter_value remove_url %}
-                {% elif filter_name == 'Estado Operacional' %}
-                    {% remove_filter_url request 'operational_status' as remove_url %}
-                    {% filter_badge filter_name filter_value remove_url %}
-                {% elif filter_name == 'Estado de Pagos' %}
-                    {% remove_filter_url request 'payment_status' as remove_url %}
-                    {% filter_badge filter_name filter_value remove_url %}
-                {% elif filter_name == 'Estado de Renovación' %}
-                    {% remove_filter_url request 'renewal_status' as remove_url %}
-                    {% filter_badge filter_name filter_value remove_url %}
-                {% elif filter_name == 'Estado General' %}
-                    {% remove_filter_url request 'status' as remove_url %}
-                    {% filter_badge filter_name filter_value remove_url %}
-                {% endif %}
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
+
         
         {% include 'accounting/components/advanced_service_filters.html' %}
     </div>
