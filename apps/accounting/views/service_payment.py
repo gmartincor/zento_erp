@@ -145,8 +145,8 @@ def cancel_period_view(request, service_id, period_id):
         id=period_id, 
         client_service=client_service,
         status__in=[
-            ServicePayment.StatusChoices.PERIOD_CREATED,
-            ServicePayment.StatusChoices.PENDING
+            ServicePayment.StatusChoices.AWAITING_START,
+            ServicePayment.StatusChoices.UNPAID_ACTIVE
         ]
     )
     

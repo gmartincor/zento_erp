@@ -26,7 +26,7 @@ class ServicePeriodManager:
             client_service=client_service,
             period_start=period_start,
             period_end=period_end,
-            status=ServicePayment.StatusChoices.PERIOD_CREATED,
+            status=ServicePayment.StatusChoices.AWAITING_START,
             notes=notes,
             amount=client_service.price,
             payment_date=None,
@@ -86,8 +86,8 @@ class ServicePeriodManager:
     def get_pending_periods(client_service: ClientService) -> List[ServicePayment]:
         return client_service.payments.filter(
             status__in=[
-                ServicePayment.StatusChoices.PERIOD_CREATED,
-                ServicePayment.StatusChoices.PENDING
+                ServicePayment.StatusChoices.AWAITING_START,
+                ServicePayment.StatusChoices.UNPAID_ACTIVE
             ]
         ).order_by('period_start')
     

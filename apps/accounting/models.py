@@ -326,8 +326,8 @@ class ClientService(TimeStampedModel):
 class ServicePayment(TimeStampedModel):
     
     class StatusChoices(models.TextChoices):
-        PERIOD_CREATED = 'PERIOD_CREATED', 'Período creado'
-        PENDING = 'PENDING', 'Pago en proceso'
+        AWAITING_START = 'AWAITING_START', 'Pendiente de pago'
+        UNPAID_ACTIVE = 'UNPAID_ACTIVE', 'Sin pagar'
         PAID = 'PAID', 'Pagado'
         OVERDUE = 'OVERDUE', 'Vencido'
         CANCELLED = 'CANCELLED', 'Cancelado'
@@ -375,7 +375,7 @@ class ServicePayment(TimeStampedModel):
     status = models.CharField(
         max_length=15,
         choices=StatusChoices.choices,
-        default=StatusChoices.PERIOD_CREATED,
+        default=StatusChoices.AWAITING_START,
         verbose_name="Estado"
     )
     
@@ -452,8 +452,8 @@ class ServicePayment(TimeStampedModel):
         if self.status == self.StatusChoices.CANCELLED:
             last_active_period = self.client_service.payments.filter(
                 status__in=[
-                    self.StatusChoices.PERIOD_CREATED,
-                    self.StatusChoices.PENDING, 
+                    self.StatusChoices.AWAITING_START,
+                    self.StatusChoices.UNPAID_ACTIVE,
                     self.StatusChoices.PAID
                 ]
             ).exclude(id=self.id).order_by('-period_end').first()
@@ -464,8 +464,8 @@ class ServicePayment(TimeStampedModel):
         else:
             last_period = self.client_service.payments.filter(
                 status__in=[
-                    self.StatusChoices.PERIOD_CREATED,
-                    self.StatusChoices.PENDING,
+                    self.StatusChoices.AWAITING_START,
+                    self.StatusChoices.UNPAID_ACTIVE,
                     self.StatusChoices.PAID
                 ]
             ).order_by('-period_end').first()
@@ -563,10 +563,9 @@ class ServicePayment(TimeStampedModel):
     
     @property
     def can_be_paid(self):
-        """Verifica si el período puede recibir un pago"""
         return self.status in [
-            self.StatusChoices.PERIOD_CREATED,
-            self.StatusChoices.PENDING
+            self.StatusChoices.AWAITING_START,
+            self.StatusChoices.UNPAID_ACTIVE
         ]
     
     @property
@@ -589,7 +588,7 @@ class ServicePayment(TimeStampedModel):
         self.save()
 
     def mark_as_overdue(self):
-        if self.status == self.StatusChoices.PENDING:
+        if self.status in [self.StatusChoices.AWAITING_START, self.StatusChoices.UNPAID_ACTIVE]:
             self.status = self.StatusChoices.OVERDUE
             self.save()
 
@@ -622,7 +621,25 @@ class ServicePayment(TimeStampedModel):
 
     @property
     def net_amount(self):
-        """Calcula el pago neto después de reembolsos"""
         if self.amount is None:
             return None
         return self.amount - (self.refunded_amount or 0)
+
+    def get_appropriate_status(self):
+        from .services.date_calculator import DateCalculator
+        today = DateCalculator.get_today()
+        
+        if self.status == self.StatusChoices.PAID:
+            return self.status
+            
+        if today < self.period_start:
+            return self.StatusChoices.AWAITING_START
+        elif today <= self.period_end:
+            return self.StatusChoices.UNPAID_ACTIVE
+        else:
+            return self.StatusChoices.OVERDUE
+    
+    def save(self, *args, **kwargs):
+        if self.status in [self.StatusChoices.AWAITING_START, self.StatusChoices.UNPAID_ACTIVE] and self.status != self.StatusChoices.PAID:
+            self.status = self.get_appropriate_status()
+        super().save(*args, **kwargs)

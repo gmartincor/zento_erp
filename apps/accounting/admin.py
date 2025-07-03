@@ -288,11 +288,12 @@ class ServicePaymentAdmin(admin.ModelAdmin):
 
     def status_display(self, obj):
         status_colors = {
-            'PENDING': 'orange',
+            'AWAITING_START': 'blue',
+            'UNPAID_ACTIVE': 'orange',
             'PAID': 'green',
             'OVERDUE': 'red',
             'CANCELLED': 'gray',
-            'REFUNDED': 'blue'
+            'REFUNDED': 'purple'
         }
         
         color = status_colors.get(obj.status, 'black')
@@ -311,7 +312,7 @@ class ServicePaymentAdmin(admin.ModelAdmin):
     def mark_as_paid(self, request, queryset):
         count = 0
         for payment in queryset:
-            if payment.status == ServicePayment.StatusChoices.PENDING:
+            if payment.status in [ServicePayment.StatusChoices.AWAITING_START, ServicePayment.StatusChoices.UNPAID_ACTIVE]:
                 payment.mark_as_paid()
                 count += 1
         
@@ -322,7 +323,7 @@ class ServicePaymentAdmin(admin.ModelAdmin):
     def mark_as_overdue(self, request, queryset):
         count = 0
         for payment in queryset:
-            if payment.status == ServicePayment.StatusChoices.PENDING:
+            if payment.status in [ServicePayment.StatusChoices.AWAITING_START, ServicePayment.StatusChoices.UNPAID_ACTIVE]:
                 payment.mark_as_overdue()
                 count += 1
         
@@ -333,7 +334,7 @@ class ServicePaymentAdmin(admin.ModelAdmin):
     def cancel_payments(self, request, queryset):
         count = 0
         for payment in queryset:
-            if payment.status in [ServicePayment.StatusChoices.PENDING, ServicePayment.StatusChoices.OVERDUE]:
+            if payment.status in [ServicePayment.StatusChoices.AWAITING_START, ServicePayment.StatusChoices.UNPAID_ACTIVE, ServicePayment.StatusChoices.OVERDUE]:
                 payment.cancel('Cancelado desde admin')
                 count += 1
         

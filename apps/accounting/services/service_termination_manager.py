@@ -54,8 +54,8 @@ class ServiceTerminationManager:
         
         last_created_payment = service.payments.filter(
             status__in=[
-                ServicePayment.StatusChoices.PERIOD_CREATED,
-                ServicePayment.StatusChoices.PENDING,
+                ServicePayment.StatusChoices.AWAITING_START,
+                ServicePayment.StatusChoices.UNPAID_ACTIVE,
                 ServicePayment.StatusChoices.PAID
             ]
         ).order_by('-period_end').first()

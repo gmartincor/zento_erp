@@ -75,8 +75,9 @@ class ClientStateManager:
         
         pending_periods = service.payments.filter(
             status__in=[
-                ServicePayment.StatusChoices.PERIOD_CREATED,
-                ServicePayment.StatusChoices.PENDING
+                ServicePayment.StatusChoices.AWAITING_START,
+                ServicePayment.StatusChoices.UNPAID_ACTIVE,
+                ServicePayment.StatusChoices.OVERDUE
             ],
             period_start__gte=cancel_date
         )

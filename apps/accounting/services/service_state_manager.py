@@ -59,7 +59,7 @@ class ServiceStateManager:
         
         last_period = cls._get_last_period(service)
         has_pending_periods = service.payments.filter(
-            status__in=['PERIOD_CREATED', 'PENDING']
+            status__in=['AWAITING_START', 'UNPAID_ACTIVE']
         ).exists()
         
         if not last_period:
@@ -73,7 +73,7 @@ class ServiceStateManager:
                 else:
                     return 'active'
             else:
-                return 'pending_payment'
+                return 'pending'
         
         if cls.is_service_expired(service):
             return 'expired'
@@ -129,7 +129,7 @@ class ServiceStateManager:
             'expired': 1,
             'expiring_soon': 2,
             'renewal_due': 3,
-            'pending_payment': 4,
+            'pending': 4,
             'no_periods': 5,
             'suspended': 6,
             'inactive': 7,
@@ -177,7 +177,7 @@ class ServiceStateManager:
         status = cls.get_service_status(service)
         
         pending_periods = service.payments.filter(
-            status__in=[ServicePayment.StatusChoices.PERIOD_CREATED, ServicePayment.StatusChoices.PENDING]
+            status__in=[ServicePayment.StatusChoices.AWAITING_START, ServicePayment.StatusChoices.UNPAID_ACTIVE]
         ).order_by('period_start')
         
         paid_periods = service.payments.filter(

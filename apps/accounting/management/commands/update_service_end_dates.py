@@ -28,7 +28,6 @@ class Command(BaseCommand):
                 latest_period = service.payments.filter(
                     status__in=[
                         ServicePayment.StatusChoices.PERIOD_CREATED,
-                        ServicePayment.StatusChoices.PENDING,
                         ServicePayment.StatusChoices.PAID
                     ]
                 ).order_by('-period_end').first()

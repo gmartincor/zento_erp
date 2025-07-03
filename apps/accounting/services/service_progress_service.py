@@ -23,9 +23,8 @@ class ServiceProgressService:
     
     @classmethod
     def _has_payments(cls, service: ClientService) -> bool:
-        """Verifica si el servicio tiene pagos registrados."""
         return service.payments.filter(
-            status__in=['PAID', 'PENDING']
+            status='PAID'
         ).exists()
     
     @classmethod

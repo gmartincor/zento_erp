@@ -5,8 +5,8 @@ from apps.accounting.models import ServicePayment
 class StatusDisplayService:
     
     PAYMENT_STATUS_LABELS = {
-        'PERIOD_CREATED': 'Período creado',
-        'PENDING': 'Pago en proceso',
+        'AWAITING_START': 'Pendiente de pago',
+        'UNPAID_ACTIVE': 'Sin pagar',
         'PAID': 'Pagado',
         'OVERDUE': 'Vencido',
         'CANCELLED': 'Cancelado',
@@ -14,8 +14,8 @@ class StatusDisplayService:
     }
     
     PAYMENT_STATUS_CLASSES = {
-        'PERIOD_CREATED': 'bg-blue-100 text-blue-800',
-        'PENDING': 'bg-yellow-100 text-yellow-800',
+        'AWAITING_START': 'bg-blue-100 text-blue-800',
+        'UNPAID_ACTIVE': 'bg-orange-100 text-orange-800',
         'PAID': 'bg-green-100 text-green-800',
         'OVERDUE': 'bg-red-100 text-red-800',
         'CANCELLED': 'bg-red-100 text-red-800',
@@ -25,7 +25,7 @@ class StatusDisplayService:
     SERVICE_STATUS_LABELS = {
         'active': 'Activo',
         'no_periods': 'Sin períodos',
-        'pending_payment': 'Sin pagos realizados',
+        'pending': 'Pendiente',
         'renewal_due': 'Renovar pronto',
         'expiring_soon': 'Vence pronto',
         'expired': 'Vencido',
@@ -36,7 +36,7 @@ class StatusDisplayService:
     SERVICE_STATUS_CLASSES = {
         'active': 'bg-green-100 text-green-800',
         'no_periods': 'bg-slate-100 text-slate-800',
-        'pending_payment': 'bg-amber-100 text-amber-800',
+        'pending': 'bg-orange-100 text-orange-800',
         'renewal_due': 'bg-yellow-100 text-yellow-800',
         'expiring_soon': 'bg-orange-100 text-orange-800',
         'expired': 'bg-red-100 text-red-800',

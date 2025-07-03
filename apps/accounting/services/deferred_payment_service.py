@@ -45,8 +45,9 @@ class DeferredPaymentService:
     def get_pending_periods_for_payment(cls, client_service):
         return client_service.payments.filter(
             status__in=[
-                ServicePayment.StatusChoices.PERIOD_CREATED,
-                ServicePayment.StatusChoices.PENDING
+                ServicePayment.StatusChoices.AWAITING_START,
+                ServicePayment.StatusChoices.UNPAID_ACTIVE,
+                ServicePayment.StatusChoices.OVERDUE
             ]
         ).order_by('period_start')
     
