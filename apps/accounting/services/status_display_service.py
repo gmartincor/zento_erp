@@ -21,7 +21,7 @@ class StatusDisplayService:
     }
     
     SERVICE_STATUS_LABELS = {
-        'active': 'Activo',
+        'active': 'Al día',
         'no_periods': 'Sin períodos',
         'renewal_pending': 'Pendiente de renovación',
         'expiring_soon': 'Vence pronto',
