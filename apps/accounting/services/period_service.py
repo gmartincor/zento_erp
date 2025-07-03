@@ -93,9 +93,7 @@ class ServicePeriodManager:
     
     @staticmethod
     def get_last_period(client_service: ClientService) -> ServicePayment:
-        return client_service.payments.exclude(
-            status=ServicePayment.StatusChoices.CANCELLED
-        ).order_by('-period_end').first()
+        return client_service.payments.order_by('-period_end').first()
     
     @staticmethod
     def get_unpaid_periods_summary(client_service: ClientService) -> Dict[str, Any]:

@@ -78,9 +78,7 @@ class ServiceStateManager:
     
     @classmethod
     def _get_last_period(cls, service: ClientService) -> Optional[ServicePayment]:
-        return service.payments.exclude(
-            status=ServicePayment.StatusChoices.CANCELLED
-        ).order_by('-period_end').first()
+        return service.payments.order_by('-period_end').first()
     
     @classmethod
     def get_status_display_data(cls, service: ClientService) -> Dict[str, Any]:

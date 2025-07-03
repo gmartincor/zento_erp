@@ -82,10 +82,7 @@ class ClientStateManager:
             period_start__gte=cancel_date
         )
         
-        for period in pending_periods:
-            period.status = ServicePayment.StatusChoices.CANCELLED
-            period.notes = f"{period.notes}\nCancelado por desactivación de cliente" if period.notes else "Cancelado por desactivación de cliente"
-            period.save(update_fields=['status', 'notes', 'modified'])
+        pending_periods.delete()
         
         last_paid_period = service.payments.filter(
             status=ServicePayment.StatusChoices.PAID

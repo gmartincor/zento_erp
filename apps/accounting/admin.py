@@ -292,7 +292,6 @@ class ServicePaymentAdmin(admin.ModelAdmin):
             'UNPAID_ACTIVE': 'orange',
             'PAID': 'green',
             'OVERDUE': 'red',
-            'CANCELLED': 'gray',
             'REFUNDED': 'purple'
         }
         

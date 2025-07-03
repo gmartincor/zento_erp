@@ -330,7 +330,6 @@ class ServicePayment(TimeStampedModel):
         UNPAID_ACTIVE = 'UNPAID_ACTIVE', 'Pendiente de pago'
         PAID = 'PAID', 'Pagado'
         OVERDUE = 'OVERDUE', 'Vencido'
-        CANCELLED = 'CANCELLED', 'Cancelado'
         REFUNDED = 'REFUNDED', 'Reembolsado'
     
     class PaymentMethodChoices(models.TextChoices):
@@ -449,30 +448,17 @@ class ServicePayment(TimeStampedModel):
         self._update_service_end_date()
     
     def _update_service_end_date(self):
-        if self.status == self.StatusChoices.CANCELLED:
-            last_active_period = self.client_service.payments.filter(
-                status__in=[
-                    self.StatusChoices.AWAITING_START,
-                    self.StatusChoices.UNPAID_ACTIVE,
-                    self.StatusChoices.PAID
-                ]
-            ).exclude(id=self.id).order_by('-period_end').first()
-            
-            if last_active_period:
-                self.client_service.end_date = last_active_period.period_end
-                self.client_service.save(update_fields=['end_date', 'modified'])
-        else:
-            last_period = self.client_service.payments.filter(
-                status__in=[
-                    self.StatusChoices.AWAITING_START,
-                    self.StatusChoices.UNPAID_ACTIVE,
-                    self.StatusChoices.PAID
-                ]
-            ).order_by('-period_end').first()
-            
-            if last_period and last_period.period_end:
-                self.client_service.end_date = last_period.period_end
-                self.client_service.save(update_fields=['end_date', 'modified'])
+        last_period = self.client_service.payments.filter(
+            status__in=[
+                self.StatusChoices.AWAITING_START,
+                self.StatusChoices.UNPAID_ACTIVE,
+                self.StatusChoices.PAID
+            ]
+        ).order_by('-period_end').first()
+        
+        if last_period and last_period.period_end:
+            self.client_service.end_date = last_period.period_end
+            self.client_service.save(update_fields=['end_date', 'modified'])
 
     def __str__(self):
         return f"{self.client_service.client.full_name} - {self.amount}€ ({self.get_status_display()})"
@@ -592,12 +578,6 @@ class ServicePayment(TimeStampedModel):
             self.status = self.StatusChoices.OVERDUE
             self.save()
 
-    def cancel(self, reason=None):
-        self.status = self.StatusChoices.CANCELLED
-        if reason:
-            self.notes = f"{self.notes}\nCancelado: {reason}" if self.notes else f"Cancelado: {reason}"
-        self.save()
-
     def refund(self, refund_amount=None, reason=None):
         if self.status == self.StatusChoices.PAID:
             if refund_amount is None:
@@ -640,7 +620,7 @@ class ServicePayment(TimeStampedModel):
             return self.StatusChoices.OVERDUE
     
     def save(self, *args, **kwargs):
-        if self.status not in [self.StatusChoices.PAID, self.StatusChoices.CANCELLED, self.StatusChoices.REFUNDED]:
+        if self.status not in [self.StatusChoices.PAID, self.StatusChoices.REFUNDED]:
             self.status = self.get_appropriate_status()
         super().save(*args, **kwargs)
         self._update_service_end_date()

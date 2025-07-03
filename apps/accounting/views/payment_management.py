@@ -23,8 +23,6 @@ class PaymentManagementView(LoginRequiredMixin, BusinessLinePermissionMixin, Lis
         
         queryset = ServicePayment.objects.filter(
             client_service__business_line__in=accessible_lines
-        ).exclude(
-            status=ServicePayment.StatusChoices.CANCELLED
         ).select_related('client_service__client', 'client_service__business_line').order_by('-payment_date')
         
         search = self.request.GET.get('search')
@@ -46,8 +44,6 @@ class PaymentManagementView(LoginRequiredMixin, BusinessLinePermissionMixin, Lis
         
         total_payments = ServicePayment.objects.filter(
             client_service__business_line__in=accessible_lines
-        ).exclude(
-            status=ServicePayment.StatusChoices.CANCELLED
         ).aggregate(
             total=RevenueCalculationMixin.get_net_revenue_aggregation(),
             count=Count('id')
