@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Any
 from decimal import Decimal
 from datetime import date, timedelta
 from django.db import models
-from django.db.models import QuerySet, Q, Sum, Count, Avg, F, Case, When, Value
+from django.db.models import QuerySet, Q, Sum, Count, Avg, F, Case, When, Value, OuterRef, Max
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.contrib.auth import get_user_model
@@ -90,6 +90,86 @@ class ClientServiceQuerySet(models.QuerySet):
                 end_date__gte=today,
                 end_date__lt=today + timedelta(days=7)
             )
+        
+        return self.none()
+    
+    def with_operational_status(self, status):
+        from datetime import timedelta
+        today = timezone.now().date()
+        
+        if status == 'active':
+            return self.filter(is_active=True, admin_status='ENABLED')
+        elif status == 'inactive':
+            return self.filter(is_active=False)
+        elif status == 'suspended':
+            return self.filter(is_active=True, admin_status='SUSPENDED')
+        
+        return self.none()
+    
+    def with_payment_status(self, status):
+        from django.db.models import OuterRef, Subquery
+        
+        if status == 'no_payments':
+            return self.filter(payments__isnull=True)
+        
+        from apps.accounting.models import ServicePayment
+        
+        latest_payment_id = ServicePayment.objects.filter(
+            client_service=OuterRef('pk')
+        ).order_by('-created').values('pk')[:1]
+        
+        return self.filter(
+            payments__pk__in=Subquery(latest_payment_id),
+            payments__status=status
+        ).distinct()
+    
+    def with_renewal_status(self, status):
+        from datetime import timedelta
+        today = timezone.now().date()
+        
+        if status == 'active':
+            # Un servicio está "Al día" si no tiene fecha de vencimiento o si vence más allá de 15 días
+            # Esto es consistente con ServiceStateManager.RENEWAL_WARNING_DAYS = 15
+            return self.filter(
+                is_active=True,
+                admin_status='ENABLED'
+            ).filter(
+                Q(end_date__isnull=True) | Q(end_date__gt=today + timedelta(days=15))
+            )
+        
+        elif status == 'no_periods':
+            return self.filter(payments__isnull=True)
+        
+        elif status == 'renewal_pending':
+            # Servicios que necesitan renovación (entre 8 y 15 días)
+            return self.filter(
+                is_active=True,
+                admin_status='ENABLED',
+                end_date__gt=today + timedelta(days=7),
+                end_date__lte=today + timedelta(days=15)
+            )
+        
+        elif status == 'expiring_soon':
+            # Servicios que vencen pronto (7 días o menos)
+            return self.filter(
+                is_active=True,
+                admin_status='ENABLED',
+                end_date__gte=today,
+                end_date__lte=today + timedelta(days=7)
+            )
+        
+        elif status == 'expired':
+            return self.filter(
+                is_active=True,
+                admin_status='ENABLED',
+                end_date__lt=today
+            )
+        
+        elif status == 'inactive':
+            return self.filter(is_active=False)
+        
+        elif status == 'suspended':
+            return self.filter(is_active=True, admin_status='SUSPENDED')
         
         return self.none()
 
@@ -287,7 +367,6 @@ class ClientServiceManager(models.Manager):
     ) -> List[Dict[str, Any]]:
         from apps.accounting.models import Client, ServicePayment
         
-        # Get clients that have services in the specified business lines
         clients_with_services = Client.objects.filter(
             services__business_line__in=business_lines,
             services__is_active=True
@@ -320,7 +399,6 @@ class ClientServiceManager(models.Manager):
                 'black_services': service_stats['black_services'] or 0,
             })
         
-        # Sort by revenue and limit
         client_data.sort(key=lambda x: x['total_revenue'], reverse=True)
         return client_data[:limit]
     

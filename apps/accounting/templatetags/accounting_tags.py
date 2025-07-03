@@ -224,19 +224,15 @@ def payment_amount_display(payment, show_details=True):
 
 @register.filter
 def payment_status_badge(payment):
-    status_config = {
-        'PAID': ('bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', 'Pagado'),
-        'AWAITING_START': ('bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', 'Periodo creado sin pago'),
-        'UNPAID_ACTIVE': ('bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', 'Pendiente de pago'),
-        'OVERDUE': ('bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200', 'Vencido'),
-        'REFUNDED': ('bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200', 'Reembolsado'),
-        'PERIOD_CREATED': ('bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', 'Período creado')
-    }
+    """
+    DEPRECATED: Usar payment_status_badge de status_tags que usa StatusDisplayService
+    """
+    from ..services.status_display_service import StatusDisplayService
     
-    css_class, display_text = status_config.get(payment.status, ('bg-gray-100 text-gray-800', payment.get_status_display()))
+    status_data = StatusDisplayService.get_payment_status_display(payment.status)
     
     return format_html(
         '<span class="px-2 py-1 text-xs font-medium rounded-full {}">{}</span>',
-        css_class,
-        display_text
+        status_data['class'],
+        status_data['label']
     )

@@ -6,26 +6,16 @@ register = template.Library()
 
 @register.filter
 def service_status_badge(status):
-    status_classes = {
-        'active': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-        'inactive': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
-        'completed': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-        'suspended': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-    }
+    """
+    DEPRECATED: Usar service_status_badge de service_status_tags que usa StatusDisplayService
+    """
+    from ..services.status_display_service import StatusDisplayService
     
-    status_display = {
-        'active': 'Activo',
-        'inactive': 'Inactivo',
-        'completed': 'Completado',
-        'suspended': 'Suspendido'
-    }
-    
-    css_class = status_classes.get(status, status_classes['inactive'])
-    display_text = status_display.get(status, status.title())
+    status_data = StatusDisplayService.get_service_status_display(status)
     
     return format_html(
         '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {}">{}</span>',
-        css_class, display_text
+        status_data['class'], status_data['label']
     )
 
 
@@ -51,24 +41,14 @@ def payment_method_display(method):
 
 @register.filter
 def payment_status_badge(status):
-    status_classes = {
-        'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-        'paid': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-        'overdue': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-        'partial': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-    }
+    """
+    DEPRECATED: Usar payment_status_badge de status_tags que usa StatusDisplayService
+    """
+    from ..services.status_display_service import StatusDisplayService
     
-    status_display = {
-        'pending': 'Pendiente',
-        'paid': 'Pagado',
-        'overdue': 'Vencido',
-        'partial': 'Parcial'
-    }
-    
-    css_class = status_classes.get(status, status_classes['pending'])
-    display_text = status_display.get(status, status.title())
+    status_data = StatusDisplayService.get_payment_status_display(status)
     
     return format_html(
         '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {}">{}</span>',
-        css_class, display_text
+        status_data['class'], status_data['label']
     )

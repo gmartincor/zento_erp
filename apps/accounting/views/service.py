@@ -74,25 +74,35 @@ class ServiceCategoryListView(BaseServiceView, ListView):
     paginate_by = 25
     
     def get_queryset(self):
+        from ..services.enhanced_filter_service import EnhancedFilterService
+        
         business_line, _, category = self.get_business_line_data()
         normalized_category = category.lower() if category else None
         
-        status_filter = self.request.GET.get('status')
-        client_filter = self.request.GET.get('client')
+        # Obtener todos los filtros de la request
+        filters = {
+            'status': self.request.GET.get('status'),
+            'operational_status': self.request.GET.get('operational_status'),
+            'payment_status': self.request.GET.get('payment_status'),
+            'renewal_status': self.request.GET.get('renewal_status'),
+            'client': self.request.GET.get('client'),
+        }
+        
+        # Filtrar valores vacíos
+        filters = {k: v for k, v in filters.items() if v}
         
         queryset = ClientService.objects.get_services_by_category_including_descendants(
             business_line, normalized_category
         )
         
-        if status_filter:
-            queryset = queryset.with_status(status_filter)
-        
-        if client_filter:
-            queryset = queryset.filter(client__full_name__icontains=client_filter)
+        # Aplicar filtros usando el servicio mejorado
+        queryset = EnhancedFilterService.apply_filters(queryset, filters)
         
         return queryset.select_related('client', 'business_line').prefetch_related('payments')
     
     def get_context_data(self, **kwargs):
+        from ..services.enhanced_filter_service import EnhancedFilterService
+        
         context = super().get_context_data(**kwargs)
         business_line, line_path, category = self.get_business_line_data()
         normalized_category = category.upper() if category else None
@@ -101,11 +111,25 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         if view_mode not in ['grid', 'list']:
             view_mode = 'grid'
         
+        # Obtener filtros aplicados
+        filters = {
+            'status': self.request.GET.get('status'),
+            'operational_status': self.request.GET.get('operational_status'),
+            'payment_status': self.request.GET.get('payment_status'),
+            'renewal_status': self.request.GET.get('renewal_status'),
+            'client': self.request.GET.get('client'),
+        }
+        filters = {k: v for k, v in filters.items() if v}
+        
         context.update(self.get_base_context())
         context.update({
             'business_line': business_line,
             'category': normalized_category,
-            'page_title': f'Servicios - {business_line.name}'
+            'page_title': f'Servicios - {business_line.name}',
+            'applied_filters': filters,
+            'filter_summary': EnhancedFilterService.get_active_filters(dict(self.request.GET)),
+            'active_filters_count': len(EnhancedFilterService.get_active_filters(dict(self.request.GET))),
+            'filter_conflicts': EnhancedFilterService.detect_conflicts(dict(self.request.GET)),
         })
         
         context.update({

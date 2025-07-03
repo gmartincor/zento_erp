@@ -1,8 +1,9 @@
 {% load service_status_tags %}
 
-<form method="get" class="space-y-4">
+<form method="get" class="space-y-6">
     <input type="hidden" name="view" value="{{ request.GET.view|default:'grid' }}">
     
+    <!-- Filtros básicos -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente</label>
@@ -12,16 +13,55 @@
         </div>
         
         <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado del Servicio</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado General (Compatibilidad)</label>
             <select name="status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                 <option value="">Todos los estados</option>
-                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Activos</option>
-                <option value="expiring_soon" {% if request.GET.status == 'expiring_soon' %}selected{% endif %}>Vencen Pronto</option>
-                <option value="renewal_due" {% if request.GET.status == 'renewal_due' %}selected{% endif %}>Renovar Pronto</option>
-                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Vencidos</option>
-                <option value="suspended" {% if request.GET.status == 'suspended' %}selected{% endif %}>Suspendidos</option>
-                <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Pausados</option>
+                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Al día (>30 días)</option>
+                <option value="renewal_due" {% if request.GET.status == 'renewal_due' %}selected{% endif %}>Pendiente renovación (7-30 días)</option>
+                <option value="expiring_soon" {% if request.GET.status == 'expiring_soon' %}selected{% endif %}>Vence pronto (<7 días)</option>
+                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Vencido</option>
+                <option value="suspended" {% if request.GET.status == 'suspended' %}selected{% endif %}>Suspendido</option>
+                <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactivo</option>
             </select>
+        </div>
+    </div>
+    
+    <!-- Filtros específicos avanzados -->
+    <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+        <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Filtros Específicos (Se pueden combinar)</h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado Operacional</label>
+                <select name="operational_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todos</option>
+                    <option value="active" {% if request.GET.operational_status == 'active' %}selected{% endif %}>Activo</option>
+                    <option value="suspended" {% if request.GET.operational_status == 'suspended' %}selected{% endif %}>Suspendido</option>
+                    <option value="inactive" {% if request.GET.operational_status == 'inactive' %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado de Pagos</label>
+                <select name="payment_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todos</option>
+                    <option value="up_to_date" {% if request.GET.payment_status == 'up_to_date' %}selected{% endif %}>Al día</option>
+                    <option value="pending_payment" {% if request.GET.payment_status == 'pending_payment' %}selected{% endif %}>Pago pendiente</option>
+                    <option value="overdue_payment" {% if request.GET.payment_status == 'overdue_payment' %}selected{% endif %}>Pago vencido</option>
+                    <option value="no_payments" {% if request.GET.payment_status == 'no_payments' %}selected{% endif %}>Sin pagos</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado de Renovación</label>
+                <select name="renewal_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todos</option>
+                    <option value="active_long_term" {% if request.GET.renewal_status == 'active_long_term' %}selected{% endif %}>Largo plazo (>30 días)</option>
+                    <option value="renewal_due" {% if request.GET.renewal_status == 'renewal_due' %}selected{% endif %}>Renovar pronto (7-30 días)</option>
+                    <option value="expiring_soon" {% if request.GET.renewal_status == 'expiring_soon' %}selected{% endif %}>Vence pronto (<7 días)</option>
+                    <option value="expired" {% if request.GET.renewal_status == 'expired' %}selected{% endif %}>Vencido</option>
+                </select>
+            </div>
         </div>
     </div>
     

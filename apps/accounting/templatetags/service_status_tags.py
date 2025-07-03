@@ -182,3 +182,19 @@ def service_payment_status_badge(service):
         f'{status_data["label"]}'
         f'</span>'
     )
+
+
+@register.simple_tag
+def service_renewal_status_badge(service):
+    from ..services.service_state_manager import ServiceStateManager
+    from ..services.status_display_service import StatusDisplayService
+    
+    status = ServiceStateManager.get_service_status(service)
+    days_left = ServiceStateManager.days_until_expiry(service)
+    status_data = StatusDisplayService.get_service_status_display(status, days_left)
+    
+    return mark_safe(
+        f'<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {status_data["class"]}">'
+        f'{status_data["label"]}'
+        f'</span>'
+    )
