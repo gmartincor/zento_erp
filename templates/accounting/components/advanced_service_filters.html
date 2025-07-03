@@ -44,8 +44,6 @@
                     <option value="renewal_pending" {% if request.GET.renewal_status == 'renewal_pending' %}selected{% endif %}>Pendiente de renovación</option>
                     <option value="expiring_soon" {% if request.GET.renewal_status == 'expiring_soon' %}selected{% endif %}>Vence pronto</option>
                     <option value="expired" {% if request.GET.renewal_status == 'expired' %}selected{% endif %}>Vencido</option>
-                    <option value="inactive" {% if request.GET.renewal_status == 'inactive' %}selected{% endif %}>Pausado</option>
-                    <option value="suspended" {% if request.GET.renewal_status == 'suspended' %}selected{% endif %}>Suspendido</option>
                 </select>
             </div>
         </div>
