@@ -154,3 +154,14 @@ def service_payment_summary(service):
         'paid_count': paid_periods.count(),
         'pending_count': pending_periods.count()
     }
+
+
+@register.inclusion_tag('accounting/components/service_operational_status_badge.html')
+def service_operational_status_badge(service):
+    is_active = ServiceStateManager.is_service_active(service)
+    
+    return {
+        'is_active': is_active,
+        'label': 'Activo' if is_active else 'Inactivo',
+        'css_class': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' if is_active else 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+    }
