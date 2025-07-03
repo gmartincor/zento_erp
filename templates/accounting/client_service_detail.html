@@ -41,7 +41,7 @@
         <div>
             <div class="flex items-center space-x-3 mb-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                    Servicio {{ service.get_category_display }}
+                    Detalle del Servicio
                 </h1>
                 {% category_badge service.category %}
                 {% if service|service_is_active %}
@@ -132,7 +132,6 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
                         <div class="flex items-center space-x-2">
                             {% category_badge service.category %}
-                            <span class="text-sm text-gray-900 dark:text-white">{{ service.get_category_display }}</span>
                         </div>
                     </div>
                 </div>
@@ -285,9 +284,6 @@
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center space-x-2">
                         {% category_badge related.category %}
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">
-                            {{ related.get_category_display }}
-                        </span>
                     </div>
                     <span class="text-xs text-gray-500 dark:text-gray-400">
                         {{ related.created|date:"d/m/Y" }}

@@ -111,7 +111,7 @@ NAVIGATION_ITEMS = {
 
 CATEGORY_CONFIG = {
     'white': {
-        'name': 'Servicios Blancos',
+        'name': 'Servicio White',
         'color': 'green',
         'icon': 'check-circle',
         'badge_class': 'bg-blue-100 text-blue-800',
@@ -119,7 +119,7 @@ CATEGORY_CONFIG = {
         'text_class': 'text-emerald-600 dark:text-emerald-300'
     },
     'black': {
-        'name': 'Servicios Negros',
+        'name': 'Servicio Black',
         'color': 'purple',
         'icon': 'exclamation-circle',
         'badge_class': 'bg-gray-100 text-gray-800',
