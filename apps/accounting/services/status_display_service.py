@@ -23,7 +23,6 @@ class StatusDisplayService:
     SERVICE_STATUS_LABELS = {
         'active': 'Activo',
         'no_periods': 'Sin períodos',
-        'pending': 'Pendiente',
         'renewal_due': 'Renovar pronto',
         'expiring_soon': 'Vence pronto',
         'expired': 'Vencido',
@@ -34,7 +33,6 @@ class StatusDisplayService:
     SERVICE_STATUS_CLASSES = {
         'active': 'bg-green-100 text-green-800',
         'no_periods': 'bg-slate-100 text-slate-800',
-        'pending': 'bg-orange-100 text-orange-800',
         'renewal_due': 'bg-yellow-100 text-yellow-800',
         'expiring_soon': 'bg-orange-100 text-orange-800',
         'expired': 'bg-red-100 text-red-800',

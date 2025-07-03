@@ -65,16 +65,6 @@ class ServiceStateManager:
         if not last_period:
             return 'no_periods'
         
-        if has_pending_periods:
-            has_paid_periods = service.payments.filter(status=ServicePayment.StatusChoices.PAID).exists()
-            if has_paid_periods:
-                if cls.is_service_expired(service):
-                    return 'expired'
-                else:
-                    return 'active'
-            else:
-                return 'pending'
-        
         if cls.is_service_expired(service):
             return 'expired'
         
