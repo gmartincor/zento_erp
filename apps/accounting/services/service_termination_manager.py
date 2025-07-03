@@ -20,6 +20,7 @@ class ServiceTerminationManager:
         today = timezone.now().date()
         
         ServiceTerminationManager.validate_termination_date(service, termination_date)
+        ServiceTerminationManager._cancel_affected_periods(service, termination_date)
         
         service.end_date = termination_date
         
@@ -44,13 +45,11 @@ class ServiceTerminationManager:
     @staticmethod
     def get_termination_date_limits(service: ClientService) -> dict:
         limits = {
-            'min_date': None,
+            'min_date': service.start_date + timedelta(days=1) if service.start_date else None,
             'max_date': None,
             'has_paid_periods': False,
             'last_paid_date': None
         }
-        if service.start_date:
-            limits['min_date'] = service.start_date + timedelta(days=1)
         
         last_created_payment = service.payments.filter(
             status__in=[
@@ -79,19 +78,51 @@ class ServiceTerminationManager:
     
     @staticmethod
     def validate_termination_date(service: ClientService, termination_date: date) -> None:
-  
         limits = ServiceTerminationManager.get_termination_date_limits(service)
         
-        # Validar fecha mínima
         if limits['min_date'] and termination_date <= service.start_date:
             raise ValidationError(
                 f"La fecha de finalización debe ser posterior al {service.start_date.strftime('%d/%m/%Y')}"
             )
         
-        # Validar fecha máxima (solo si hay períodos creados)
         if limits['max_date'] and termination_date > limits['max_date']:
             raise ValidationError(
                 f"No puedes finalizar el servicio más allá del último período creado "
                 f"({limits['max_date'].strftime('%d/%m/%Y')}). "
                 f"Si necesitas extender el servicio, primero crea un nuevo período."
             )
+    
+    @staticmethod
+    def _get_cancellable_periods(service: ClientService, termination_date: date):
+        return service.payments.filter(
+            period_start__gt=termination_date,
+            status__in=[
+                ServicePayment.StatusChoices.AWAITING_START,
+                ServicePayment.StatusChoices.UNPAID_ACTIVE,
+                ServicePayment.StatusChoices.OVERDUE
+            ]
+        )
+    
+    @staticmethod
+    def _cancel_affected_periods(service: ClientService, termination_date: date) -> None:
+        future_periods = ServiceTerminationManager._get_cancellable_periods(service, termination_date)
+        
+        for period in future_periods:
+            period.cancel(f"Servicio finalizado el {termination_date.strftime('%d/%m/%Y')}")
+
+    @staticmethod
+    def get_affected_payments_info(service: ClientService, termination_date: date) -> dict:
+        future_periods = ServiceTerminationManager._get_cancellable_periods(service, termination_date)
+        
+        partial_periods = service.payments.filter(
+            period_start__lte=termination_date,
+            period_end__gt=termination_date,
+            status=ServicePayment.StatusChoices.PAID
+        )
+        
+        return {
+            'future_periods': future_periods,
+            'partial_periods': partial_periods,
+            'future_count': future_periods.count(),
+            'partial_count': partial_periods.count()
+        }

@@ -640,6 +640,7 @@ class ServicePayment(TimeStampedModel):
             return self.StatusChoices.OVERDUE
     
     def save(self, *args, **kwargs):
-        if self.status in [self.StatusChoices.AWAITING_START, self.StatusChoices.UNPAID_ACTIVE] and self.status != self.StatusChoices.PAID:
+        if self.status not in [self.StatusChoices.PAID, self.StatusChoices.CANCELLED, self.StatusChoices.REFUNDED]:
             self.status = self.get_appropriate_status()
         super().save(*args, **kwargs)
+        self._update_service_end_date()

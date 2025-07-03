@@ -9,7 +9,6 @@ class StatusDisplayService:
         'UNPAID_ACTIVE': 'Sin pagar',
         'PAID': 'Pagado',
         'OVERDUE': 'Vencido',
-        'CANCELLED': 'Cancelado',
         'REFUNDED': 'Reembolsado'
     }
     
@@ -18,7 +17,6 @@ class StatusDisplayService:
         'UNPAID_ACTIVE': 'bg-orange-100 text-orange-800',
         'PAID': 'bg-green-100 text-green-800',
         'OVERDUE': 'bg-red-100 text-red-800',
-        'CANCELLED': 'bg-red-100 text-red-800',
         'REFUNDED': 'bg-purple-100 text-purple-800'
     }
     

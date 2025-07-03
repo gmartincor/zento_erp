@@ -307,7 +307,7 @@ class ServicePaymentAdmin(admin.ModelAdmin):
     status_display.short_description = 'Estado'
     status_display.admin_order_field = 'status'
 
-    actions = ['mark_as_paid', 'mark_as_overdue', 'cancel_payments']
+    actions = ['mark_as_paid', 'mark_as_overdue']
 
     def mark_as_paid(self, request, queryset):
         count = 0
@@ -330,17 +330,6 @@ class ServicePaymentAdmin(admin.ModelAdmin):
         self.message_user(request, f'{count} pagos marcados como vencidos.')
     
     mark_as_overdue.short_description = 'Marcar como vencido'
-
-    def cancel_payments(self, request, queryset):
-        count = 0
-        for payment in queryset:
-            if payment.status in [ServicePayment.StatusChoices.AWAITING_START, ServicePayment.StatusChoices.UNPAID_ACTIVE, ServicePayment.StatusChoices.OVERDUE]:
-                payment.cancel('Cancelado desde admin')
-                count += 1
-        
-        self.message_user(request, f'{count} pagos cancelados.')
-    
-    cancel_payments.short_description = 'Cancelar pagos'
 
 
 admin.site.unregister(ClientService)

@@ -131,35 +131,3 @@ def service_payment_history_view(request, service_id):
     }
     
     return render(request, 'accounting/payments/service_history.html', context)
-
-
-@login_required
-@require_http_methods(["POST"])
-def cancel_period_view(request, service_id, period_id):
-    """
-    Vista para cancelar un período pendiente.
-    """
-    client_service = get_object_or_404(ClientService, id=service_id)
-    period = get_object_or_404(
-        ServicePayment, 
-        id=period_id, 
-        client_service=client_service,
-        status__in=[
-            ServicePayment.StatusChoices.AWAITING_START,
-            ServicePayment.StatusChoices.UNPAID_ACTIVE
-        ]
-    )
-    
-    try:
-        period.status = ServicePayment.StatusChoices.CANCELLED
-        period.save()
-        
-        messages.success(
-            request,
-            f"Período {period.period_start} - {period.period_end} cancelado exitosamente"
-        )
-        
-    except Exception as e:
-        messages.error(request, f"Error al cancelar período: {str(e)}")
-    
-    return redirect('accounting:client_service_detail', service_id=service_id)
