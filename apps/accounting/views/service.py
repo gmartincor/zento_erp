@@ -107,9 +107,9 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         business_line, line_path, category = self.get_business_line_data()
         normalized_category = category.upper() if category else None
         
-        view_mode = self.request.GET.get('view', 'grid')
+        view_mode = self.request.GET.get('view', 'list')
         if view_mode not in ['grid', 'list']:
-            view_mode = 'grid'
+            view_mode = 'list'
         
         # Obtener filtros aplicados
         filters = {
