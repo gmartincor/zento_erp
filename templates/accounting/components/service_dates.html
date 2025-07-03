@@ -2,18 +2,17 @@
 <div class="text-sm space-y-1">
     <div>
         <span class="text-gray-600 dark:text-gray-400">Inicio:</span>
-        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.current_start_date|date:"d M Y" }}</span>
+        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.start_date|date:"d/m/Y"|default:"Sin fecha" }}</span>
     </div>
-    {% if service.current_end_date %}
+    {% if service.end_date %}
     <div>
         <span class="text-gray-600 dark:text-gray-400">Vence:</span>
-        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.current_end_date|date:"d M Y" }}</span>
+        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.end_date|date:"d/m/Y" }}</span>
     </div>
     {% else %}
     <div>
-        <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded-full">
-            No activo
-        </span>
+        <span class="text-gray-600 dark:text-gray-400">Vence:</span>
+        <span class="font-medium text-gray-900 dark:text-white ml-1">Sin definir</span>
     </div>
     {% endif %}
 </div>
@@ -21,19 +20,11 @@
 <div class="grid grid-cols-2 gap-4 text-sm">
     <div>
         <span class="text-gray-600 dark:text-gray-400">Inicio:</span>
-        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.current_start_date|date:"d M Y" }}</span>
+        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.start_date|date:"d/m/Y"|default:"Sin fecha" }}</span>
     </div>
-    {% if service.current_end_date %}
     <div>
         <span class="text-gray-600 dark:text-gray-400">Vence:</span>
-        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.current_end_date|date:"d M Y" }}</span>
+        <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.end_date|date:"d/m/Y"|default:"Sin definir" }}</span>
     </div>
-    {% else %}
-    <div class="flex justify-end">
-        <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded-full">
-            No activo
-        </span>
-    </div>
-    {% endif %}
 </div>
 {% endif %}
