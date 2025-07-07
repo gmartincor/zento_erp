@@ -1,13 +1,14 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django_tenants.models import TenantMixin, DomainMixin
 from apps.core.models import TimeStampedModel, SoftDeleteModel
 from apps.core.constants import TENANT_DEFAULTS, TENANT_ERROR_MESSAGES
 from .managers import TenantManager, ActiveTenantManager, AllTenantManager
 import re
 
 
-class Tenant(TimeStampedModel, SoftDeleteModel):
+class Tenant(TenantMixin, TimeStampedModel, SoftDeleteModel):
     
     class StatusChoices(models.TextChoices):
         PENDING = 'PENDING', 'Pendiente'
@@ -165,3 +166,7 @@ class Tenant(TimeStampedModel, SoftDeleteModel):
         self.status = self.StatusChoices.INACTIVE
         self.is_active = False
         self.save(update_fields=['status', 'is_active', 'updated'])
+
+
+class Domain(DomainMixin):
+    pass

@@ -1,6 +1,7 @@
 def configure_tenant_settings():
     return {
         'SHARED_APPS': [
+            'django_tenants',
             'django.contrib.admin',
             'django.contrib.auth',
             'django.contrib.contenttypes',
@@ -18,6 +19,7 @@ def configure_tenant_settings():
             'apps.expenses',
         ],
         'INSTALLED_APPS': [
+            'django_tenants',
             'django.contrib.admin',
             'django.contrib.auth',
             'django.contrib.contenttypes',

@@ -289,6 +289,8 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
         }
 
 class TenantMixin:
+    """Mixin para obtener información del tenant actual usando django-tenants"""
+    
     def get_current_tenant(self):
         from django_tenants.utils import connection
         return connection.tenant
@@ -297,7 +299,8 @@ class TenantMixin:
         tenant = self.get_current_tenant()
         return {
             'tenant_name': tenant.name if tenant else None,
-            'tenant_subdomain': tenant.schema_name if tenant else None,
+            'tenant_schema': tenant.schema_name if tenant else None,
+            'tenant_slug': tenant.slug if tenant else None,
         }
     
     def validate_tenant_access(self, user):
@@ -308,17 +311,19 @@ class TenantMixin:
 
 
 class TenantContextMixin:
-    def get_tenant_context(self):
+    """Mixin para contexto de gestión administrativa (no para tenants individuales)"""
+    
+    def get_admin_context(self):
         return {
-            'tenant_management': True,
-            'app_section': 'tenants',
-            'breadcrumbs': self.get_tenant_breadcrumbs(),
+            'admin_section': True,
+            'app_section': 'administration',
+            'breadcrumbs': self.get_admin_breadcrumbs(),
         }
     
-    def get_tenant_breadcrumbs(self):
+    def get_admin_breadcrumbs(self):
         return [
             {'name': 'Inicio', 'url': '/'},
-            {'name': 'Tenants', 'url': '/tenants/', 'active': True}
+            {'name': 'Administración', 'url': '/admin/', 'active': True}
         ]
 
 

@@ -48,7 +48,9 @@ class ExpenseCategoryView(LoginRequiredMixin, TemporalFilterMixin, TemplateView)
         if month:
             base_filter &= Q(expenses__accounting_month=month)
         
-        categories = ExpenseCategory.objects.filter(is_active=True).annotate(
+        categories = ExpenseCategory.objects.filter(
+            is_active=True
+        ).annotate(
             total_amount=Sum('expenses__amount', filter=base_filter),
             expense_count=Count('expenses', filter=base_filter)
         ).order_by('category_type', 'name')

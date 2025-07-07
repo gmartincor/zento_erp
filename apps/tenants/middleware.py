@@ -1,34 +1,40 @@
 from django.http import Http404
-from django.shortcuts import get_object_or_404
-from django.urls import resolve, Resolver404
-from django.utils.deprecation import MiddlewareMixin
-from .models import Tenant
+from django.db import connection
+from django_tenants.middleware import TenantMainMiddleware
+from django_tenants.utils import get_tenant_model, get_public_schema_name
 
-
-class TenantRouteMiddleware(MiddlewareMixin):
+class TenantSlugMiddleware(TenantMainMiddleware):
+    """
+    Middleware personalizado que extiende TenantMainMiddleware 
+    para soportar identificación de tenant por slug en la URL
+    en lugar de por dominio.
+    """
+    
     def process_request(self, request):
-        path = request.path_info
+        # Obtener el schema público si la URL no tiene un slug de tenant
+        connection.set_schema_to_public()
         
-        if path.startswith('/admin/') or path.startswith('/static/') or path.startswith('/media/'):
-            request.tenant = None
-            return None
-        
-        if path == '/':
-            request.tenant = None
-            return None
-        
-        path_parts = [part for part in path.split('/') if part]
-        
-        if not path_parts:
-            request.tenant = None
-            return None
-        
-        potential_tenant_slug = path_parts[0]
-        
-        try:
-            tenant = Tenant.objects.get(slug=potential_tenant_slug, is_active=True, is_deleted=False)
-            request.tenant = tenant
-        except Tenant.DoesNotExist:
-            request.tenant = None
-        
+        # Verificar si hay un slug de tenant en la URL
+        # Ejemplo: /tenant-slug/dashboard/
+        path_parts = request.path_info.split('/')
+        if len(path_parts) > 1 and path_parts[1]:
+            tenant_slug = path_parts[1]
+            
+            # Verificar si estamos en una ruta que debe ser procesada por tenant
+            if tenant_slug != 'admin' and tenant_slug != 'static' and tenant_slug != 'media':
+                # Buscar tenant por slug
+                TenantModel = get_tenant_model()
+                try:
+                    tenant = TenantModel.objects.get(
+                        slug=tenant_slug,
+                        is_active=True,
+                        is_deleted=False
+                    )
+                    # Establecer el tenant en la conexión
+                    connection.set_tenant(tenant)
+                    request.tenant = tenant
+                except TenantModel.DoesNotExist:
+                    # Si no se encuentra el tenant, continuamos con el schema público
+                    pass
+            
         return None

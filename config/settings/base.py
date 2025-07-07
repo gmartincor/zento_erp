@@ -30,9 +30,12 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv(
 
 tenant_config = configure_tenant_settings()
 
+SHARED_APPS = tenant_config['SHARED_APPS']
+TENANT_APPS = tenant_config['TENANT_APPS']
 INSTALLED_APPS = tenant_config['INSTALLED_APPS']
 
 MIDDLEWARE = [
+    'apps.tenants.middleware.TenantSlugMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -40,10 +43,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'apps.tenants.middleware.TenantRouteMiddleware',
 ]
 
-ROOT_URLCONF = 'config.urls'
+PUBLIC_SCHEMA_URLCONF = 'config.urls_public'
+ROOT_URLCONF = 'config.urls_tenants'
 
 TEMPLATES = [
     {
@@ -76,6 +79,13 @@ DATABASES = {
         'PORT': config('DB_PORT', default='5432'),
     }
 }
+
+TENANT_MODEL = "tenants.Tenant"
+TENANT_DOMAIN_MODEL = "tenants.Domain"
+
+DATABASE_ROUTERS = (
+    'django_tenants.routers.TenantSyncRouter',
+)
 
 # User model
 AUTH_USER_MODEL = 'authentication.User'

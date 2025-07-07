@@ -1,64 +1,39 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.urls import reverse
-from django.conf import settings
+from django_tenants.utils import connection, get_tenant_model
+from django.http import Http404
 
-
-def tenant_login_view(request, tenant_slug):
-    if not hasattr(request, 'tenant') or not request.tenant:
-        messages.error(request, f'El tenant "{tenant_slug}" no existe o no está disponible')
-        return redirect('admin:index')
+@login_required
+def tenant_dashboard_view(request, tenant_slug=None):
+    """Dashboard principal del tenant usando django-tenants con rutas basadas en slug"""
+    # Obtener el tenant actual a través de la conexión (establecido por TenantMainMiddleware)
+    tenant = connection.tenant
     
-    # If user is already authenticated, redirect to dashboard
-    if request.user.is_authenticated:
-        return redirect('tenant_dashboard', tenant_slug=tenant_slug)
+    # Verificar que el tenant está activo y que el slug coincide
+    if not tenant or not tenant.is_active:
+        messages.error(request, 'Acceso no disponible. Por favor, contacta al administrador.')
+        return redirect('unified_login')
     
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            messages.success(request, f'¡Bienvenido/a a {request.tenant.name}, {user.get_full_name() or user.username}!')
-            return redirect('tenant_dashboard', tenant_slug=tenant_slug)
-        else:
-            messages.error(request, 'Credenciales inválidas')
+    # Verificar que el usuario tiene acceso a este tenant
+    if tenant.slug != tenant_slug:
+        raise Http404("Tenant no encontrado")
     
     context = {
-        'tenant': request.tenant,
-        'page_title': f'Acceso - {request.tenant.name}',
-    }
-    
-    return render(request, 'authentication/login.html', context)
-
-
-def tenant_dashboard_view(request, tenant_slug):
-    if not hasattr(request, 'tenant') or not request.tenant:
-        messages.error(request, 'Tenant no encontrado')
-        return redirect('tenant_login', tenant_slug=tenant_slug)
-    
-    if not request.user.is_authenticated:
-        return redirect('tenant_login', tenant_slug=tenant_slug)
-    
-    context = {
-        'tenant': request.tenant,
-        'page_title': f'Dashboard - {request.tenant.name}',
+        'tenant': tenant,
+        'page_title': f'Dashboard - {tenant.name}',
+        'show_tenant_branding': True,
     }
     
     return render(request, 'dashboard/home.html', context)
 
 
-def tenant_logout_view(request, tenant_slug):
-    if not hasattr(request, 'tenant') or not request.tenant:
-        messages.error(request, 'Tenant no encontrado')
-        return redirect('tenant_login', tenant_slug=tenant_slug)
-    
+def tenant_logout_view(request):
+    """Logout que siempre redirige al formulario unificado"""
     if request.user.is_authenticated:
         user_name = request.user.get_full_name() or request.user.username
         logout(request)
         messages.success(request, f'¡Hasta pronto, {user_name}!')
     
-    return redirect('tenant_login', tenant_slug=tenant_slug)
+    return redirect('unified_login')

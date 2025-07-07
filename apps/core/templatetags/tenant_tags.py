@@ -1,34 +1,22 @@
 from django import template
 from django.urls import reverse, NoReverseMatch
 from django.utils.safestring import mark_safe
+from django_tenants.utils import connection
 
 register = template.Library()
 
+
 @register.simple_tag(takes_context=True)
 def tenant_url(context, url_name, *args, **kwargs):
-    request = context['request']
-    if hasattr(request, 'tenant') and request.tenant:
-        tenant_slug = request.tenant.slug
-        
-        if url_name == 'dashboard:home' or url_name == 'dashboard_home':
-            return reverse('tenant_dashboard', args=[tenant_slug])
-        elif url_name == 'tenant_logout' or url_name == 'logout':
-            return reverse('tenant_logout', args=[tenant_slug])
-        elif url_name == 'tenant_login' or url_name == 'login':
-            return reverse('tenant_login', args=[tenant_slug])
-        else:
-            try:
-                return reverse(url_name, args=[tenant_slug] + list(args), kwargs=kwargs)
-            except NoReverseMatch:
-                return reverse(url_name, args=list(args), kwargs=kwargs)
-    
     try:
         return reverse(url_name, args=args, kwargs=kwargs)
     except NoReverseMatch:
         return url_name
 
+
 @register.simple_tag(takes_context=True)
 def is_active_section(context, app_name):
+    """Determina si una sección está activa basándose en la app actual"""
     request = context['request']
     resolver_match = getattr(request, 'resolver_match', None)
     if resolver_match:
@@ -36,3 +24,28 @@ def is_active_section(context, app_name):
             resolver_match.url_name == 'tenant_dashboard' and app_name == 'dashboard'
         )
     return False
+
+
+@register.simple_tag
+def get_current_tenant():
+    """Obtiene el tenant actual usando django-tenants"""
+    try:
+        return connection.tenant
+    except:
+        return None
+
+
+@register.filter
+def tenant_name(tenant):
+    """Filtro para obtener el nombre del tenant de forma segura"""
+    return tenant.name if tenant else "Sin tenant"
+
+
+@register.inclusion_tag('components/tenant_info.html', takes_context=True)
+def tenant_info(context):
+    """Componente para mostrar información del tenant actual"""
+    tenant = get_current_tenant()
+    return {
+        'tenant': tenant,
+        'request': context['request']
+    }
