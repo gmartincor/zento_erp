@@ -287,3 +287,47 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
             'white_count': white_count,
             'black_count': black_count,
         }
+
+class TenantMixin:
+    def get_current_tenant(self):
+        from django_tenants.utils import connection
+        return connection.tenant
+    
+    def get_tenant_context(self):
+        tenant = self.get_current_tenant()
+        return {
+            'tenant_name': tenant.name if tenant else None,
+            'tenant_subdomain': tenant.schema_name if tenant else None,
+        }
+    
+    def validate_tenant_access(self, user):
+        tenant = self.get_current_tenant()
+        if not tenant or not tenant.is_active:
+            raise PermissionDenied("Acceso no autorizado al tenant")
+        return True
+
+
+class TenantContextMixin:
+    def get_tenant_context(self):
+        return {
+            'tenant_management': True,
+            'app_section': 'tenants',
+            'breadcrumbs': self.get_tenant_breadcrumbs(),
+        }
+    
+    def get_tenant_breadcrumbs(self):
+        return [
+            {'name': 'Inicio', 'url': '/'},
+            {'name': 'Tenants', 'url': '/tenants/', 'active': True}
+        ]
+
+
+class TenantFormMixin:
+    FORM_CSS_CLASSES = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
+    
+    def apply_form_styling(self, field, extra_attrs=None):
+        attrs = {'class': self.FORM_CSS_CLASSES}
+        if extra_attrs:
+            attrs.update(extra_attrs)
+        field.widget.attrs.update(attrs)
+        return field

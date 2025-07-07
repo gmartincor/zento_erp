@@ -132,3 +132,36 @@ CATEGORY_DEFAULTS = {
     'DEFAULT_CATEGORY': 'white',
     'VALID_CATEGORIES': ['white', 'black']
 }
+
+TENANT_SUCCESS_MESSAGES = {
+    'TENANT_CREATED': 'Nutricionista "{name}" registrado exitosamente.',
+    'TENANT_UPDATED': 'Datos del nutricionista actualizados exitosamente.',
+    'TENANT_ACTIVATED': 'Cuenta de "{name}" activada exitosamente.',
+    'TENANT_DEACTIVATED': 'Cuenta de "{name}" desactivada exitosamente.',
+}
+
+TENANT_ERROR_MESSAGES = {
+    'SUBDOMAIN_EXISTS': 'El subdominio "{subdomain}" ya está en uso.',
+    'EMAIL_EXISTS': 'Ya existe una cuenta con el email "{email}".',
+    'INVALID_SUBDOMAIN': 'El subdominio "{subdomain}" no es válido. Solo letras, números y guiones.',
+    'SUBDOMAIN_RESERVED': 'El subdominio "{subdomain}" está reservado.',
+    'TENANT_NOT_FOUND': 'Nutricionista no encontrado.',
+    'TENANT_INACTIVE': 'La cuenta está desactivada.',
+    'TENANT_SUSPENDED': 'La cuenta está suspendida.',
+    'SCHEMA_CREATION_FAILED': 'Error al crear el esquema de base de datos.',
+}
+
+TENANT_SUCCESS_MESSAGES = {
+    'TENANT_CREATED': 'Cuenta de nutricionista "{name}" creada exitosamente.',
+    'TENANT_UPDATED': 'Cuenta de nutricionista "{name}" actualizada exitosamente.',
+    'TENANT_ACTIVATED': 'Cuenta de nutricionista "{name}" activada exitosamente.',
+    'TENANT_SUSPENDED': 'Cuenta de nutricionista "{name}" suspendida.',
+    'TENANT_DELETED': 'Cuenta de nutricionista "{name}" eliminada exitosamente.',
+}
+
+TENANT_DEFAULTS = {
+    'DEFAULT_DOMAIN': 'localhost:8000',
+    'MIN_SUBDOMAIN_LENGTH': 3,
+    'MAX_SUBDOMAIN_LENGTH': 50,
+    'RESERVED_SUBDOMAINS': ['www', 'api', 'admin', 'app', 'mail', 'ftp', 'public', 'static', 'media'],
+}

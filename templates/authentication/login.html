@@ -13,10 +13,14 @@
             </svg>
         </div>
         <h2 class="text-3xl font-bold text-gray-900 dark:text-white">
-            Nutrition Pro CRM
+            {% if tenant %}{{ tenant.name }}{% else %}Nutrition Pro CRM{% endif %}
         </h2>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Accede a tu cuenta para gestionar tu negocio
+            {% if tenant %}
+                Accede a tu cuenta para gestionar tu negocio
+            {% else %}
+                Accede a tu cuenta para gestionar tu negocio
+            {% endif %}
         </p>
     </div>
 
@@ -36,7 +40,11 @@
                         Ya tienes una sesión activa como <strong>{{ user.get_full_name|default:user.username }}</strong>
                     </p>
                     <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">
-                        Puedes <a href="{% url 'dashboard:home' %}" class="underline hover:no-underline">ir al dashboard</a> o iniciar sesión con otra cuenta.
+                        {% if tenant %}
+                            Puedes <a href="{% url 'tenant_dashboard' tenant.slug %}" class="underline hover:no-underline">ir al dashboard</a> o iniciar sesión con otra cuenta.
+                        {% else %}
+                            Puedes <a href="{% url 'dashboard:home' %}" class="underline hover:no-underline">ir al dashboard</a> o iniciar sesión con otra cuenta.
+                        {% endif %}
                     </p>
                 </div>
             </div>
@@ -133,7 +141,11 @@
                         <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        Iniciar Sesión
+                        {% if tenant %}
+                            Acceder a {{ tenant.name }}
+                        {% else %}
+                            Iniciar Sesión
+                        {% endif %}
                     </span>
                     <span x-show="loading" class="flex items-center">
                         <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -147,14 +159,23 @@
         </form>
     </div>
 
-    <!-- Demo credentials -->
+    <!-- Info section -->
     <div class="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Credenciales de Prueba:</h3>
-        <div class="space-y-1 text-xs text-gray-600 dark:text-gray-400">
-            <p><strong>Admin:</strong> admin / admin123</p>
-            <p><strong>Usuario 1:</strong> maria.glow / maria123</p>
-            <p><strong>Usuario 2:</strong> carlos.glow / carlos123</p>
-        </div>
+        {% if tenant %}
+            <div class="text-center">
+                <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{{ tenant.name }}</h3>
+                <p class="text-xs text-gray-600 dark:text-gray-400">
+                    Acceso exclusivo para {{ tenant.name }}. Si no tienes cuenta, contacta al administrador.
+                </p>
+            </div>
+        {% else %}
+            <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Credenciales de Prueba:</h3>
+            <div class="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                <p><strong>Admin:</strong> admin / admin123</p>
+                <p><strong>Usuario 1:</strong> maria.glow / maria123</p>
+                <p><strong>Usuario 2:</strong> carlos.glow / carlos123</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

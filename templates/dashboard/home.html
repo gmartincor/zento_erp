@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard - Nutrition Pro CRM{% endblock %}
+{% block title %}Dashboard - {% if tenant %}{{ tenant.name }}{% else %}Nutrition Pro CRM{% endif %}{% endblock %}
 
 {% block page_header %}
 <div class="mb-6">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+        Dashboard{% if tenant %} - {{ tenant.name }}{% endif %}
+    </h1>
     <p class="mt-2 text-gray-600 dark:text-gray-400">Resumen de tu negocio de nutrición</p>
 </div>
 {% endblock %}

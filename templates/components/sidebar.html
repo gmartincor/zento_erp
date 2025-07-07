@@ -1,4 +1,4 @@
-<!-- Sidebar -->
+{% load tenant_tags %}
 <aside class="bg-white dark:bg-gray-800 shadow-lg transition-all duration-300" 
        :class="{ 'w-16': !$store.sidebar.open, 'w-64': $store.sidebar.open }">
     <div class="p-6">
@@ -21,7 +21,7 @@
         <ul class="space-y-2">
             <!-- Dashboard -->
             <li>
-                <a href="{% url 'dashboard:home' %}" 
+                <a href="{% tenant_url 'dashboard:home' %}" 
                    class="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {% if request.resolver_match.app_name == 'dashboard' %}bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300{% endif %}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2V7zm0 0a2 2 0 012-2h.01a2 2 0 012 2v.01a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"></path>
@@ -31,7 +31,7 @@
             </li>
 
             <!-- Ingresos -->
-            <li x-data="{ open: {% if request.resolver_match.app_name == 'accounting' %}true{% else %}false{% endif %} }">
+            <li x-data="{ open: {% is_active_section 'accounting' as is_accounting %}{% if is_accounting %}true{% else %}false{% endif %} }">
                 <button @click="open = !open" 
                         class="w-full flex items-center justify-between px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {% if request.resolver_match.app_name == 'accounting' %}bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300{% endif %}">
                     <div class="flex items-center space-x-3">
@@ -46,15 +46,15 @@
                 </button>
                 
                 <ul x-show="open" x-transition class="mt-2 ml-8 space-y-1">
-                    <li><a href="{% url 'accounting:business-lines' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Por Línea de Negocio</a></li>
-                    <li><a href="{% url 'accounting:payments' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Gestión de Pagos</a></li>
-                    <li><a href="{% url 'accounting:payment-history' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Historial de Pagos</a></li>
-                    <li><a href="{% url 'accounting:expiring_services' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Próximos a Vencer</a></li>
+                    <li><a href="{% tenant_url 'accounting:business-lines' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Por Línea de Negocio</a></li>
+                    <li><a href="{% tenant_url 'accounting:payments' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Gestión de Pagos</a></li>
+                    <li><a href="{% tenant_url 'accounting:payment-history' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Historial de Pagos</a></li>
+                    <li><a href="{% tenant_url 'accounting:expiring_services' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Próximos a Vencer</a></li>
                 </ul>
             </li>
 
             <!-- Gastos -->
-            <li x-data="{ open: {% if request.resolver_match.app_name == 'expenses' %}true{% else %}false{% endif %} }">
+            <li x-data="{ open: {% is_active_section 'expenses' as is_expenses %}{% if is_expenses %}true{% else %}false{% endif %} }">
                 <button @click="open = !open" 
                         class="w-full flex items-center justify-between px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {% if request.resolver_match.app_name == 'expenses' %}bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300{% endif %}">
                     <div class="flex items-center space-x-3">
@@ -69,11 +69,11 @@
                 </button>
                 
                 <ul x-show="open" x-transition class="mt-2 ml-8 space-y-1">
-                    <li><a href="{% url 'expenses:categories' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Todas las Categorías</a></li>
-                    <li><a href="{% url 'expenses:by-type' 'FIXED' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Fijos</a></li>
-                    <li><a href="{% url 'expenses:by-type' 'VARIABLE' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Variables</a></li>
-                    <li><a href="{% url 'expenses:by-type' 'TAX' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Impuestos</a></li>
-                    <li><a href="{% url 'expenses:by-type' 'OCCASIONAL' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Puntuales</a></li>
+                    <li><a href="{% tenant_url 'expenses:categories' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Todas las Categorías</a></li>
+                    <li><a href="{% tenant_url 'expenses:by-type' 'FIXED' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Fijos</a></li>
+                    <li><a href="{% tenant_url 'expenses:by-type' 'VARIABLE' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Variables</a></li>
+                    <li><a href="{% tenant_url 'expenses:by-type' 'TAX' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Impuestos</a></li>
+                    <li><a href="{% tenant_url 'expenses:by-type' 'OCCASIONAL' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Puntuales</a></li>
                 </ul>
             </li>
 

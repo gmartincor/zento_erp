@@ -1,11 +1,21 @@
 """
 Django settings for config project.
-Base settings to be imported by other settings files.
+Base settings to be importDATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='crm_nutricion_db'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
+    }
+}r settings files.
 """
 
 import os
 from pathlib import Path
 from decouple import config, Csv
+from .tenant_settings import configure_tenant_settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -18,32 +28,9 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
-# Application definition
+tenant_config = configure_tenant_settings()
 
-DJANGO_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.humanize',
-]
-
-LOCAL_APPS = [
-    'apps.core',
-    'apps.authentication',
-    'apps.business_lines',
-    'apps.accounting',
-    'apps.expenses',
-    'apps.dashboard',
-]
-
-THIRD_PARTY_APPS = [
-    # Add third party apps here
-]
-
-INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
+INSTALLED_APPS = tenant_config['INSTALLED_APPS']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -53,6 +40,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.tenants.middleware.TenantRouteMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -80,7 +68,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django_tenants.postgresql_backend',
         'NAME': config('DB_NAME', default='crm_nutricion'),
         'USER': config('DB_USER', default='postgres'),
         'PASSWORD': config('DB_PASSWORD', default='postgres'),
