@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from apps.tenants.models import Tenant, Domain
-from apps.core.constants import TENANT_SUCCESS_MESSAGES, TENANT_ERROR_MESSAGES
+from apps.core.constants import TENANT_SUCCESS_MESSAGES
 
 
 class Command(BaseCommand):
@@ -21,35 +21,40 @@ class Command(BaseCommand):
             help='Email del tenant principal'
         )
         parser.add_argument(
-            '--subdomain',
+            '--schema-name',
             type=str,
             default='admin',
-            help='Subdominio del tenant principal'
+            help='Nombre del esquema del tenant principal'
+        )
+        parser.add_argument(
+            '--domain',
+            type=str,
+            default='admin.localhost:8000',
+            help='Dominio del tenant principal'
         )
 
     def handle(self, *args, **options):
         name = options['name']
         email = options['email']
-        subdomain = options['subdomain']
+        schema_name = options['schema_name']
+        domain_name = options['domain']
 
         try:
             with transaction.atomic():
-                if Tenant.objects.filter(subdomain=subdomain).exists():
+                if Tenant.objects.filter(schema_name=schema_name).exists():
                     self.stdout.write(
-                        self.style.WARNING(
-                            TENANT_ERROR_MESSAGES['SUBDOMAIN_EXISTS'].format(subdomain=subdomain)
-                        )
+                        self.style.WARNING(f"Ya existe un tenant con el esquema '{schema_name}'")
                     )
                     return
 
                 tenant = Tenant.objects.create(
                     name=name,
                     email=email,
-                    subdomain=subdomain
+                    schema_name=schema_name
                 )
 
                 domain = Domain.objects.create(
-                    domain=f'{subdomain}.localhost:8000',
+                    domain=domain_name,
                     tenant=tenant,
                     is_primary=True
                 )
@@ -60,13 +65,7 @@ class Command(BaseCommand):
                     )
                 )
 
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f'Dominio: {domain.domain}'
-                    )
-                )
-
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'Error: {str(e)}')
+                self.style.ERROR(f'Error creando tenant: {str(e)}')
             )

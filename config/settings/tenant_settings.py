@@ -10,9 +10,9 @@ def configure_tenant_settings():
             'django.contrib.staticfiles',
             'apps.core',
             'apps.tenants',
+            'apps.authentication',
         ],
         'TENANT_APPS': [
-            'apps.authentication',
             'apps.dashboard', 
             'apps.accounting',
             'apps.business_lines',

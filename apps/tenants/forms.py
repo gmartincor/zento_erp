@@ -1,15 +1,21 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from apps.core.mixins import TenantFormMixin
-from apps.core.constants import TENANT_DEFAULTS, TENANT_ERROR_MESSAGES
+from apps.core.constants import TENANT_ERROR_MESSAGES
 from .models import Tenant
 from .services import TenantValidationService
 
 
 class BaseTenantForm(forms.ModelForm, TenantFormMixin):
+    schema_name = forms.CharField(
+        max_length=50,
+        label="Nombre del esquema",
+        help_text="Identificador único para el tenant (solo letras, números y guiones bajos)"
+    )
+    
     class Meta:
         model = Tenant
-        fields = ['name', 'email', 'slug', 'phone', 'professional_number']
+        fields = ['name', 'email', 'phone', 'professional_number', 'schema_name']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -20,7 +26,7 @@ class BaseTenantForm(forms.ModelForm, TenantFormMixin):
         field_configs = {
             'name': {'placeholder': 'Ej: María García Martínez'},
             'email': {'type': 'email', 'placeholder': 'maria@email.com'},
-            'slug': {'placeholder': 'maria (se convertirá en /maria/)'},
+            'schema_name': {'placeholder': 'maria_garcia'},
             'phone': {'placeholder': '+34 600 123 456'},
             'professional_number': {'placeholder': 'Número de colegiado'}
         }
@@ -33,13 +39,13 @@ class BaseTenantForm(forms.ModelForm, TenantFormMixin):
         labels = {
             'name': "Nombre completo",
             'email': "Email",
-            'slug': "Slug",
+            'schema_name': "Nombre del esquema",
             'phone': "Teléfono",
             'professional_number': "Número de colegiado"
         }
         
         help_texts = {
-            'slug': f"Solo letras, números y guiones. Mínimo {TENANT_DEFAULTS['MIN_SUBDOMAIN_LENGTH']} caracteres.",
+            'schema_name': "Solo letras, números y guiones bajos. Mínimo 3 caracteres.",
             'professional_number': "Opcional. Número de colegiado profesional"
         }
         
@@ -51,16 +57,14 @@ class BaseTenantForm(forms.ModelForm, TenantFormMixin):
             if field_name in self.fields:
                 self.fields[field_name].help_text = help_text
     
-    def clean_slug(self):
-        slug = self.cleaned_data['slug']
-        is_valid, error_message = TenantValidationService.validate_subdomain_format(slug)
+    def clean_schema_name(self):
+        schema_name = self.cleaned_data['schema_name']
+        is_valid, error_message = TenantValidationService.validate_schema_name_format(schema_name)
         if not is_valid:
             raise ValidationError(error_message)
-        if not TenantValidationService.check_subdomain_availability(slug):
-            raise ValidationError(
-                TENANT_ERROR_MESSAGES['SUBDOMAIN_EXISTS'].format(subdomain=slug)
-            )
-        return slug
+        if not TenantValidationService.check_schema_name_availability(schema_name):
+            raise ValidationError(f"El nombre de esquema '{schema_name}' ya está en uso.")
+        return schema_name
     
     def clean_email(self):
         email = self.cleaned_data['email']
@@ -73,7 +77,7 @@ class BaseTenantForm(forms.ModelForm, TenantFormMixin):
 
 class TenantRegistrationForm(BaseTenantForm):
     class Meta(BaseTenantForm.Meta):
-        fields = ['name', 'email', 'slug']
+        fields = ['name', 'email', 'schema_name']
 
 
 class TenantUpdateForm(BaseTenantForm):
@@ -82,8 +86,8 @@ class TenantUpdateForm(BaseTenantForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if 'slug' in self.fields:
-            del self.fields['slug']
+        if 'schema_name' in self.fields:
+            del self.fields['schema_name']
     
     def clean_email(self):
         email = self.cleaned_data['email']

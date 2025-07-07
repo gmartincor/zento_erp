@@ -11,21 +11,19 @@ User = get_user_model()
 
 class TenantService:
     @classmethod
-    def create_tenant(cls, name, email, slug, **kwargs):
+    def create_tenant(cls, name, email, schema_name, domain_name, **kwargs):
         try:
             with transaction.atomic():
                 tenant = Tenant(
                     name=name,
                     email=email,
-                    slug=slug,
-                    schema_name=slug,
+                    schema_name=schema_name,
                     **kwargs
                 )
                 tenant.save()
                 
-                domain_str = f"{slug}.localhost"
                 domain = Domain(
-                    domain=domain_str,
+                    domain=domain_name,
                     tenant=tenant,
                     is_primary=True
                 )

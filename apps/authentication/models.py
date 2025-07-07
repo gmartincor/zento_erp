@@ -3,9 +3,6 @@ from django.db import models
 
 
 class User(AbstractUser):
-    """
-    Custom User model with role-based access.
-    """
     
     class RoleChoices(models.TextChoices):
         AUTONOMO = 'AUTONOMO', 'Autónomo'
@@ -15,6 +12,15 @@ class User(AbstractUser):
         choices=RoleChoices.choices,
         default=RoleChoices.AUTONOMO,
         verbose_name="Rol"
+    )
+    
+    tenant = models.OneToOneField(
+        'tenants.Tenant',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='user',
+        verbose_name="Tenant asociado"
     )
 
     class Meta:

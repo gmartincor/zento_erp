@@ -1,27 +1,124 @@
 from django.contrib import admin
+from django import forms
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.urls import reverse
+from django.urls import reverse, path
 from django.http import HttpResponseRedirect
 from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.admin import AdminSite
 from apps.core.constants import TENANT_SUCCESS_MESSAGES
-from .models import Tenant
+from apps.authentication.models import User
+from .models import Tenant, Domain
 from .forms import TenantUpdateForm, TenantStatusForm
 from .services import TenantService
 
 
+class TenantCreationForm(forms.ModelForm):
+    """Formulario para crear un tenant con su usuario asociado"""
+    
+    # Campos adicionales para el usuario
+    username = forms.CharField(
+        max_length=150,
+        help_text="Nombre de usuario para acceder al sistema"
+    )
+    user_email = forms.EmailField(
+        label="Email del usuario",
+        help_text="Email para el usuario (puede ser diferente al del tenant)"
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput,
+        help_text="Contraseña inicial para el usuario"
+    )
+    first_name = forms.CharField(
+        max_length=150,
+        required=False,
+        help_text="Nombre del usuario"
+    )
+    last_name = forms.CharField(
+        max_length=150,
+        required=False,
+        help_text="Apellidos del usuario"
+    )
+    create_domain = forms.BooleanField(
+        initial=True,
+        required=False,
+        help_text="Crear dominio automáticamente para desarrollo"
+    )
+    
+    class Meta:
+        model = Tenant
+        fields = ['name', 'email', 'phone', 'professional_number', 'notes']
+    
+    def save(self, commit=True):
+        tenant = super().save(commit=False)
+        
+        if commit:
+            # Generar schema_name automáticamente
+            import re
+            from django.conf import settings
+            
+            schema_base = re.sub(r'[^a-zA-Z0-9]', '', self.cleaned_data['username'].lower())
+            tenant.schema_name = f"tenant_{schema_base}"
+            
+            # Asegurar que el schema_name sea único
+            counter = 1
+            original_schema = tenant.schema_name
+            while Tenant.objects.filter(schema_name=tenant.schema_name).exists():
+                tenant.schema_name = f"{original_schema}_{counter}"
+                counter += 1
+            
+            tenant.save()
+            
+            # Crear usuario asociado
+            user = User.objects.create_user(
+                username=self.cleaned_data['username'],
+                email=self.cleaned_data['user_email'],
+                password=self.cleaned_data['password'],
+                first_name=self.cleaned_data['first_name'],
+                last_name=self.cleaned_data['last_name'],
+                tenant=tenant
+            )
+            
+            # Crear dominio si se solicita
+            if self.cleaned_data.get('create_domain', True):
+                is_development = settings.DEBUG
+                
+                if is_development:
+                    domain_name = f"{tenant.schema_name}.localhost"
+                else:
+                    # En producción, usar un dominio genérico
+                    # El administrador deberá configurar el dominio real después
+                    domain_name = f"{tenant.schema_name}.ejemplo.com"
+                
+                Domain.objects.get_or_create(
+                    domain=domain_name,
+                    tenant=tenant,
+                    defaults={'is_primary': True}
+                )
+        
+        return tenant
+
+
+@admin.register(Domain)
+class DomainAdmin(admin.ModelAdmin):
+    list_display = ['domain', 'tenant', 'is_primary']
+    list_filter = ['is_primary']
+    search_fields = ['domain', 'tenant__name']
+
+
 @admin.register(Tenant)
 class TenantAdmin(admin.ModelAdmin):
-    form = TenantUpdateForm
     
     list_display = [
         'name',
         'email',
-        'slug',
+        'schema_name',
         'status_badge',
         'is_active',
+        'user_info',
+        'domain_info',
         'created',
-        'formatted_url',
         'action_links'
     ]
     
@@ -36,7 +133,7 @@ class TenantAdmin(admin.ModelAdmin):
     search_fields = [
         'name',
         'email',
-        'slug',
+        'schema_name',
         'professional_number'
     ]
     
@@ -48,7 +145,7 @@ class TenantAdmin(admin.ModelAdmin):
         'created',
         'modified',
         'deleted_at',
-        'formatted_url_link',
+        'schema_name',
         'tenant_stats'
     ]
     
@@ -57,7 +154,72 @@ class TenantAdmin(admin.ModelAdmin):
             'fields': ('name', 'email', 'phone', 'professional_number')
         }),
         ('Configuración', {
-            'fields': ('slug', 'formatted_url_link')
+            'fields': ('schema_name',)
+        }),
+        ('Estado y Control', {
+            'fields': ('status', 'is_active', 'notes')
+        }),
+        ('Información del Sistema', {
+            'fields': ('created', 'modified', 'is_deleted', 'deleted_at', 'tenant_stats'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['activate_tenants', 'suspend_tenants', 'restore_tenants']
+    
+    def get_form(self, request, obj=None, **kwargs):
+        """Usar formulario especial para creación"""
+        if obj is None:  # Creando nuevo tenant
+            kwargs['form'] = TenantCreationForm
+        else:  # Editando tenant existente
+            kwargs['form'] = TenantUpdateForm
+        return super().get_form(request, obj, **kwargs)
+    
+    def get_queryset(self, request):
+        return Tenant.all_objects.all()
+    
+    def user_info(self, obj):
+        """Muestra información del usuario asociado"""
+        try:
+            user = User.objects.filter(tenant=obj).first()
+            if user:
+                return format_html(
+                    '<strong>{}</strong><br><small>{}</small>',
+                    user.username,
+                    user.get_full_name() or 'Sin nombre'
+                )
+            else:
+                return format_html(
+                    '<span style="color: red;">Sin usuario</span>'
+                )
+        except:
+            return 'Error'
+    user_info.short_description = 'Usuario'
+    
+    def domain_info(self, obj):
+        """Muestra información del dominio principal"""
+        try:
+            domain = Domain.objects.filter(tenant=obj, is_primary=True).first()
+            if domain:
+                return format_html(
+                    '<a href="http://{}" target="_blank">{}</a>',
+                    domain.domain,
+                    domain.domain
+                )
+            else:
+                return format_html(
+                    '<span style="color: orange;">Sin dominio</span>'
+                )
+        except:
+            return 'Error'
+    domain_info.short_description = 'Dominio'
+    
+    fieldsets = (
+        ('Información del Nutricionista', {
+            'fields': ('name', 'email', 'phone', 'professional_number')
+        }),
+        ('Configuración', {
+            'fields': ('schema_name',)
         }),
         ('Estado y Control', {
             'fields': ('status', 'is_active', 'notes')
@@ -88,21 +250,6 @@ class TenantAdmin(admin.ModelAdmin):
             obj.get_status_display()
         )
     status_badge.short_description = 'Estado'
-    
-    def formatted_url(self, obj):
-        return obj.full_url
-    formatted_url.short_description = 'URL'
-    
-    def formatted_url_link(self, obj):
-        if obj.pk:
-            full_url = f"http://localhost:8000{obj.full_url}"
-            return format_html(
-                '<a href="{}" target="_blank">{}</a>',
-                full_url,
-                full_url
-            )
-        return '-'
-    formatted_url_link.short_description = 'URL de Acceso'
     
     def action_links(self, obj):
         if not obj.pk:

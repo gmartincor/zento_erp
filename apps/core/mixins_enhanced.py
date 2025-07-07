@@ -30,7 +30,6 @@ class TenantUtilsMixin:
             'tenant': tenant,
             'tenant_name': tenant.name if tenant else None,
             'tenant_schema': tenant.schema_name if tenant else None,
-            'tenant_slug': tenant.slug if tenant else None,
         }
         
     def validate_tenant_access(self, user, tenant=None):

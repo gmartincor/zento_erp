@@ -1,126 +1,134 @@
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.shortcuts import redirect, render, get_object_or_404
-from django.views.decorators.http import require_http_methods
-from django.views.generic import ListView, DetailView, UpdateView
-from django.core.exceptions import ValidationError
-from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from apps.core.constants import TENANT_SUCCESS_MESSAGES, TENANT_ERROR_MESSAGES
-from apps.core.mixins import TenantContextMixin
-from .forms import TenantUpdateForm, TenantStatusForm
-from .services import TenantService, TenantDataService
+from django_tenants.utils import connection
+from django.http import Http404
+from apps.authentication.models import User
 from .models import Tenant
 
 
-class BaseTenantView(TenantContextMixin):
-    model = Tenant
+def unified_login_view(request):
+    """Vista de login unificada que funciona en cualquier tenant"""
+    current_tenant = connection.tenant
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update(self.get_tenant_context())
-        return context
-
-
-@method_decorator(login_required, name='dispatch')
-class TenantListView(BaseTenantView, ListView):
-    template_name = 'tenants/list.html'
-    context_object_name = 'tenants'
-    paginate_by = 25
+    # Si el usuario ya está autenticado, redirigir al dashboard
+    if request.user.is_authenticated:
+        # Verificar que el usuario pertenece a este tenant o está en público
+        if current_tenant.schema_name == 'public':
+            # En tenant público, verificar si el usuario tiene tenant
+            user_tenant = getattr(request.user, 'tenant', None)
+            if user_tenant and user_tenant.is_available:
+                messages.info(request, 'Ya tienes una sesión activa. Accede a tu área desde tu subdominio.')
+                return render(request, 'authentication/login.html', {
+                    'page_title': 'Acceso - Nutrition Pro CRM',
+                    'user_has_tenant': True,
+                    'user_tenant': user_tenant,
+                })
+        else:
+            # En un tenant específico, ir al dashboard
+            return redirect('tenant_dashboard')
     
-    def get_queryset(self):
-        return Tenant.active_objects.all()
+    if request.method == 'POST':
+        return _process_login_form(request, current_tenant)
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'page_title': 'Nutricionistas Registrados',
-            'subtitle': 'Gestión de cuentas profesionales',
-            'stats': {
-                'total': Tenant.objects.count(),
-                'active': Tenant.active_objects.count(),
-                'pending': Tenant.objects.pending().count(),
-                'suspended': Tenant.objects.suspended().count(),
-            }
-        })
-        return context
-
-
-@method_decorator(login_required, name='dispatch')
-class TenantDetailView(BaseTenantView, DetailView):
-    template_name = 'tenants/detail.html'
-    context_object_name = 'tenant'
+    context = {
+        'page_title': 'Acceso - Nutrition Pro CRM',
+        'is_public_tenant': current_tenant.schema_name == 'public',
+    }
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        tenant = self.get_object()
-        
-        context.update({
-            'page_title': f'Nutricionista: {tenant.name}',
-            'subtitle': f'Gestión de {tenant.subdomain}',
-        })
-        return context
-
-
-@method_decorator(login_required, name='dispatch')
-class TenantUpdateView(BaseTenantView, UpdateView):
-    form_class = TenantUpdateForm
-    template_name = 'tenants/update.html'
-    context_object_name = 'tenant'
-    success_url = reverse_lazy('admin:tenants_tenant_changelist')
-    
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(
-            self.request,
-            TENANT_SUCCESS_MESSAGES['TENANT_UPDATED'].format(name=self.object.name)
-        )
-        return response
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'page_title': f'Editar: {self.object.name}',
-            'subtitle': 'Actualizar información del nutricionista',
-        })
-        return context
+    return render(request, 'authentication/login.html', context)
 
 
 @login_required
-@require_http_methods(["GET", "POST"])
-def tenant_status_update_view(request, pk):
-    tenant = get_object_or_404(Tenant, pk=pk)
+def tenant_dashboard_view(request):
+    """Vista del dashboard del tenant"""
+    tenant = connection.tenant
     
-    if request.method == 'POST':
-        form = TenantStatusForm(request.POST, instance=tenant)
-        
-        if form.is_valid():
-            try:
-                old_status = tenant.status
-                form.save()
-                
-                if tenant.status == Tenant.StatusChoices.ACTIVE and old_status != Tenant.StatusChoices.ACTIVE:
-                    tenant.activate()
-                elif tenant.status == Tenant.StatusChoices.SUSPENDED:
-                    TenantService.suspend_tenant(tenant.id, form.cleaned_data.get('notes'))
-                
-                messages.success(
-                    request,
-                    f"Estado de {tenant.name} actualizado a {tenant.get_status_display()}"
-                )
-                
-                return redirect('admin:tenants_tenant_changelist')
-                
-            except ValidationError as e:
-                messages.error(request, str(e))
-    else:
-        form = TenantStatusForm(instance=tenant)
+    # Solo permitir acceso si estamos en un tenant válido y activo
+    if tenant.schema_name == 'public':
+        messages.error(request, 'Accede desde tu subdominio personalizado.')
+        return redirect('unified_login')
+    
+    if not tenant.is_active:
+        messages.error(request, 'Este espacio de trabajo no está disponible.')
+        logout(request)
+        return redirect('unified_login')
+    
+    # Verificar que el usuario pertenece a este tenant
+    user_tenant = getattr(request.user, 'tenant', None)
+    if not user_tenant or user_tenant.id != tenant.id:
+        messages.error(request, 'No tienes acceso a este espacio de trabajo.')
+        logout(request)
+        return redirect('unified_login')
     
     context = {
-        'form': form,
         'tenant': tenant,
-        'page_title': f'Cambiar Estado: {tenant.name}',
-        'subtitle': 'Gestión de estado del nutricionista',
+        'page_title': f'Dashboard - {tenant.name}',
     }
     
-    return render(request, 'tenants/status_update.html', context)
+    return render(request, 'dashboard/home.html', context)
+
+
+def tenant_logout_view(request):
+    """Vista de logout"""
+    if request.user.is_authenticated:
+        user_name = request.user.get_full_name() or request.user.username
+        logout(request)
+        messages.success(request, f'¡Hasta pronto, {user_name}!')
+    
+    return redirect('unified_login')
+
+
+def _process_login_form(request, current_tenant):
+    """Procesa el formulario de login"""
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    
+    if not (username and password):
+        messages.error(request, 'Por favor, completa todos los campos')
+        return render(request, 'authentication/login.html', {
+            'page_title': 'Acceso - Nutrition Pro CRM',
+            'is_public_tenant': current_tenant.schema_name == 'public',
+        })
+    
+    # Autenticar usuario
+    user = authenticate(request, username=username, password=password)
+    if user is None:
+        messages.error(request, 'Usuario o contraseña incorrectos')
+        return render(request, 'authentication/login.html', {
+            'page_title': 'Acceso - Nutrition Pro CRM',
+            'is_public_tenant': current_tenant.schema_name == 'public',
+        })
+    
+    # Verificar que el usuario tiene un tenant asociado y está activo
+    user_tenant = getattr(user, 'tenant', None)
+    if not user_tenant or not user_tenant.is_available:
+        messages.error(request, 'Tu cuenta no tiene un espacio de trabajo asignado o no está activa.')
+        return render(request, 'authentication/login.html', {
+            'page_title': 'Acceso - Nutrition Pro CRM',
+            'is_public_tenant': current_tenant.schema_name == 'public',
+        })
+    
+    # Login exitoso
+    login(request, user)
+    messages.success(request, f'¡Bienvenido/a, {user.get_full_name() or user.username}!')
+    
+    # Si estamos en el tenant correcto, ir al dashboard
+    if current_tenant.id == user_tenant.id:
+        return redirect('tenant_dashboard')
+    
+    # Si estamos en tenant público, mostrar mensaje para ir al subdominio
+    if current_tenant.schema_name == 'public':
+        messages.info(request, 'Accede a tu área de trabajo desde tu subdominio personalizado.')
+        return render(request, 'authentication/login.html', {
+            'page_title': 'Acceso - Nutrition Pro CRM',
+            'user_has_tenant': True,
+            'user_tenant': user_tenant,
+            'is_public_tenant': True,
+        })
+    
+    # Si estamos en un tenant incorrecto, mostrar error
+    messages.error(request, 'Este no es tu espacio de trabajo. Accede desde tu subdominio.')
+    logout(request)
+    return redirect('unified_login')

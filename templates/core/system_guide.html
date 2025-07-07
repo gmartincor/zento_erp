@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Guía del Sistema - Nutrition Pro CRM{% endblock %}
+
+{% block auth_content %}
+<div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow rounded-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">🏥 Nutrition Pro CRM - Guía del Sistema</h1>
+        
+        <div class="space-y-8">
+            <section>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">📖 ¿Cómo funciona?</h2>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <p class="text-gray-700">
+                        Nutrition Pro CRM es un sistema multi-tenant donde cada nutricionista tiene su propio espacio de trabajo independiente.
+                        Cada nutricionista accede a través de su subdominio personalizado con total aislamiento de datos.
+                    </p>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">🔐 Acceso al Sistema</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-green-800 mb-2">💻 En Desarrollo</h3>
+                        <ul class="text-sm text-green-700 space-y-1">
+                            <li>• URL principal: <code>http://localhost:8000</code></li>
+                            <li>• URL de nutricionista: <code>http://[schema].localhost:8000</code></li>
+                            <li>• Ejemplo: <code>http://ana-martinez.localhost:8000</code></li>
+                        </ul>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-purple-800 mb-2">🌐 En Producción</h3>
+                        <ul class="text-sm text-purple-700 space-y-1">
+                            <li>• URL principal: <code>https://tudominio.com</code></li>
+                            <li>• URL de nutricionista: <code>https://[schema].tudominio.com</code></li>
+                            <li>• Ejemplo: <code>https://ana.tudominio.com</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">👩‍⚕️ Para Nutricionistas</h2>
+                <div class="bg-gray-50 p-4 rounded-lg space-y-3">
+                    <h3 class="font-semibold text-gray-800">Flujo de Acceso:</h3>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-2">
+                        <li>Accede a tu URL personalizada (ej: <code>ana.localhost:8000</code>)</li>
+                        <li>Ingresa tu usuario y contraseña</li>
+                        <li>Serás redirigido/a automáticamente a tu dashboard personal</li>
+                        <li>Todos tus datos están completamente aislados de otros nutricionistas</li>
+                    </ol>
+                    
+                    <div class="mt-4 p-3 bg-yellow-100 rounded border border-yellow-300">
+                        <p class="text-sm text-yellow-800">
+                            <strong>Importante:</strong> Si accedes desde la URL principal, el sistema te mostrará un enlace directo a tu área de trabajo personal.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">⚙️ Para Administradores</h2>
+                <div class="bg-gray-50 p-4 rounded-lg space-y-3">
+                    <h3 class="font-semibold text-gray-800">Crear Nuevo Nutricionista:</h3>
+                    <div class="bg-black text-green-400 p-3 rounded font-mono text-sm">
+                        python manage.py create_nutritionist \<br>
+                        &nbsp;&nbsp;--name "Ana García" \<br>
+                        &nbsp;&nbsp;--email "ana@ejemplo.com" \<br>
+                        &nbsp;&nbsp;--username "ana" \<br>
+                        &nbsp;&nbsp;--password "password123" \<br>
+                        &nbsp;&nbsp;--professional-number "12345"
+                    </div>
+                    
+                    <h3 class="font-semibold text-gray-800 mt-4">Funcionalidades Incluidas:</h3>
+                    <ul class="text-gray-700 space-y-1">
+                        <li>✅ Creación automática de usuario y tenant</li>
+                        <li>✅ Configuración automática de subdominios</li>
+                        <li>✅ Configuración de /etc/hosts en desarrollo</li>
+                        <li>✅ Base de datos completamente aislada por nutricionista</li>
+                        <li>✅ Sistema de autenticación seguro</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">🧪 Usuarios de Prueba</h2>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="grid gap-4">
+                        <div class="bg-white p-3 rounded border">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <strong>Ana Martínez</strong> - <code>ana / ana123</code>
+                                </div>
+                                <a href="http://ana-martinez.localhost:8000" target="_blank" class="text-blue-600 hover:underline">
+                                    ana-martinez.localhost:8000
+                                </a>
+                            </div>
+                        </div>
+                        <div class="bg-white p-3 rounded border">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <strong>Carlos Nutricionista</strong> - <code>carlos / carlos123</code>
+                                </div>
+                                <a href="http://carlos.localhost:8000" target="_blank" class="text-blue-600 hover:underline">
+                                    carlos.localhost:8000
+                                </a>
+                            </div>
+                        </div>
+                        <div class="bg-white p-3 rounded border">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <strong>María García</strong> - <code>maria / maria123</code>
+                                </div>
+                                <a href="http://maria.localhost:8000" target="_blank" class="text-blue-600 hover:underline">
+                                    maria.localhost:8000
+                                </a>
+                            </div>
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded border border-yellow-300">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <strong>Administrador</strong> - <code>admin / admin123</code>
+                                </div>
+                                <a href="http://localhost:8000/admin/" target="_blank" class="text-blue-600 hover:underline">
+                                    localhost:8000/admin/
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">🔧 Características Técnicas</h2>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-blue-800 mb-2">🏗️ Arquitectura</h3>
+                        <ul class="text-sm text-blue-700 space-y-1">
+                            <li>• Django Tenants</li>
+                            <li>• PostgreSQL</li>
+                            <li>• Schemas separados</li>
+                            <li>• Relación 1:1 User-Tenant</li>
+                        </ul>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-green-800 mb-2">🔒 Seguridad</h3>
+                        <ul class="text-sm text-green-700 space-y-1">
+                            <li>• Aislamiento total de datos</li>
+                            <li>• Autenticación por subdominio</li>
+                            <li>• Validación de permisos</li>
+                            <li>• Sessions independientes</li>
+                        </ul>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-purple-800 mb-2">📱 UX/UI</h3>
+                        <ul class="text-sm text-purple-700 space-y-1">
+                            <li>• Responsive design</li>
+                            <li>• Branding personalizado</li>
+                            <li>• Navegación intuitiva</li>
+                            <li>• Dashboard unificado</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="{% url 'unified_login' %}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 mr-4">
+                🔐 Ir al Login
+            </a>
+            <a href="/admin/" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200">
+                ⚙️ Panel Admin
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

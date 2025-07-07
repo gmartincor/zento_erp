@@ -26,7 +26,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-=s24s@s)2l@1-bg4+5%x(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost,.localhost', cast=Csv())
 
 tenant_config = configure_tenant_settings()
 
@@ -35,7 +35,7 @@ TENANT_APPS = tenant_config['TENANT_APPS']
 INSTALLED_APPS = tenant_config['INSTALLED_APPS']
 
 MIDDLEWARE = [
-    'apps.tenants.middleware.TenantSlugMiddleware',
+    'django_tenants.middleware.main.TenantMainMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

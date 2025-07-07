@@ -15,7 +15,6 @@ class TenantTestingService:
                 results.append({
                     'tenant_name': tenant.name,
                     'schema': tenant.schema_name,
-                    'subdomain': tenant.subdomain,
                     'client_count': client_count,
                     'is_isolated': True
                 })
