@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load accounting_tags %}
+{% load tenant_tags %}
 
 {% block title %}{{ page_title }}{% endblock %}
 
@@ -75,10 +76,11 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% load status_tags %}
+{% load tenant_tags %}
                             {% payment_status_badge payment %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{% url 'accounting:service-payment' payment.client_service.id %}" class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+                            <a href="{% tenant_url 'accounting:service-payment' payment.client_service.id %}" class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
                                 Ver Servicio
                             </a>
                         </td>

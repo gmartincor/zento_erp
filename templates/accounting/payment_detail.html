@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load accounting_tags %}
+{% load tenant_tags %}
 {% load presentation_tags %}
+{% load tenant_tags %}
 
 {% block title %}Detalle de Pago - {{ payment.client_service.client.full_name }}{% endblock %}
 
@@ -13,7 +15,7 @@
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                         Detalle de Pago
                     </h1>
-                    <a href="{% url 'accounting:client-service-detail' service_id=client_service.id %}" 
+                    <a href="{% tenant_url 'accounting:client-service-detail' service_id=client_service.id %}" 
                        class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                         Volver al Servicio
                     </a>
@@ -72,6 +74,7 @@
                                     <span class="text-sm font-medium text-blue-700 dark:text-blue-300">Monto:</span>
                                     <div class="ml-2">
                                         {% load accounting_tags %}
+{% load tenant_tags %}
                                         {% payment_amount_display payment show_details=True %}
                                     </div>
                                 </div>

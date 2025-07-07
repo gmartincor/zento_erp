@@ -91,6 +91,7 @@
         </div>
         
         {% load service_status_tags %}
+{% load tenant_tags %}
         {% service_vigency_info service as vigency %}
         {% if vigency.end_date %}
         <div>

@@ -28,9 +28,6 @@ class TenantRouteMiddleware(MiddlewareMixin):
         try:
             tenant = Tenant.objects.get(slug=potential_tenant_slug, is_active=True, is_deleted=False)
             request.tenant = tenant
-            request.path_info = '/' + '/'.join(path_parts[1:]) + ('/' if path.endswith('/') and len(path_parts) > 1 else '')
-            if not request.path_info.endswith('/') and request.path_info != '/':
-                request.path_info += '/'
         except Tenant.DoesNotExist:
             request.tenant = None
         

@@ -1,5 +1,6 @@
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
     {% for service in services %}
+{% load tenant_tags %}
         {% include 'accounting/components/service_card.html' with service=service show_remanentes=has_remanentes line_path=line_path current_category=current_category %}
     {% endfor %}
 </div>

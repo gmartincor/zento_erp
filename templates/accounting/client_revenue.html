@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load tenant_tags %}
 {% load presentation_tags %}
+{% load tenant_tags %}
 
 {% block title %}{{ page_title }} - CRM Nutrición Pro{% endblock %}
 
@@ -152,7 +154,7 @@
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
                 Detalle: {{ client_detail.client.name }}
             </h2>
-            <a href="{% url 'accounting:revenue-clients' %}" 
+            <a href="{% tenant_url 'accounting:revenue-clients' %}" 
                class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                 ← Volver a la lista
             </a>

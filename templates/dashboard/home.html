@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load tenant_tags %}
 
 {% block title %}Dashboard - {% if tenant %}{{ tenant.name }}{% else %}Nutrition Pro CRM{% endif %}{% endblock %}
 
@@ -77,8 +78,8 @@
             <div class="ml-4">
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Acciones Rápidas</p>
                 <div class="mt-2 space-y-1">
-                    <a href="{% url 'expenses:create' 'VARIABLE' %}" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 block">+ Nuevo Gasto</a>
-                    <a href="{% url 'expenses:categories' %}" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 block">Ver Gastos</a>
+                    <a href="{% tenant_url 'expenses:category-create' %}" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 block">+ Nuevo Gasto</a>
+                    <a href="{% tenant_url 'expenses:categories' %}" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 block">Ver Gastos</a>
                 </div>
             </div>
         </div>
@@ -206,7 +207,7 @@
             </svg>
         </div>
         <div class="mt-4">
-            <a href="{% url 'expenses:categories' %}" class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm font-medium">
+            <a href="{% tenant_url 'expenses:categories' %}" class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm font-medium">
                 Ver módulo →
             </a>
         </div>

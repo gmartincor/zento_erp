@@ -1,5 +1,5 @@
 from django import template
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 from django.utils.safestring import mark_safe
 
 register = template.Library()
@@ -8,17 +8,24 @@ register = template.Library()
 def tenant_url(context, url_name, *args, **kwargs):
     request = context['request']
     if hasattr(request, 'tenant') and request.tenant:
-        if url_name == 'dashboard:home':
-            return reverse('tenant_dashboard', args=[request.tenant.slug])
-        elif url_name.startswith('dashboard:'):
-            return f"/{request.tenant.slug}/{url_name.replace('dashboard:', 'dashboard/')}/"
-        elif url_name.startswith('accounting:'):
-            return f"/{request.tenant.slug}/{url_name.replace('accounting:', 'accounting/')}/"
-        elif url_name.startswith('expenses:'):
-            return f"/{request.tenant.slug}/{url_name.replace('expenses:', 'expenses/')}/"
-        elif url_name == 'tenant_logout':
-            return reverse('tenant_logout', args=[request.tenant.slug])
-    return reverse(url_name, args=args, kwargs=kwargs)
+        tenant_slug = request.tenant.slug
+        
+        if url_name == 'dashboard:home' or url_name == 'dashboard_home':
+            return reverse('tenant_dashboard', args=[tenant_slug])
+        elif url_name == 'tenant_logout' or url_name == 'logout':
+            return reverse('tenant_logout', args=[tenant_slug])
+        elif url_name == 'tenant_login' or url_name == 'login':
+            return reverse('tenant_login', args=[tenant_slug])
+        else:
+            try:
+                return reverse(url_name, args=[tenant_slug] + list(args), kwargs=kwargs)
+            except NoReverseMatch:
+                return reverse(url_name, args=list(args), kwargs=kwargs)
+    
+    try:
+        return reverse(url_name, args=args, kwargs=kwargs)
+    except NoReverseMatch:
+        return url_name
 
 @register.simple_tag(takes_context=True)
 def is_active_section(context, app_name):

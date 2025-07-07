@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load service_tags accounting_tags presentation_tags service_status_tags %}
+{% load tenant_tags %}
 
 {% block title %}Nuevo Pago - {{ service.client.full_name }} - Nutrition Pro CRM{% endblock %}
 
@@ -7,7 +8,7 @@
 <nav class="flex mb-6" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-3">
         <li class="inline-flex items-center">
-            <a href="{% url 'accounting:service-payment-history' service_id=service.id %}" 
+            <a href="{% tenant_url 'accounting:service-payment-history' service_id=service.id %}" 
                class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
                 Historial de Pagos
             </a>
@@ -38,7 +39,7 @@
                 </p>
             </div>
             
-            <a href="{% url 'accounting:service-payment-history' service_id=service.id %}" 
+            <a href="{% tenant_url 'accounting:service-payment-history' service_id=service.id %}" 
                class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium">
                 Cancelar
             </a>
@@ -209,7 +210,7 @@
                 </div>
 
                 <div class="flex justify-end space-x-3">
-                    <a href="{% url 'accounting:service-payment-history' service_id=service.id %}" 
+                    <a href="{% tenant_url 'accounting:service-payment-history' service_id=service.id %}" 
                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         Cancelar
                     </a>

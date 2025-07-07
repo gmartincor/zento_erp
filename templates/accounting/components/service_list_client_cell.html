@@ -1,5 +1,6 @@
 <div class="flex items-center">
     <div class="flex-shrink-0 h-10 w-10">
+{% load tenant_tags %}
         <div class="h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {{ service.client.full_name|first|upper }}
@@ -8,7 +9,7 @@
     </div>
     <div class="ml-4">
         <div class="text-sm font-medium text-gray-900 dark:text-white">
-            <a href="{% url 'accounting:client-service-history' client_id=service.client.id %}" 
+            <a href="{% tenant_url 'accounting:client-service-history' client_id=service.client.id %}" 
                class="hover:text-blue-600 dark:hover:text-blue-400">
                 {{ service.client.full_name }}
             </a>

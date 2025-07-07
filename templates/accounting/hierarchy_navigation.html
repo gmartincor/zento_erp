@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load tenant_tags %}
 {% load presentation_tags %}
+{% load tenant_tags %}
 {% load service_status_tags %}
+{% load tenant_tags %}
 
 {% block title %}{{ page_title }} - CRM Nutrición Pro{% endblock %}
 
@@ -26,7 +29,7 @@
                 </select>
             </form>
             
-            <a href="{% url 'accounting:create' %}" 
+            <a href="{% tenant_url 'accounting:create' %}" 
                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -168,7 +171,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {% for category in items %}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer" 
-             onclick="window.location.href='{% url 'accounting:category-services' line_path=line_path category=category.category|lower %}'">
+             onclick="window.location.href='{% tenant_url 'accounting:category-services' line_path=line_path category=category.category|lower %}'">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ category.name }}</h3>
@@ -289,6 +292,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% load service_tags %}
+{% load tenant_tags %}
                             {{ service|service_status_badge_filter }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

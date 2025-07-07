@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load tenant_tags %}
 
 {% block title %}Iniciar Sesión - Nutrition Pro CRM{% endblock %}
 
@@ -41,9 +42,9 @@
                     </p>
                     <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">
                         {% if tenant %}
-                            Puedes <a href="{% url 'tenant_dashboard' tenant.slug %}" class="underline hover:no-underline">ir al dashboard</a> o iniciar sesión con otra cuenta.
+                            Puedes <a href="{% tenant_url 'dashboard:home' %}" class="underline hover:no-underline">ir al dashboard</a> o iniciar sesión con otra cuenta.
                         {% else %}
-                            Puedes <a href="{% url 'dashboard:home' %}" class="underline hover:no-underline">ir al dashboard</a> o iniciar sesión con otra cuenta.
+                            Puedes <a href="{% tenant_url 'dashboard:home' %}" class="underline hover:no-underline">ir al dashboard</a> o iniciar sesión con otra cuenta.
                         {% endif %}
                     </p>
                 </div>

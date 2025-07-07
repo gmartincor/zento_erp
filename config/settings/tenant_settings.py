@@ -24,6 +24,7 @@ def configure_tenant_settings():
             'django.contrib.sessions',
             'django.contrib.messages',
             'django.contrib.staticfiles',
+            'django.contrib.humanize',
             'apps.core',
             'apps.tenants',
             'apps.authentication',

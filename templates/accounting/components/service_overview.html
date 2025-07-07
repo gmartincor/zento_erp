@@ -1,4 +1,5 @@
 {% load service_tags text_filters service_status_tags %}
+{% load tenant_tags %}
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -117,7 +118,7 @@
         </h4>
         <div class="space-y-2">
             {% if service|service_is_active %}
-                <a href="{% url 'accounting:service-terminate' service_id=service.id %}" 
+                <a href="{% tenant_url 'accounting:service-terminate' service_id=service.id %}" 
                    class="w-full inline-flex items-center justify-center px-3 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30">
                     Finalizar Servicio
                 </a>

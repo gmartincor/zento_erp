@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load accounting_tags %}
+{% load tenant_tags %}
 {% load static %}
+{% load tenant_tags %}
 
 {% block title %}{{ page_title }}{% endblock %}
 
@@ -15,7 +17,7 @@
         
         {% if business_line %}
         <div class="flex space-x-3">
-            <a href="{% url 'accounting:expiring_services' %}" 
+            <a href="{% tenant_url 'accounting:expiring_services' %}" 
                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -132,11 +134,11 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex items-center justify-end space-x-2">
-                                <a href="{% url 'accounting:payment-detail' payment.id %}" 
+                                <a href="{% tenant_url 'accounting:payment-detail' payment.id %}" 
                                    class="text-primary-600 hover:text-primary-900">
                                     Ver
                                 </a>
-                                <a href="{% url 'accounting:payment-edit' payment.id %}" 
+                                <a href="{% tenant_url 'accounting:payment-edit' payment.id %}" 
                                    class="text-blue-600 hover:text-blue-900">
                                     Editar
                                 </a>

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load service_tags accounting_tags presentation_tags service_status_tags %}
+{% load tenant_tags %}
 
 {% block title %}Historial de Pagos - {{ service.client.full_name }} - Nutrition Pro CRM{% endblock %}
 
@@ -7,7 +8,7 @@
 <nav class="flex mb-6" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-3">
         <li class="inline-flex items-center">
-            <a href="{% url 'accounting:category-services' line_path=service.get_line_path category=service.category|lower %}" 
+            <a href="{% tenant_url 'accounting:category-services' line_path=service.get_line_path category=service.category|lower %}" 
                class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
                 {{ service.get_category_display }}
             </a>
@@ -39,12 +40,12 @@
             </div>
             
             <div class="flex space-x-3">
-                <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
+                <a href="{% tenant_url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
                    class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium">
                     Volver al Servicio
                 </a>
                 
-                <a href="{% url 'accounting:service-payment' service_id=service.id %}" 
+                <a href="{% tenant_url 'accounting:service-payment' service_id=service.id %}" 
                    class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium">
                     Nuevo Pago
                 </a>
@@ -133,6 +134,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                     {% load accounting_tags %}
+{% load tenant_tags %}
                                     {% payment_amount_display payment show_details=False %}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -154,7 +156,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="{% url 'accounting:payment-edit' payment_id=payment.id %}" 
+                                    <a href="{% tenant_url 'accounting:payment-edit' payment_id=payment.id %}" 
                                        class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 mr-3">
                                         Editar
                                     </a>
@@ -177,7 +179,7 @@
                     Comienza registrando el primer pago para este servicio.
                 </p>
                 <div class="mt-6">
-                    <a href="{% url 'accounting:payment-create' service_id=service.id %}" 
+                    <a href="{% tenant_url 'accounting:payment-create' service_id=service.id %}" 
                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
                         <svg class="mr-2 -ml-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>

@@ -1,5 +1,6 @@
 <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
     <div class="flex items-center justify-between">
+{% load tenant_tags %}
         <div class="flex items-center">
             <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
@@ -15,12 +16,12 @@
         </div>
         <div class="flex space-x-2">
             {% if service %}
-            <a href="{% url 'accounting:service-payment-history' service_id=service.id %}" 
+            <a href="{% tenant_url 'accounting:service-payment-history' service_id=service.id %}" 
                class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors">
                 Ver Historial
             </a>
             {% if not has_payments or needs_payment %}
-            <a href="{% url 'accounting:service-payment' service_id=service.id %}" 
+            <a href="{% tenant_url 'accounting:service-payment' service_id=service.id %}" 
                class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors">
                 Nuevo Pago
             </a>

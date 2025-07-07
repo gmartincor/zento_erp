@@ -8,7 +8,7 @@ from django.conf import settings
 
 def tenant_login_view(request, tenant_slug):
     if not hasattr(request, 'tenant') or not request.tenant:
-        messages.error(request, 'Acceso no autorizado')
+        messages.error(request, f'El tenant "{tenant_slug}" no existe o no está disponible')
         return redirect('admin:index')
     
     # If user is already authenticated, redirect to dashboard
@@ -37,8 +37,8 @@ def tenant_login_view(request, tenant_slug):
 
 def tenant_dashboard_view(request, tenant_slug):
     if not hasattr(request, 'tenant') or not request.tenant:
-        messages.error(request, 'Acceso no autorizado')
-        return redirect('admin:index')
+        messages.error(request, 'Tenant no encontrado')
+        return redirect('tenant_login', tenant_slug=tenant_slug)
     
     if not request.user.is_authenticated:
         return redirect('tenant_login', tenant_slug=tenant_slug)
@@ -53,8 +53,8 @@ def tenant_dashboard_view(request, tenant_slug):
 
 def tenant_logout_view(request, tenant_slug):
     if not hasattr(request, 'tenant') or not request.tenant:
-        messages.error(request, 'Acceso no autorizado')
-        return redirect('admin:index')
+        messages.error(request, 'Tenant no encontrado')
+        return redirect('tenant_login', tenant_slug=tenant_slug)
     
     if request.user.is_authenticated:
         user_name = request.user.get_full_name() or request.user.username

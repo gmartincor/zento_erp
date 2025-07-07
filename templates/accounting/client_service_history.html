@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load tenant_tags %}
 {% load presentation_tags %}
+{% load tenant_tags %}
 {% load service_status_tags %}
+{% load tenant_tags %}
 
 {% block title %}{{ page_title }} - Nutrition Pro CRM{% endblock %}
 
@@ -9,7 +12,7 @@
 <nav class="flex" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-3">
         <li class="inline-flex items-center">
-            <a href="{% url 'accounting:index' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+            <a href="{% tenant_url 'accounting:index' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
                 Dashboard
             </a>
         </li>
@@ -48,7 +51,7 @@
         </div>
         
         <div class="mt-4 lg:mt-0 flex flex-col sm:flex-row gap-3">
-            <a href="{% url 'accounting:index' %}" 
+            <a href="{% tenant_url 'accounting:index' %}" 
                class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium flex items-center justify-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -241,6 +244,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {% if service|service_is_active %}
                             {% load service_status_tags %}
+{% load tenant_tags %}
                             {% service_vigency_info service as vigency %}
                             <div>
                                 <div class="font-medium">
@@ -252,6 +256,7 @@
                             </div>
                         {% else %}
                             {% load service_status_tags %}
+{% load tenant_tags %}
                             {% service_vigency_info service as vigency %}
                             <div>
                                 <div class="font-medium">
@@ -266,12 +271,12 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="{% url 'accounting:client-service-detail' service_id=service.id %}" 
+                        <a href="{% tenant_url 'accounting:client-service-detail' service_id=service.id %}" 
                            class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">
                             Ver Pagos
                         </a>
                         {% if service|service_is_active %}
-                        <a href="{% url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
+                        <a href="{% tenant_url 'accounting:service-edit' line_path=service.get_line_path category=service.category|lower service_id=service.id %}" 
                            class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                             Editar
                         </a>

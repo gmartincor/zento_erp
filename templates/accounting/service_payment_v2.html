@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static accounting_tags presentation_tags service_tags %}
+{% load tenant_tags %}
 
 {% block title %}Procesar Pago - {{ client_service.client.full_name }} - Nutrition Pro CRM{% endblock %}
 
@@ -22,7 +23,7 @@
         </div>
         
         <div class="mt-4 lg:mt-0 flex flex-col sm:flex-row gap-3">
-            <a href="{% url 'accounting:client-service-detail' service_id=client_service.id %}" 
+            <a href="{% tenant_url 'accounting:client-service-detail' service_id=client_service.id %}" 
                class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium flex items-center justify-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -228,7 +229,7 @@
                 <p class="text-gray-600 dark:text-gray-400 mb-6">
                     Este servicio no tiene períodos pendientes de pago.
                 </p>
-                <a href="{% url 'accounting:service-renewal' service_id=client_service.id %}" 
+                <a href="{% tenant_url 'accounting:service-renewal' service_id=client_service.id %}" 
                    class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -296,6 +297,7 @@
                         <div>
                             <div class="text-sm font-medium text-gray-900 dark:text-white">
                                 {% load accounting_tags %}
+{% load tenant_tags %}
                                 {% payment_amount_display payment show_details=True %}
                             </div>
                             <div class="text-xs text-gray-600 dark:text-gray-400">
@@ -312,7 +314,7 @@
                 </div>
                 
                 <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
-                    <a href="{% url 'accounting:client-service-history' client_id=client_service.client.id %}" 
+                    <a href="{% tenant_url 'accounting:client-service-history' client_id=client_service.client.id %}" 
                        class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
                         Ver historial completo →
                     </a>

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load tenant_tags %}
 
 {% block title %}{{ category_display }} - Gastos - Nutrition Pro CRM{% endblock %}
 
@@ -9,7 +10,7 @@
         <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
         </svg>
-        <a href="{% url 'expenses:categories' %}" class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Gastos</a>
+        <a href="{% tenant_url 'expenses:categories' %}" class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Gastos</a>
     </div>
 </li>
 <li>
@@ -60,14 +61,14 @@
             
             <!-- Botones de acción -->
             <div class="flex space-x-2">
-                <a href="{% url 'expenses:create' category_slug %}" 
+                <a href="{% tenant_url 'expenses:create' category_slug %}" 
                    class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors font-medium text-sm">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Nuevo Gasto
                 </a>
-                <a href="{% url 'expenses:categories' %}{% if current_year %}?year={{ current_year }}{% endif %}{% if current_month %}&month={{ current_month }}{% endif %}" 
+                <a href="{% tenant_url 'expenses:categories' %}{% if current_year %}?year={{ current_year }}{% endif %}{% if current_month %}&month={{ current_month }}{% endif %}" 
                    class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg transition-colors font-medium text-sm">
                     Volver
                 </a>
@@ -164,11 +165,11 @@
                         €{{ expense.amount|floatformat:2 }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <a href="{% url 'expenses:edit' category_slug expense.pk %}" 
+                        <a href="{% tenant_url 'expenses:edit' category_slug expense.pk %}" 
                            class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
                             Editar
                         </a>
-                        <a href="{% url 'expenses:delete' category_slug expense.pk %}" 
+                        <a href="{% tenant_url 'expenses:delete' category_slug expense.pk %}" 
                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
                             Eliminar
                         </a>
@@ -186,7 +187,7 @@
         <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No hay gastos</h3>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comienza agregando un nuevo gasto a esta categoría.</p>
         <div class="mt-6">
-            <a href="{% url 'expenses:create' category_slug %}" 
+            <a href="{% tenant_url 'expenses:create' category_slug %}" 
                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
                 <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>

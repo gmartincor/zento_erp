@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
+{% load tenant_tags %}
 {% load presentation_tags %}
+{% load tenant_tags %}
 
 {% block title %}{{ page_title|default:"Gestión de Ingresos" }} - Nutrition Pro CRM{% endblock %}
 
@@ -202,16 +204,16 @@
                         </div>
 
                         <div class="flex items-center space-x-2">
-                            <a href="{% url 'accounting:business-lines-path' line_path=business_line.get_url_path %}"
+                            <a href="{% tenant_url 'accounting:business-lines-path' line_path=business_line.get_url_path %}"
                                class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                                 Ver Detalle
                             </a>
                             {% if not business_line.children.exists %}
-                            <a href="{% url 'accounting:category-services' line_path=business_line.slug category='white' %}"
+                            <a href="{% tenant_url 'accounting:category-services' line_path=business_line.slug category='white' %}"
                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 transition-colors">
                                 White
                             </a>
-                            <a href="{% url 'accounting:category-services' line_path=business_line.slug category='black' %}"
+                            <a href="{% tenant_url 'accounting:category-services' line_path=business_line.slug category='black' %}"
                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-gray-800 hover:bg-gray-900 transition-colors">
                                 Black
                             </a>

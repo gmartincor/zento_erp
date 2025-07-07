@@ -1,5 +1,6 @@
 {% if compact %}
 <div class="text-sm space-y-1">
+{% load tenant_tags %}
     <div>
         <span class="text-gray-600 dark:text-gray-400">Inicio:</span>
         <span class="font-medium text-gray-900 dark:text-white ml-1">{{ service.start_date|date:"d/m/Y"|default:"Sin fecha" }}</span>

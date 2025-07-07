@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
 from apps.tenants.tenant_views import tenant_login_view, tenant_dashboard_view, tenant_logout_view
+from apps.tenants.unified_views import unified_login_view
 
 def redirect_to_admin(request):
     return redirect('admin:index')
@@ -11,18 +12,14 @@ def redirect_to_admin(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    path('<str:tenant_slug>/', include([
-        path('', tenant_dashboard_view, name='tenant_dashboard'),
-        path('login/', tenant_login_view, name='tenant_login'),
-        path('logout/', tenant_logout_view, name='tenant_logout'),
-        path('logout/', tenant_logout_view, name='tenant_logout'),
-        path('auth/', include('apps.authentication.urls')),
-        path('dashboard/', include('apps.dashboard.urls')),
-        path('accounting/', include('apps.accounting.urls')),
-        path('expenses/', include('apps.expenses.urls')),
-    ])),
+    path('<str:tenant_slug>/', tenant_dashboard_view, name='tenant_dashboard'),
+    path('<str:tenant_slug>/login/', tenant_login_view, name='tenant_login'),
+    path('<str:tenant_slug>/logout/', tenant_logout_view, name='tenant_logout'),
+    path('<str:tenant_slug>/dashboard/', tenant_dashboard_view, name='dashboard_home'),
+    path('<str:tenant_slug>/accounting/', include('apps.accounting.urls')),
+    path('<str:tenant_slug>/expenses/', include('apps.expenses.urls')),
     
-    path('', redirect_to_admin),
+    path('', unified_login_view, name='unified_login'),
 ]
 
 if settings.DEBUG:

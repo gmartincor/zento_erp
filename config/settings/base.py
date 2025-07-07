@@ -128,9 +128,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication settings
-LOGIN_URL = 'authentication:login'
-LOGIN_REDIRECT_URL = 'dashboard:home'
-LOGOUT_REDIRECT_URL = 'authentication:login'
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = 'tenant_dashboard'
+LOGOUT_REDIRECT_URL = 'unified_login'
 
 # Messages framework settings
 from django.contrib.messages import constants as messages
