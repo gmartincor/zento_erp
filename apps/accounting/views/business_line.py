@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.http import Http404
 from django.db.models import Q
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 
@@ -94,11 +94,10 @@ class BusinessLineListView(
 
 
 class BusinessLineHierarchyView(
+    LoginRequiredMixin,
     BusinessLineHierarchyMixin,
-    PermissionRequiredMixin,
     TemplateView
 ):
-    permission_required = 'accounting.view_businessline'
     template_name = 'accounting/hierarchy_navigation.html'
     
     def get_template_names(self):
@@ -299,10 +298,7 @@ class BusinessLineCreateView(LoginRequiredMixin, CreateView):
     fields = ['name', 'parent']
     
     def dispatch(self, request, *args, **kwargs):
-        if getattr(request.user, 'role', None) != 'ADMIN':
-            raise PermissionDenied(
-                "Solo los administradores pueden gestionar líneas de negocio."
-            )
+        # Permitir acceso a cualquier usuario autenticado
         return super().dispatch(request, *args, **kwargs)
     
     def get_initial(self):

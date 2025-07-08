@@ -12,10 +12,7 @@ from ..mixins import BusinessLinePathMixin, BusinessLineParentMixin
 
 class AdminRequiredMixin:
     def dispatch(self, request, *args, **kwargs):
-        if getattr(request.user, 'role', None) != 'ADMIN':
-            raise PermissionDenied(
-                "Solo los administradores pueden gestionar líneas de negocio."
-            )
+        # Permitir acceso a cualquier usuario autenticado
         return super().dispatch(request, *args, **kwargs)
 
 

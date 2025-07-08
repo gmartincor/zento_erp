@@ -58,14 +58,12 @@ class BusinessLineService(RevenueCalculationMixin):
         return '/'.join(path_parts)
     
     def check_user_permission(self, user, business_line):
-        accessible_lines = self.get_accessible_lines(user)
-        return accessible_lines.filter(id=business_line.id).exists()
+        # Permitir acceso a cualquier usuario autenticado
+        return True
     
     def enforce_permission(self, user, business_line):
-        if not self.check_user_permission(user, business_line):
-            raise PermissionDenied(
-                f"User {user.username} does not have access to business line {business_line.name}"
-            )
+        # No hay restricciones - cualquier usuario autenticado puede acceder
+        pass
     
     def get_children_for_display(self, business_line, user_permissions=None):
         children = business_line.children.select_related('parent').filter(is_active=True)
