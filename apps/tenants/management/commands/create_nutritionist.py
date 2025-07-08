@@ -12,26 +12,28 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--name', type=str, required=True, help='Nombre del nutricionista')
-        parser.add_argument('--email', type=str, required=True, help='Email del nutricionista')
         parser.add_argument('--username', type=str, required=True, help='Username para login')
         parser.add_argument('--password', type=str, required=True, help='Password para login')
-        parser.add_argument('--phone', type=str, help='Teléfono (opcional)')
-        parser.add_argument('--professional-number', type=str, help='Número de colegiado (opcional)')
-        parser.add_argument('--first-name', type=str, help='Nombre del usuario')
+        parser.add_argument('--email', type=str, required=True, help='Email del nutricionista')
+        parser.add_argument('--domain', type=str, required=True, help='Dominio (ej: carlos.localhost)')
         parser.add_argument('--skip-hosts', action='store_true', help='No configurar /etc/hosts automáticamente')
 
     def handle(self, *args, **options):
         name = options['name']
-        email = options['email']
         username = options['username']
         password = options['password']
-        phone = options.get('phone', '')
-        professional_number = options.get('professional_number', '')
-        first_name = options.get('first_name', '')
-        last_name = options.get('last_name', '')
+        email = options['email']
+        domain_name = options['domain']
         skip_hosts = options.get('skip_hosts', False)
 
         try:
+            # Verificar que el dominio no exista
+            if Domain.objects.filter(domain=domain_name).exists():
+                self.stdout.write(
+                    self.style.ERROR(f'❌ El dominio "{domain_name}" ya está registrado')
+                )
+                return
+
             # Verificar que el username no exista
             if User.objects.filter(username=username).exists():
                 self.stdout.write(
@@ -61,39 +63,29 @@ class Command(BaseCommand):
                 schema_name=schema_name,
                 name=name,
                 email=email,
-                phone=phone,
-                professional_number=professional_number,
+                phone='',  # Campo opcional vacío
+                professional_number='',  # Campo opcional vacío
                 status=Tenant.StatusChoices.ACTIVE,
                 is_active=True
             )
 
             # Crear el usuario
-            if not first_name and not last_name:
-                # Si no se proporcionan nombres específicos, usar el nombre completo del nutricionista
-                name_parts = name.split()
-                first_name = name_parts[0] if name_parts else username
-                last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+            # Usar el nombre completo del nutricionista para first_name y last_name
+            name_parts = name.split()
+            first_name = name_parts[0] if name_parts else username
+            last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
             
             user = User.objects.create_user(
                 username=username,
                 email=email,
                 password=password,
-                first_name=first_name or username,  # Asegurar que nunca sea vacío
-                last_name=last_name or '',
+                first_name=first_name,
+                last_name=last_name,
                 tenant=tenant,
                 is_active=True
             )
 
-            # Crear dominio para desarrollo
-            if settings.DEBUG:
-                # Convertir schema_name a formato válido RFC (reemplazar _ con -)
-                valid_domain_name = schema_name.replace('_', '-')
-                domain_name = f"{valid_domain_name}.localhost"
-            else:
-                # En producción, usar un formato más profesional
-                clean_name = schema_name.replace('tenant_', '').replace('_', '-')
-                domain_name = f"{clean_name}.tudominio.com"
-            
+            # Crear dominio usando el dominio proporcionado
             domain = Domain.objects.create(
                 domain=domain_name,
                 tenant=tenant,
@@ -106,7 +98,6 @@ class Command(BaseCommand):
             self.stdout.write('='*50)
             self.stdout.write(f'👤 Nutricionista: {name}')
             self.stdout.write(f'📧 Email: {email}')
-            self.stdout.write(f'🏥 Colegiado: {professional_number or "No especificado"}')
             self.stdout.write('')
             self.stdout.write('🔐 CREDENCIALES DE ACCESO:')
             self.stdout.write(f'   Username: {username}')
@@ -123,15 +114,13 @@ class Command(BaseCommand):
 
             if settings.DEBUG:
                 self.stdout.write('')
-                # Usar el dominio válido para /etc/hosts
-                valid_subdomain = schema_name.replace('_', '-') + ".localhost"
-                
+                # Usar el dominio proporcionado para /etc/hosts
                 if not skip_hosts:
                     # Intentar configurar /etc/hosts automáticamente
-                    self._configure_hosts_file(valid_subdomain)
+                    self._configure_hosts_file(domain_name)
                 else:
                     self.stdout.write(self.style.WARNING('🔧 CONFIGURACIÓN MANUAL REQUERIDA:'))
-                    self.stdout.write(f'   Agregar a /etc/hosts: 127.0.0.1    {valid_subdomain}')
+                    self.stdout.write(f'   Agregar a /etc/hosts: 127.0.0.1    {domain_name}')
 
         except Exception as e:
             self.stdout.write(
