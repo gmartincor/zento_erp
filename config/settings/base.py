@@ -29,8 +29,12 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    '.localhost',  # Permitir todos los subdominios .localhost
+    '.localhost',
 ]
+
+# Desarrollo: permitir cualquier host
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
 
 tenant_config = configure_tenant_settings()
 
@@ -39,6 +43,7 @@ TENANT_APPS = tenant_config['TENANT_APPS']
 INSTALLED_APPS = tenant_config['INSTALLED_APPS']
 
 MIDDLEWARE = [
+    'apps.tenants.debug_middleware.TenantDebugMiddleware',
     'django_tenants.middleware.main.TenantMainMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
