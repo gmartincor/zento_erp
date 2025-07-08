@@ -26,7 +26,11 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-=s24s@s)2l@1-bg4+5%x(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost,.localhost', cast=Csv())
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '.localhost',  # Permitir todos los subdominios .localhost
+]
 
 tenant_config = configure_tenant_settings()
 
@@ -138,7 +142,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication settings
-LOGIN_URL = '/'
+LOGIN_URL = 'unified_login'
 LOGIN_REDIRECT_URL = 'tenant_dashboard'
 LOGOUT_REDIRECT_URL = 'unified_login'
 
