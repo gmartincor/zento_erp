@@ -86,9 +86,13 @@ class Command(BaseCommand):
 
             # Crear dominio para desarrollo
             if settings.DEBUG:
-                domain_name = f"{schema_name}.localhost"
+                # Convertir schema_name a formato válido RFC (reemplazar _ con -)
+                valid_domain_name = schema_name.replace('_', '-')
+                domain_name = f"{valid_domain_name}.localhost"
             else:
-                domain_name = f"{schema_name}.tudominio.com"
+                # En producción, usar un formato más profesional
+                clean_name = schema_name.replace('tenant_', '').replace('_', '-')
+                domain_name = f"{clean_name}.tudominio.com"
             
             domain = Domain.objects.create(
                 domain=domain_name,
@@ -119,14 +123,15 @@ class Command(BaseCommand):
 
             if settings.DEBUG:
                 self.stdout.write('')
-                subdomain = f"{schema_name}.localhost"
+                # Usar el dominio válido para /etc/hosts
+                valid_subdomain = schema_name.replace('_', '-') + ".localhost"
                 
                 if not skip_hosts:
                     # Intentar configurar /etc/hosts automáticamente
-                    self._configure_hosts_file(subdomain)
+                    self._configure_hosts_file(valid_subdomain)
                 else:
                     self.stdout.write(self.style.WARNING('🔧 CONFIGURACIÓN MANUAL REQUERIDA:'))
-                    self.stdout.write(f'   Agregar a /etc/hosts: 127.0.0.1    {subdomain}')
+                    self.stdout.write(f'   Agregar a /etc/hosts: 127.0.0.1    {valid_subdomain}')
 
         except Exception as e:
             self.stdout.write(
