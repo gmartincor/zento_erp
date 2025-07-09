@@ -32,6 +32,12 @@
     </td>
     
     <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-blue-600 dark:text-blue-400">
+            {{ line_data.stats.total_count }}
+        </div>
+    </td>
+    
+    <td class="px-6 py-4 whitespace-nowrap">
         {% if line_data.stats.has_remanentes %}
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
                 Con remanentes

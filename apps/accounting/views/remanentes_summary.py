@@ -126,25 +126,30 @@ def remanentes_summary_view(request):
             )
             total_general = {
                 'total_amount': stats['total_amount'],
+                'total_count': stats['total_count'],
                 'has_remanentes': stats['has_remanentes']
             }
         except BusinessLine.DoesNotExist:
             stats = StatisticsService().calculate_remanente_stats_filtered(year=year, month=month)
             total_general = {
                 'total_amount': stats['total_amount'],
+                'total_count': stats['total_count'],
                 'has_remanentes': stats['has_remanentes']
             }
     else:
         total_amount = Decimal('0')
+        total_count = 0
         has_remanentes = False
         
         for line_data in lines_data:
             total_amount += line_data['stats']['total_amount']
+            total_count += line_data['stats']['total_count']
             if line_data['stats']['has_remanentes']:
                 has_remanentes = True
         
         total_general = {
             'total_amount': total_amount,
+            'total_count': total_count,
             'has_remanentes': has_remanentes
         }
     
