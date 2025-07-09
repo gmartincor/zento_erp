@@ -1,3 +1,5 @@
+{% for field in form %}
+    {% if field.name == "remanente" %}
 <div class="border-t border-gray-200 dark:border-gray-600 pt-6">
     <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
         💰 Remanente
@@ -6,22 +8,20 @@
         Aplicar un remanente (positivo o negativo) al período seleccionado.
     </p>
     
-    {% for field in form %}
-        {% if field.name == "remanente" %}
-        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {{ field.label }}
-                {% if field.help_text %}
-                <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ field.help_text }}</span>
-                {% endif %}
-            </label>
-            {{ field }}
-            {% if field.errors %}
-            <div class="text-red-600 text-sm mt-1">
-                {{ field.errors }}
-            </div>
+    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {{ field.label }}
+            {% if field.help_text %}
+            <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ field.help_text }}</span>
             {% endif %}
+        </label>
+        {{ field }}
+        {% if field.errors %}
+        <div class="text-red-600 text-sm mt-1">
+            {{ field.errors }}
         </div>
         {% endif %}
-    {% endfor %}
+    </div>
 </div>
+    {% endif %}
+{% endfor %}
