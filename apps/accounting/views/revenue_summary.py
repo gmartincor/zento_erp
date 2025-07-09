@@ -13,6 +13,7 @@ def revenue_summary_view(request, category='white'):
     month = request.GET.get('month')
     search = request.GET.get('search', '').strip()
     business_line_id = request.GET.get('business_line')
+    payment_method = request.GET.get('payment_method')
     
     if business_line_id:
         try:
@@ -47,9 +48,11 @@ def revenue_summary_view(request, category='white'):
         'page_subtitle': f'Análisis de ingresos por líneas de negocio - Categoría {category.title()}',
         'selected_year': year or current_year,
         'selected_month': month,
+        'selected_payment_method': payment_method,
         'search': search,
         'selected_business_line': business_line_id,
         'business_lines_choices': business_lines_choices,
+        'payment_methods': ServicePayment.PaymentMethodChoices.choices,
         'years': range(current_year - 5, current_year + 1),
         'months': [
             (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'),
@@ -80,7 +83,7 @@ def revenue_summary_view(request, category='white'):
     
     def build_line_data(line, level=0, force_include=False):
         stats = calculate_revenue_stats_filtered(
-            business_line=line, category=category, year=year, month=month
+            business_line=line, category=category, year=year, month=month, payment_method=payment_method
         )
         
         should_include = force_include
@@ -124,34 +127,32 @@ def revenue_summary_view(request, category='white'):
         try:
             selected_line = BusinessLine.objects.get(id=business_line_id, is_active=True)
             stats = calculate_revenue_stats_filtered(
-                business_line=selected_line, category=category, year=year, month=month
+                business_line=selected_line, category=category, year=year, month=month, payment_method=payment_method
             )
             total_summary = {
                 'total_amount': stats['total_amount'],
                 'total_payments': stats['total_payments'],
-                'total_services': stats['total_services']
+                'average_amount': stats['average_amount']
             }
         except BusinessLine.DoesNotExist:
-            stats = calculate_revenue_stats_filtered(category=category, year=year, month=month)
+            stats = calculate_revenue_stats_filtered(category=category, year=year, month=month, payment_method=payment_method)
             total_summary = {
                 'total_amount': stats['total_amount'],
                 'total_payments': stats['total_payments'],
-                'total_services': stats['total_services']
+                'average_amount': stats['average_amount']
             }
     else:
         total_amount = Decimal('0')
         total_payments = 0
-        total_services = 0
         
         for line_data in lines_data:
             total_amount += line_data['stats']['total_amount']
             total_payments += line_data['stats']['total_payments']
-            total_services += line_data['stats']['total_services']
         
         total_summary = {
             'total_amount': total_amount,
             'total_payments': total_payments,
-            'total_services': total_services
+            'average_amount': total_amount / total_payments if total_payments > 0 else Decimal('0')
         }
     
     context['total_summary'] = total_summary
@@ -166,7 +167,7 @@ def get_all_descendant_lines(business_line):
         descendants.extend(get_all_descendant_lines(child))
     return descendants
 
-def calculate_revenue_stats_filtered(business_line=None, category='white', year=None, month=None):
+def calculate_revenue_stats_filtered(business_line=None, category='white', year=None, month=None, payment_method=None):
     if business_line:
         all_lines = get_all_descendant_lines(business_line)
         services = []
@@ -190,15 +191,16 @@ def calculate_revenue_stats_filtered(business_line=None, category='white', year=
         payments = payments.filter(payment_date__year=year)
     if month:
         payments = payments.filter(payment_date__month=month)
+    if payment_method:
+        payments = payments.filter(payment_method=payment_method)
     
     summary = payments.aggregate(
         total_amount=Sum('amount'),
         total_payments=Count('id'),
-        total_services=Count('client_service', distinct=True)
     )
     
     return {
         'total_amount': summary['total_amount'] or Decimal('0'),
         'total_payments': summary['total_payments'] or 0,
-        'total_services': summary['total_services'] or 0,
+        'average_amount': (summary['total_amount'] or Decimal('0')) / (summary['total_payments'] or 1),
     }

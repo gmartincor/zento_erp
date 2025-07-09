@@ -38,19 +38,8 @@
     </td>
     
     <td class="px-6 py-4 whitespace-nowrap">
-        <div class="text-sm font-medium text-purple-600 dark:text-purple-400">
-            {{ line_data.stats.total_services }}
-        </div>
-    </td>
-    
-    <td class="px-6 py-4 whitespace-nowrap">
         <div class="text-sm text-gray-900 dark:text-white">
-            {% if line_data.stats.total_payments > 0 %}
-                {% widthratio line_data.stats.total_amount line_data.stats.total_payments 1 as avg_amount %}
-                {{ avg_amount|format_currency:"€" }}
-            {% else %}
-                -
-            {% endif %}
+            {{ line_data.stats.average_amount|format_currency:"€" }}
         </div>
     </td>
 </tr>
