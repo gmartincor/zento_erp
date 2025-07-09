@@ -31,38 +31,7 @@
         </div>
     </div>
 
-    <form method="get" class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label for="year" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Año</label>
-                <select name="year" id="year" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Todos los años</option>
-                    {% for year_option in years %}
-                        <option value="{{ year_option }}" {% if year_option == selected_year %}selected{% endif %}>{{ year_option }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div>
-                <label for="month" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mes</label>
-                <select name="month" id="month" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Todos los meses</option>
-                    {% for month_num, month_name in months %}
-                        <option value="{{ month_num }}" {% if month_num == selected_month %}selected{% endif %}>{{ month_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        
-        <div class="flex gap-3 mt-4">
-            <button type="submit" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium">
-                Aplicar Filtros
-            </button>
-            <a href="{{ request.path }}" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium">
-                Limpiar
-            </a>
-        </div>
-    </form>
+    {% include 'accounting/components/profit_filters.html' %}
 
     <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 mb-6">
         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Análisis de Beneficios</h3>

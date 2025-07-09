@@ -135,29 +135,31 @@
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 lg:mb-0">Filtrar Servicios</h2>
         
-        <form method="get" class="flex flex-col sm:flex-row gap-3">
-            <select name="is_active" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="">Todos los estados</option>
-                {% for value, label in status_options %}
-                    <option value="{{ value }}" {% if filter_params.is_active == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
+        <form method="get" class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <div class="flex flex-col lg:flex-row gap-3 flex-1">
+                <select name="is_active" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todos los estados</option>
+                    {% for value, label in status_options %}
+                        <option value="{{ value }}" {% if filter_params.is_active == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                
+                <select name="category" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Todas las categorías</option>
+                    <option value="white" {% if filter_params.category == "white" %}selected{% endif %}>White</option>
+                    <option value="black" {% if filter_params.category == "black" %}selected{% endif %}>Black</option>
+                </select>
+            </div>
             
-            <select name="category" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="">Todas las categorías</option>
-                <option value="white" {% if filter_params.category == "white" %}selected{% endif %}>White</option>
-                <option value="black" {% if filter_params.category == "black" %}selected{% endif %}>Black</option>
-            </select>
-            
-            <button type="submit" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium">
-                Filtrar
-            </button>
-            
-            {% if filter_params.is_active or filter_params.category %}
-            <a href="?" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors font-medium">
-                Limpiar
-            </a>
-            {% endif %}
+            <div class="flex gap-3 lg:ml-4">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                    Aplicar Filtros
+                </button>
+                <a href="?" class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500 px-4 py-2 rounded-md transition-colors">
+                    Limpiar
+                </a>
+            </div>
+        </form>
         </form>
     </div>
 </div>
