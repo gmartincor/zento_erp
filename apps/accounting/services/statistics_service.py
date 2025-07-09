@@ -179,7 +179,7 @@ class StatisticsService(RevenueCalculationMixin):
         if client_service:
             query = ServicePayment.objects.filter(client_service=client_service)
         elif business_line:
-            services = self._get_services_for_line(business_line)
+            services = self._get_services_for_line(business_line, include_children=True)
             query = ServicePayment.objects.filter(client_service__in=services)
         else:
             return {'total_amount': Decimal('0'), 'total_count': 0, 'average_amount': Decimal('0'), 'has_remanentes': False}

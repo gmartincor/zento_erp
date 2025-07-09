@@ -2,12 +2,12 @@ from django import forms
 from django.core.exceptions import ValidationError
 from datetime import timedelta, date
 
-from .base_forms import BaseServiceForm, PaymentFieldsMixin
+from .base_forms import BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin
 from ..services.period_service import ServicePeriodManager
 from ..services.payment_service import PaymentService
 
 
-class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
+class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin):
     
     RENEWAL_TYPE_CHOICES = [
         ('period_only', 'Solo extender servicio (sin pago)'),
@@ -38,6 +38,7 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
             self._set_minimum_date()
         
         self.add_payment_fields()
+        self.add_remanente_fields()
         self._set_suggested_amount()
     
     def _set_minimum_date(self):
@@ -96,7 +97,8 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
                 payment_date=self.cleaned_data['payment_date'],
                 payment_method=self.cleaned_data['payment_method'],
                 reference_number=self.cleaned_data.get('reference_number', ''),
-                notes=f"Pago simultáneo con renovación"
+                notes=f"Pago simultáneo con renovación",
+                remanente=self.cleaned_data.get('remanente')
             )
         
         return period
