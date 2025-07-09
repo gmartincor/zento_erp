@@ -95,15 +95,13 @@ class PaymentForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin):
         
         updated_periods = []
         for period in periods:
-            suggested_amount = PaymentService.calculate_suggested_amount(period, self.client_service)
-            
-            if suggested_amount is None or suggested_amount <= 0:
-                if hasattr(period, 'amount') and period.amount and period.amount > 0:
-                    amount = period.amount
-                else:
-                    amount = self.client_service.price if self.client_service.price and self.client_service.price > 0 else 0
+            if hasattr(period, 'amount') and period.amount and period.amount > 0:
+                amount = period.amount
+            elif self.client_service.price and self.client_service.price > 0:
+                amount = self.client_service.price
             else:
-                amount = suggested_amount
+                suggested_amount = PaymentService.calculate_suggested_amount(period, self.client_service)
+                amount = suggested_amount if suggested_amount and suggested_amount > 0 else 0
             
             if amount <= 0:
                 raise ValidationError(f'No se pudo determinar un monto válido para el período {period.period_start} - {period.period_end}')

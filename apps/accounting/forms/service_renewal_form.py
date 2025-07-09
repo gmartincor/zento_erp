@@ -129,9 +129,17 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin):
             temp_period, self.client_service
         )
         
-        if suggested_amount and 'amount' in self.fields:
-            self.fields['amount'].initial = suggested_amount
-            self.fields['amount'].help_text = f"Sugerido: {suggested_amount}€ (basado en pagos anteriores)"
+        if 'amount' in self.fields:
+            base_price = self.client_service.price
+            if base_price and base_price > 0:
+                self.fields['amount'].initial = base_price
+                if suggested_amount and suggested_amount != base_price:
+                    self.fields['amount'].help_text = f"Precio base: {base_price}€. Sugerido: {suggested_amount}€ (basado en pagos anteriores)"
+                else:
+                    self.fields['amount'].help_text = f"Precio base: {base_price}€"
+            elif suggested_amount:
+                self.fields['amount'].initial = suggested_amount
+                self.fields['amount'].help_text = f"Sugerido: {suggested_amount}€ (basado en pagos anteriores)"
             
     def is_valid(self):
         is_valid = super().is_valid()

@@ -71,11 +71,16 @@ def ajax_get_suggested_amount(request, service_id, period_id):
     period = get_object_or_404(ServicePayment, id=period_id, client_service=client_service)
     
     try:
-        suggested_amount = PaymentService.calculate_suggested_amount(period, client_service)
+        if period.amount and period.amount > 0:
+            amount = period.amount
+        elif client_service.price and client_service.price > 0:
+            amount = client_service.price
+        else:
+            amount = PaymentService.calculate_suggested_amount(period, client_service)
         
         return JsonResponse({
             'success': True,
-            'suggested_amount': float(suggested_amount) if suggested_amount else None,
+            'suggested_amount': float(amount) if amount else None,
             'period_info': {
                 'start': period.period_start.isoformat(),
                 'end': period.period_end.isoformat(),

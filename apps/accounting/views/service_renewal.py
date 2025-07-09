@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ValidationError
 from django.urls import reverse
+from urllib.parse import urlencode
 
 from ..models import ClientService
 from ..forms.service_renewal_form import ServiceRenewalForm
@@ -45,10 +46,15 @@ def service_renewal_view(request, service_id):
                         f"Nuevo período: {period.period_start} - {period.period_end}"
                     )
                 
-                return redirect('accounting:service-edit', 
-                              line_path=client_service.get_line_path(),
-                              category=client_service.category,
-                              service_id=service_id)
+                # Construir URL con parámetros de query string
+                base_url = reverse('accounting:category-services', kwargs={
+                    'line_path': client_service.get_line_path(),
+                    'category': client_service.category
+                })
+                query_params = urlencode({'view': 'list'})
+                redirect_url = f"{base_url}?{query_params}"
+                
+                return redirect(redirect_url)
                 
             except ValidationError as e:
                 if hasattr(e, 'message_dict'):
@@ -58,6 +64,9 @@ def service_renewal_view(request, service_id):
                 else:
                     messages.error(request, str(e))
             except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error en renovación de servicio {service_id}: {str(e)}", exc_info=True)
                 messages.error(request, f"Error inesperado: {str(e)}")
     else:
         form = ServiceRenewalForm(client_service=client_service)

@@ -130,13 +130,13 @@ def service_vigency_info(service):
 @register.simple_tag
 def service_pending_periods(service):
     return service.payments.filter(
-        status__in=['PERIOD_CREATED', 'PENDING']
+        status__in=['AWAITING_START', 'UNPAID_ACTIVE']
     ).order_by('period_start')
 
 @register.simple_tag
 def service_payment_summary(service):
     pending_periods = service.payments.filter(
-        status__in=['PERIOD_CREATED', 'PENDING']
+        status__in=['AWAITING_START', 'UNPAID_ACTIVE']
     ).order_by('period_start')
     
     paid_periods = service.payments.filter(
