@@ -19,6 +19,7 @@ from .views.payment_history import payment_history_view
 from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
 from .views.service_renewal import service_renewal_view
 from .views.revenue_summary import revenue_summary_view
+from .views.profit_summary import profit_summary_view
 from .views.service_termination import service_termination_view
 from .views.service_payment import (
     service_payment_view,
@@ -102,5 +103,6 @@ urlpatterns = [
     
     path('remanentes/', remanentes_summary_view, name='remanentes-summary'),
     path('revenue/<str:category>/', revenue_summary_view, name='revenue-summary'),
+    path('profit/<str:category>/', profit_summary_view, name='profit-summary'),
     
 ]
