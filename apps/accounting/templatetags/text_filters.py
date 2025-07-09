@@ -5,14 +5,10 @@ register = template.Library()
 
 @register.filter
 def clean_duplicate_notes(notes):
-    """
-    Limpia notas duplicadas y las organiza de manera legible.
-    """
     if not notes:
         return ""
     
     import re
-    # Dividir por varios separadores
     parts = re.split(r'[|\r\n]+', notes)
     seen = set()
     cleaned_parts = []
@@ -22,10 +18,8 @@ def clean_duplicate_notes(notes):
         if not part:
             continue
             
-        # Normalizar para detectar duplicados (ignorar mayúsculas y espacios)
         normalized = part.lower().strip()
         
-        # Detectar patrones de extensión duplicados
         if 'extensión sin pago' in normalized:
             if 'extension_noted' not in seen:
                 cleaned_parts.append("Extensión sin pago realizada")
@@ -39,15 +33,11 @@ def clean_duplicate_notes(notes):
 
 @register.filter
 def format_service_notes(notes):
-    """
-    Formatea las notas del servicio de manera estructurada.
-    """
     if not notes:
         return ""
     
     cleaned = clean_duplicate_notes(notes)
     
-    # Si hay múltiples notas, formatear como lista numerada
     parts = cleaned.split('\n')
     parts = [part.strip() for part in parts if part.strip()]
     

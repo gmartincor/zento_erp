@@ -48,6 +48,7 @@ class BusinessLineDetailView(
         )
         context.update(detail_context)
         context['presentation'] = presentation_data
+        context['line_path'] = self.kwargs.get('line_path', '')
         return context
 
 

@@ -4,16 +4,8 @@ from ..models import ClientService
 
 
 class ServiceProgressService:
-    """
-    Servicio para gestionar y calcular el progreso de un servicio.
-    Centraliza la lógica de estado de progreso para evitar redundancia.
-    """
-    
     @classmethod
     def get_service_progress_data(cls, service: ClientService) -> Dict[str, Any]:
-        """
-        Obtiene todos los datos de progreso de un servicio de forma centralizada.
-        """
         return {
             'has_payments': cls._has_payments(service),
             'is_active': cls._is_active(service),

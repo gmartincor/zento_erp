@@ -148,11 +148,11 @@ class FinancialFormatService:
 class UIPermissionService:
     @staticmethod
     def can_edit_business_line(user, business_line) -> bool:
-        return user.role == 'ADMIN'
+        return user.is_authenticated
     
     @staticmethod
     def can_view_advanced_stats(user) -> bool:
-        return user.role in ['ADMIN', 'MANAGER']
+        return user.is_authenticated
 
 
 class PresentationService:

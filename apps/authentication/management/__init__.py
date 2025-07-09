@@ -16,8 +16,7 @@ class Command(BaseCommand):
             email='admin@nutricionpro.com',
             first_name='Admin',
             last_name='Principal',
-            password='admin123',
-            role='AUTONOMO'
+            password='admin123'
         )
         admin.is_staff = True
         admin.is_superuser = True

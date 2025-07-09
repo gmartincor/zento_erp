@@ -6,9 +6,6 @@ register = template.Library()
 
 @register.filter
 def service_status_badge(status):
-    """
-    DEPRECATED: Usar service_status_badge de service_status_tags que usa StatusDisplayService
-    """
     from ..services.status_display_service import StatusDisplayService
     
     status_data = StatusDisplayService.get_service_status_display(status)
@@ -41,9 +38,6 @@ def payment_method_display(method):
 
 @register.filter
 def payment_status_badge(status):
-    """
-    DEPRECATED: Usar payment_status_badge de status_tags que usa StatusDisplayService
-    """
     from ..services.status_display_service import StatusDisplayService
     
     status_data = StatusDisplayService.get_payment_status_display(status)

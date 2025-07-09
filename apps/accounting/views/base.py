@@ -121,8 +121,7 @@ class AccountingDashboardView(LoginRequiredMixin, BusinessLinePermissionMixin, L
     def _prepare_user_context(self):
         user = self.request.user
         return {
-            'is_autonomo': user.role == 'AUTONOMO',
-            'can_create_lines': True,
+            'can_create_lines': user.is_authenticated,
             'welcome_message': self._get_welcome_message(user),
             'available_actions': self._get_available_actions(user)
         }

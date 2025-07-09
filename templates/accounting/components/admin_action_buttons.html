@@ -1,4 +1,4 @@
-{% if user.role == 'ADMIN' %}
+{% if user.is_authenticated %}
 <div class="flex flex-col sm:flex-row gap-3">
 {% load tenant_tags %}
     <!-- Create Subline Button -->
