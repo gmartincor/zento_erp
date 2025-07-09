@@ -18,6 +18,7 @@ from .views import (
 from .views.payment_history import payment_history_view
 from .views.client_service_history import ClientServiceHistoryView, ClientServiceDetailView
 from .views.service_renewal import service_renewal_view
+from .views.revenue_summary import revenue_summary_view
 from .views.service_termination import service_termination_view
 from .views.service_payment import (
     service_payment_view,
@@ -27,11 +28,11 @@ from .views.service_payment import (
 )
 from .views.payment_detail import payment_detail_view
 from .views.remanentes_summary import remanentes_summary_view
+from .views.revenue_summary import revenue_summary_view
 
 app_name = 'accounting'
 
 urlpatterns = [
-    # Redirect root accounting URL to business lines management
     path('', RedirectView.as_view(pattern_name='accounting:business-lines', permanent=True), name='index'),
     path('create/', BusinessLineCreateView.as_view(), name='create'),
     path('create/<int:parent>/', BusinessLineCreateView.as_view(), name='create-child'),
@@ -100,5 +101,6 @@ urlpatterns = [
     path('payments/<int:payment_id>/refund/', PaymentRefundView.as_view(), name='payment-refund'),
     
     path('remanentes/', remanentes_summary_view, name='remanentes-summary'),
+    path('revenue/<str:category>/', revenue_summary_view, name='revenue-summary'),
     
 ]

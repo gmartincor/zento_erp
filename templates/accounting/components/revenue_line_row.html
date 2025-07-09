@@ -1,0 +1,60 @@
+{% load presentation_tags %}
+{% load accounting_tags %}
+
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="flex items-center" style="padding-left: {{ line_data.level|mul:20 }}px;">
+            {% if line_data.level > 0 %}
+                <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            {% endif %}
+            
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center {% if line_data.level == 0 %}bg-green-100 dark:bg-green-900/20{% else %}bg-gray-100 dark:bg-gray-700{% endif %}">
+                    <svg class="w-4 h-4 {% if line_data.level == 0 %}text-green-600 dark:text-green-400{% else %}text-gray-600 dark:text-gray-400{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                </div>
+                
+                <div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ line_data.line.name }}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">Nivel {{ line_data.line.level }}</div>
+                </div>
+            </div>
+        </div>
+    </td>
+    
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-green-600 dark:text-green-400">
+            {{ line_data.stats.total_amount|format_currency:"€" }}
+        </div>
+    </td>
+    
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-blue-600 dark:text-blue-400">
+            {{ line_data.stats.total_payments }}
+        </div>
+    </td>
+    
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-purple-600 dark:text-purple-400">
+            {{ line_data.stats.total_services }}
+        </div>
+    </td>
+    
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm text-gray-900 dark:text-white">
+            {% if line_data.stats.total_payments > 0 %}
+                {% widthratio line_data.stats.total_amount line_data.stats.total_payments 1 as avg_amount %}
+                {{ avg_amount|format_currency:"€" }}
+            {% else %}
+                -
+            {% endif %}
+        </div>
+    </td>
+</tr>
+
+{% for child_data in line_data.children %}
+    {% include 'accounting/components/revenue_line_row.html' with line_data=child_data %}
+{% endfor %}
