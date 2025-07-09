@@ -124,3 +124,22 @@ def admin_action_buttons(user, business_line, line_path):
         'business_line': business_line,
         'line_path': line_path
     }
+
+
+@register.filter
+def mul(value, arg):
+    try:
+        return int(value) * int(arg)
+    except (ValueError, TypeError):
+        return 0
+
+
+@register.filter
+def lookup(dictionary, key):
+    if isinstance(dictionary, (list, tuple)):
+        for item in dictionary:
+            if isinstance(item, (list, tuple)) and len(item) >= 2 and item[0] == key:
+                return item[1]
+    elif hasattr(dictionary, 'get'):
+        return dictionary.get(key)
+    return None

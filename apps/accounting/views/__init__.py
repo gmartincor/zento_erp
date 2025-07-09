@@ -27,6 +27,7 @@ from .payment_management import (
     ExpiringServicesView
 )
 from .payment_refund import PaymentRefundView
+from .remanentes_summary import remanentes_summary_view
 
 __all__ = [
     'AccountingDashboardView',
@@ -45,5 +46,6 @@ __all__ = [
     'ClientRevenueView',
     'PaymentManagementView',
     'ExpiringServicesView',
-    'PaymentRefundView'
+    'PaymentRefundView',
+    'remanentes_summary_view'
 ]

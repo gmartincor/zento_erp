@@ -26,6 +26,7 @@ from .views.service_payment import (
     service_payment_history_view,
 )
 from .views.payment_detail import payment_detail_view
+from .views.remanentes_summary import remanentes_summary_view
 
 app_name = 'accounting'
 
@@ -97,5 +98,7 @@ urlpatterns = [
     
     path('payments/<int:payment_id>/', payment_detail_view, name='payment-detail'),
     path('payments/<int:payment_id>/refund/', PaymentRefundView.as_view(), name='payment-refund'),
+    
+    path('remanentes/', remanentes_summary_view, name='remanentes-summary'),
     
 ]

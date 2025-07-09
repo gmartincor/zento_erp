@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from decimal import Decimal
 from apps.core.models import TimeStampedModel, SoftDeleteModel
 from apps.business_lines.models import BusinessLine
 from .managers.client_service_manager import ClientServiceManager
@@ -555,7 +554,6 @@ class ServicePayment(TimeStampedModel):
     
     @property
     def has_payment_info(self):
-        """Verifica si tiene información de pago completa"""
         return all([
             self.amount is not None,
             self.payment_date is not None,
@@ -603,39 +601,6 @@ class ServicePayment(TimeStampedModel):
         if self.amount is None:
             return None
         return self.amount - (self.refunded_amount or 0)
-
-    @property
-    def effective_amount_paid(self):
-        """Monto efectivamente pagado (precio base + remanente)"""
-        if self.amount is None:
-            return None
-        base_amount = self.amount
-        remanente = self.remanente or Decimal('0.00')
-        return base_amount + remanente
-    
-    @property
-    def has_discount(self):
-        """Verifica si tiene descuento (remanente negativo)"""
-        return self.remanente is not None and self.remanente < 0
-    
-    @property
-    def has_surcharge(self):
-        """Verifica si tiene recargo (remanente positivo)"""
-        return self.remanente is not None and self.remanente > 0
-    
-    @property
-    def discount_amount(self):
-        """Cantidad de descuento aplicado"""
-        if self.has_discount:
-            return abs(self.remanente)
-        return Decimal('0.00')
-    
-    @property
-    def surcharge_amount(self):
-        """Cantidad de recargo aplicado"""
-        if self.has_surcharge:
-            return self.remanente
-        return Decimal('0.00')
 
     def get_appropriate_status(self):
         from .services.date_calculator import DateCalculator

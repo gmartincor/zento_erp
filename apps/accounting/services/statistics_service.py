@@ -198,6 +198,30 @@ class StatisticsService(RevenueCalculationMixin):
             'has_remanentes': (stats['total_count'] or 0) > 0
         }
     
+    def calculate_remanente_stats_filtered(self, business_line=None, client_service=None, year=None, month=None):
+        if client_service:
+            query = ServicePayment.objects.filter(client_service=client_service)
+        elif business_line:
+            services = self._get_services_for_line(business_line, include_children=True)
+            query = ServicePayment.objects.filter(client_service__in=services)
+        else:
+            query = ServicePayment.objects.all()
+        
+        query = self._apply_payment_date_filters(query, year, month)
+        remanentes = query.filter(remanente__isnull=False)
+        stats = remanentes.aggregate(
+            total_amount=Sum('remanente'),
+            total_count=Count('id'),
+            average_amount=Avg('remanente')
+        )
+        
+        return {
+            'total_amount': stats['total_amount'] or Decimal('0'),
+            'total_count': stats['total_count'] or 0,
+            'average_amount': stats['average_amount'] or Decimal('0'),
+            'has_remanentes': (stats['total_count'] or 0) > 0
+        }
+
     def get_service_remanente_summary(self, client_service):
         """Resumen de remanentes para un servicio específico"""
         return self.calculate_remanente_stats(client_service=client_service)

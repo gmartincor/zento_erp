@@ -64,9 +64,6 @@ def service_payment_view(request, service_id):
 @login_required
 @require_http_methods(["POST"])
 def ajax_get_suggested_amount(request, service_id, period_id):
-    """
-    Vista AJAX para obtener monto sugerido para un período específico.
-    """
     client_service = get_object_or_404(ClientService, id=service_id)
     period = get_object_or_404(ServicePayment, id=period_id, client_service=client_service)
     
@@ -120,9 +117,6 @@ def payment_options_view(request, service_id):
 @login_required
 @require_http_methods(["GET"])
 def service_payment_history_view(request, service_id):
-    """
-    Vista para mostrar el historial completo de pagos de un servicio específico.
-    """
     from apps.accounting.services.history_service import HistoryService
     
     client_service = get_object_or_404(ClientService, id=service_id)
