@@ -175,7 +175,6 @@ class StatisticsService(RevenueCalculationMixin):
         }
     
     def calculate_remanente_stats(self, business_line=None, client_service=None):
-        """Calcula estadísticas de remanentes usando el campo simple"""
         if client_service:
             query = ServicePayment.objects.filter(client_service=client_service)
         elif business_line:
@@ -184,7 +183,10 @@ class StatisticsService(RevenueCalculationMixin):
         else:
             return {'total_amount': Decimal('0'), 'total_count': 0, 'average_amount': Decimal('0'), 'has_remanentes': False}
         
-        remanentes = query.filter(remanente__isnull=False)
+        remanentes = query.filter(
+            remanente__isnull=False,
+            client_service__category='black'
+        )
         stats = remanentes.aggregate(
             total_amount=Sum('remanente'),
             total_count=Count('id'),
@@ -208,7 +210,10 @@ class StatisticsService(RevenueCalculationMixin):
             query = ServicePayment.objects.all()
         
         query = self._apply_payment_date_filters(query, year, month)
-        remanentes = query.filter(remanente__isnull=False)
+        remanentes = query.filter(
+            remanente__isnull=False,
+            client_service__category='black'
+        )
         stats = remanentes.aggregate(
             total_amount=Sum('remanente'),
             total_count=Count('id'),
@@ -246,10 +251,10 @@ class StatisticsService(RevenueCalculationMixin):
             self._collect_descendant_ids(child, id_list)
     
     def _calculate_remanente_totals(self, services_query):
-        """Calcula totales de remanentes usando el campo simple en ServicePeriod"""
         total = ServicePayment.objects.filter(
             client_service__in=services_query,
-            remanente__isnull=False
+            remanente__isnull=False,
+            client_service__category='black'
         ).aggregate(total=Sum('remanente'))['total'] or Decimal('0')
         
         return total

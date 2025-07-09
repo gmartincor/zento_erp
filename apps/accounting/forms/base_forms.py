@@ -143,6 +143,9 @@ class PeriodFieldsMixin:
 class RemanenteFieldsMixin:
     
     def add_remanente_fields(self):
+        if hasattr(self, 'client_service') and self.client_service and self.client_service.category != 'black':
+            return
+            
         base_input_class = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white'
         
         self.fields['remanente'] = forms.DecimalField(

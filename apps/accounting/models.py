@@ -440,6 +440,11 @@ class ServicePayment(TimeStampedModel):
             raise ValidationError({
                 'payment_date': 'La fecha de pago no puede ser posterior al fin del período.'
             })
+        
+        if self.remanente and self.client_service and self.client_service.category != 'black':
+            raise ValidationError({
+                'remanente': 'Los remanentes solo pueden aplicarse a servicios de categoría BLACK.'
+            })
 
     def save(self, *args, **kwargs):
         self.clean()
