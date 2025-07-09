@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.db.models import Q, Sum, Count
+from django.db.models import Q
 from decimal import Decimal
 from apps.business_lines.models import BusinessLine
 from ..models import ServicePayment
@@ -168,6 +168,8 @@ def get_all_descendant_lines(business_line):
     return descendants
 
 def calculate_revenue_stats_filtered(business_line=None, category='white', year=None, month=None, payment_method=None):
+    from ..services.payment_service import PaymentService
+    
     if business_line:
         all_lines = get_all_descendant_lines(business_line)
         services = []
@@ -177,14 +179,16 @@ def calculate_revenue_stats_filtered(business_line=None, category='white', year=
         if services:
             payments = ServicePayment.objects.filter(
                 client_service__in=services,
-                status=ServicePayment.StatusChoices.PAID
+                status__in=[ServicePayment.StatusChoices.PAID, ServicePayment.StatusChoices.REFUNDED],
+                amount__isnull=False
             )
         else:
             payments = ServicePayment.objects.none()
     else:
         payments = ServicePayment.objects.filter(
             client_service__category=category,
-            status=ServicePayment.StatusChoices.PAID
+            status__in=[ServicePayment.StatusChoices.PAID, ServicePayment.StatusChoices.REFUNDED],
+            amount__isnull=False
         )
     
     if year:
@@ -194,13 +198,4 @@ def calculate_revenue_stats_filtered(business_line=None, category='white', year=
     if payment_method:
         payments = payments.filter(payment_method=payment_method)
     
-    summary = payments.aggregate(
-        total_amount=Sum('amount'),
-        total_payments=Count('id'),
-    )
-    
-    return {
-        'total_amount': summary['total_amount'] or Decimal('0'),
-        'total_payments': summary['total_payments'] or 0,
-        'average_amount': (summary['total_amount'] or Decimal('0')) / (summary['total_payments'] or 1),
-    }
+    return PaymentService.calculate_revenue_stats(payments)

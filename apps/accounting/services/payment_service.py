@@ -216,3 +216,25 @@ class PaymentService:
             payment_method__isnull=False
         ).order_by('-payment_date').first()
         return latest_payment.payment_method if latest_payment else None
+    
+    @staticmethod
+    def calculate_revenue_stats(payments_queryset) -> Dict[str, Any]:
+        from django.db.models import Sum, Count, F, Q
+        from decimal import Decimal
+        
+        # Filtrar pagos que tienen monto
+        valid_payments = payments_queryset.filter(amount__isnull=False)
+        
+        summary = valid_payments.aggregate(
+            total_amount=Sum(F('amount') - F('refunded_amount')),
+            total_payments=Count('id', filter=Q(status=ServicePayment.StatusChoices.PAID)),
+        )
+        
+        total_amount = summary['total_amount'] or Decimal('0')
+        total_payments = summary['total_payments'] or 0
+        
+        return {
+            'total_amount': total_amount,
+            'total_payments': total_payments,
+            'average_amount': total_amount / total_payments if total_payments > 0 else Decimal('0'),
+        }
