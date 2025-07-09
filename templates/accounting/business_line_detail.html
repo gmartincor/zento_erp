@@ -178,148 +178,28 @@
     </div>
 
     {% else %}
-    <!-- Category Services Navigation (Leaf Node) -->
+    <!-- Si no hay hijos, mostrar mensaje que será redirigido automáticamente -->
     <div class="space-y-6">
-        <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-                Categorías de Servicios
-            </h2>
-            <span class="text-sm text-gray-500 dark:text-gray-400">
-                Selecciona una categoría para gestionar servicios
-            </span>
-        </div>
-
-        <!-- Category Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- WHITE Services Card -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 hover:border-green-300 dark:hover:border-green-600">
-                <div class="p-6">
-                    <div class="flex items-center space-x-4 mb-4">
-                        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                Servicios White
-                            </h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                Servicios estándar sin remanentes
-                            </p>
-                        </div>
-                    </div>
-
-                    {% if category_stats.WHITE %}
-                    <div class="space-y-3 mb-4">
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Total servicios:</span>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">
-                                {{ category_stats.WHITE.total_services|default:0 }}
-                            </span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Ingresos totales:</span>
-                            <span class="text-sm font-medium text-green-700 dark:text-green-300">
-                                {{ category_stats.WHITE.total_revenue|default:0|format_currency:"€" }}
-                            </span>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <div class="flex space-x-3">
-                        <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='white' %}"
-                           class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            Ver Servicios
-                        </a>
-                        <a href="{% tenant_url 'accounting:service-create' line_path=line_path category='white' %}"
-                           class="inline-flex items-center px-3 py-2 border border-green-300 dark:border-green-600 shadow-sm text-sm font-medium rounded-md text-green-700 dark:text-green-300 bg-white dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BLACK Services Card -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500">
-                <div class="p-6">
-                    <div class="flex items-center space-x-4 mb-4">
-                        <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                Servicios Black
-                            </h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                Servicios con gestión de remanentes
-                            </p>
-                        </div>
-                    </div>
-
-                    {% if category_stats.BLACK %}
-                    <div class="space-y-3 mb-4">
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Total servicios:</span>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">
-                                {{ category_stats.BLACK.total_services|default:0 }}
-                            </span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Ingresos totales:</span>
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ category_stats.BLACK.total_revenue|default:0|format_currency:"€" }}
-                            </span>
-                        </div>
-                        {% get_remanente_stats business_line=business_line as remanente_stats %}
-                        {% if remanente_stats.total_count > 0 %}
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Remanentes:</span>
-                            <span class="text-sm font-medium text-amber-700 dark:text-amber-300">
-                                {{ remanente_stats.total_amount|format_currency:"€" }}
-                            </span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Total aplicados:</span>
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ remanente_stats.total_count }}
-                            </span>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-
-                    <div class="flex space-x-3">
-                        <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='black' %}"
-                           class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-700 hover:bg-gray-800 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            Ver Servicios
-                        </a>
-                        <a href="{% tenant_url 'accounting:service-create' line_path=line_path category='black' %}"
-                           class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                        </a>
-                    </div>
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
+            <div class="flex items-center space-x-3">
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <h3 class="text-lg font-medium text-blue-900 dark:text-blue-200">
+                        Línea de servicios
+                    </h3>
+                    <p class="text-blue-700 dark:text-blue-300">
+                        Esta línea de negocio no tiene sublíneas. Serás redirigido automáticamente a la vista de servicios.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
     {% endif %}
 
-    {% if children.exists or not children.exists %}
+    {% if children.exists %}
+    <!-- Acciones rápidas solo para nodos padre -->
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
@@ -335,22 +215,23 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                     </svg>
                     <span class="text-sm font-medium">Ver todas las líneas</span>
-            </a>
-            <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='white' %}"
-               class="flex items-center justify-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors w-full">
-                <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span class="text-sm font-medium">Total reportes White - {% if business_line %}{{ business_line.name }}{% elif current_line %}{{ current_line.name }}{% endif %}</span>
-            </a>
-            <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='black' %}"
-               class="flex items-center justify-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors w-full">
-                <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span class="text-sm font-medium">Total reportes Black - {% if business_line %}{{ business_line.name }}{% elif current_line %}{{ current_line.name }}{% endif %}</span>
-            </a>
+                </a>
+                <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='white' %}"
+                   class="flex items-center justify-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors w-full">
+                    <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="text-sm font-medium">Total reportes White - {% if business_line %}{{ business_line.name }}{% elif current_line %}{{ current_line.name }}{% endif %}</span>
+                </a>
+                <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='black' %}"
+                   class="flex items-center justify-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors w-full">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="text-sm font-medium">Total reportes Black - {% if business_line %}{{ business_line.name }}{% elif current_line %}{{ current_line.name }}{% endif %}</span>
+                </a>
 
+            </div>
         </div>
     </div>
     {% endif %}

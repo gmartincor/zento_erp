@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, TemplateView, CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
@@ -30,6 +30,27 @@ class BusinessLineDetailView(
     model = BusinessLine
     template_name = 'accounting/business_line_detail.html'
     context_object_name = 'business_line'
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Redirección automática para nodos hoja.
+        Si la línea de negocio no tiene hijos, redirige directamente a /white/
+        """
+        try:
+            business_line = self.get_object()
+            
+            # Verificar si es un nodo hoja (sin hijos)
+            if not business_line.children.exists():
+                line_path = kwargs.get('line_path', '')
+                redirect_url = f'/accounting/business-lines/{line_path}/white/'
+                return redirect(redirect_url)
+                
+        except (Http404, BusinessLine.DoesNotExist):
+            # Si hay problemas obteniendo el objeto, continúa con el flujo normal
+            pass
+            
+        # Si tiene hijos o hay algún error, continúa con el flujo normal
+        return super().get(request, *args, **kwargs)
     
     def get_object(self):
         line_path = self.kwargs.get('line_path', '')
@@ -121,59 +142,9 @@ class BusinessLineHierarchyView(
                     parent=current_line
                 )
                 if not accessible_children.exists():
-                    descendant_ids = current_line.get_descendant_ids()
-                    services = ClientService.objects.filter(business_line__id__in=descendant_ids)
-                    black_services = services.filter(category='black')
-                    white_services = services.filter(category='white')
-                    black_count = black_services.count()
-                    white_count = white_services.count()
-                    black_revenue = ServicePayment.objects.filter(
-                        client_service__in=black_services
-                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                    white_revenue = ServicePayment.objects.filter(
-                        client_service__in=white_services
-                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                    category_items = []
-                    category_items.append({
-                        'name': 'BLACK',
-                        'category': 'BLACK',
-                        'slug': 'black',
-                        'type': 'category',
-                        'count': black_count,
-                        'total_revenue': black_revenue,
-                        'total_services': black_count,
-                        'url': f'/accounting/business-lines/{line_path}/black/',
-                        'description': f'{black_count} servicios BLACK'
-                    })
-                    category_items.append({
-                        'name': 'WHITE', 
-                        'category': 'WHITE',
-                        'slug': 'white',
-                        'type': 'category',
-                        'count': white_count,
-                        'total_revenue': white_revenue,
-                        'total_services': white_count,
-                        'url': f'/accounting/business-lines/{line_path}/white/',
-                        'description': f'{white_count} servicios WHITE'
-                    })
-                    context.update({
-                        'current_line': current_line,
-                        'items': category_items,
-                        'show_categories': True,
-                        'page_title': f'Categorías - {current_line.name}',
-                        'page_subtitle': f'Categorías de servicios en {current_line.name}',
-                        'subtitle': f'Categorías de servicios en {current_line.name}',
-                        'show_hierarchy': True,
-                        'view_type': 'categories',
-                        'level_stats': {
-                            'total_services': black_count + white_count,
-                            'total_revenue': black_revenue + white_revenue,
-                            'black_services': black_count,
-                            'white_services': white_count,
-                            'black_revenue': black_revenue,
-                            'white_revenue': white_revenue,
-                        }
-                    })
+                    # Los nodos hoja ahora se redirigen automáticamente,
+                    # esta vista solo maneja nodos padre con hijos
+                    pass
                 else:
                     descendant_ids = current_line.get_descendant_ids()
                     
