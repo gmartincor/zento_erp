@@ -58,11 +58,9 @@ class BusinessLineService(RevenueCalculationMixin):
         return '/'.join(path_parts)
     
     def check_user_permission(self, user, business_line):
-        # Permitir acceso a cualquier usuario autenticado
         return True
     
     def enforce_permission(self, user, business_line):
-        # No hay restricciones - cualquier usuario autenticado puede acceder
         pass
     
     def get_children_for_display(self, business_line, user_permissions=None):
@@ -89,15 +87,13 @@ class BusinessLineService(RevenueCalculationMixin):
     
     def get_business_line_stats(self, business_line, include_children=False):
         services_query = ClientService.objects.filter(
-            business_line=business_line,
-            is_active=True
+            business_line=business_line
         )
         
         if include_children:
             descendant_ids = business_line.get_descendant_ids()
             services_query = ClientService.objects.filter(
-                business_line__id__in=descendant_ids,
-                is_active=True
+                business_line__id__in=descendant_ids
             )
         
         payments_query = ServicePayment.objects.filter(

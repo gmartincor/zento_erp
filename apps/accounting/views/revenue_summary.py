@@ -171,7 +171,7 @@ def calculate_revenue_stats_filtered(business_line=None, category='white', year=
         all_lines = get_all_descendant_lines(business_line)
         services = []
         for line in all_lines:
-            services.extend(line.client_services.filter(category=category, is_active=True))
+            services.extend(line.client_services.filter(category=category))
         
         if services:
             payments = ServicePayment.objects.filter(

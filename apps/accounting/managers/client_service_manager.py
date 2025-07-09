@@ -206,7 +206,7 @@ class ClientServiceManager(models.Manager):
         self,
         business_line,
         category: str,
-        active_only: bool = True
+        active_only: bool = False
     ) -> QuerySet:
         queryset = self.get_queryset().by_business_line(business_line).by_category(category)
         if active_only:
@@ -217,7 +217,7 @@ class ClientServiceManager(models.Manager):
         self,
         business_line,
         category: str,
-        active_only: bool = True
+        active_only: bool = False
     ) -> QuerySet:
         descendant_ids = business_line.get_descendant_ids()
         

@@ -140,8 +140,7 @@ class BusinessLineStatsService(RevenueCalculationMixin):
     def calculate_business_line_metrics(self, business_line: BusinessLine) -> Dict[str, Any]:
         descendant_ids = business_line.get_descendant_ids()
         services = ClientService.objects.filter(
-            business_line__id__in=descendant_ids,
-            is_active=True
+            business_line__id__in=descendant_ids
         )
         
         basic_stats = ServicePayment.objects.filter(
