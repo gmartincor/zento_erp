@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load tenant_tags %}
+
+{% block title %}Configuración de Empresa - {% if tenant %}{{ tenant.name }}{% else %}Nutrition Pro CRM{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+            Configuración de Empresa
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+            Configura los datos de tu empresa para la emisión de facturas
+        </p>
+        
+        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Información Básica</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="{{ form.business_name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.business_name.label }}
+                                </label>
+                                {{ form.business_name }}
+                                {% if form.business_name.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.business_name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.tax_id.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.tax_id.label }}
+                                </label>
+                                {{ form.tax_id }}
+                                {% if form.tax_id.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.tax_id.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label for="{{ form.legal_name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.legal_name.label }}
+                                </label>
+                                {{ form.legal_name }}
+                                {% if form.legal_name.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.legal_name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="{{ form.entity_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ form.entity_type.label }}
+                        </label>
+                        <div class="space-y-2">
+                            {% for choice in form.entity_type %}
+                                <label class="flex items-center">
+                                    {{ choice.tag }}
+                                    <span class="ml-2 text-sm text-gray-600">{{ choice.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.entity_type.errors %}
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.entity_type.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Esto afecta el cálculo de IRPF en las facturas
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Dirección</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.address.label }}
+                                </label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.address.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        {{ form.postal_code.label }}
+                                    </label>
+                                    {{ form.postal_code }}
+                                    {% if form.postal_code.errors %}
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.postal_code.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="md:col-span-2">
+                                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        {{ form.city.label }}
+                                    </label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.city.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contacto</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.phone.label }}
+                                </label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.phone.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.email.label }}
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.email.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Datos Bancarios</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="{{ form.bank_name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.bank_name.label }}
+                                </label>
+                                {{ form.bank_name }}
+                                {% if form.bank_name.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.bank_name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.iban.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.iban.label }}
+                                </label>
+                                {{ form.iban }}
+                                {% if form.iban.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.iban.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Configuración Fiscal</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="{{ form.default_vat_rate.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.default_vat_rate.label }}
+                                </label>
+                                {{ form.default_vat_rate }}
+                                {% if form.default_vat_rate.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.default_vat_rate.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.irpf_rate.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.irpf_rate.label }}
+                                </label>
+                                {{ form.irpf_rate }}
+                                {% if form.irpf_rate.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.irpf_rate.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.invoice_prefix.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.invoice_prefix.label }}
+                                </label>
+                                {{ form.invoice_prefix }}
+                                {% if form.invoice_prefix.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.invoice_prefix.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="{{ form.current_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ form.current_number.label }}
+                        </label>
+                        {{ form.current_number }}
+                        {% if form.current_number.errors %}
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.current_number.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Número actual de facturación (se incrementa automáticamente)
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end space-x-3">
+                    <a href="{% url 'invoicing:invoice_list' %}" 
+                       class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancelar
+                    </a>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
+                        Guardar Configuración
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">
+                        Información importante
+                    </h3>
+                    <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Esta configuración se utilizará como emisor en todas las facturas.</li>
+                            <li>El tipo de entidad (empresa/autónomo) afecta el cálculo automático de IRPF.</li>
+                            <li>Puedes modificar esta configuración en cualquier momento.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -17,6 +17,7 @@ def configure_tenant_settings():
             'apps.accounting',
             'apps.business_lines',
             'apps.expenses',
+            'apps.invoicing',
         ],
         'INSTALLED_APPS': [
             'django_tenants',
@@ -34,5 +35,6 @@ def configure_tenant_settings():
             'apps.accounting',
             'apps.business_lines',
             'apps.expenses',
+            'apps.invoicing',
         ],
     }

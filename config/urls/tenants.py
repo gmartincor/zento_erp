@@ -12,6 +12,7 @@ urlpatterns = [
     path('logout/', tenant_logout_view, name='tenant_logout'),
     path('accounting/', include('apps.accounting.urls')),
     path('expenses/', include('apps.expenses.urls')),
+    path('invoicing/', include('apps.invoicing.urls')),
 ]
 
 if settings.DEBUG:

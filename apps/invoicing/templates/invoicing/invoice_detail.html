@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load tenant_tags %}
+
+{% block title %}Factura {{ invoice.reference }} - {% if tenant %}{{ tenant.name }}{% else %}Nutrition Pro CRM{% endif %}{% endblock %}
+
+{% block page_header %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            Factura {{ invoice.reference }}
+        </h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">
+            Emitida el {{ invoice.issue_date|date:"d/m/Y" }}
+        </p>
+    </div>
+    <div class="flex space-x-3">
+        <a href="{% url 'invoicing:invoice_pdf' invoice.pk %}" 
+           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Descargar PDF
+        </a>
+        <a href="{% url 'invoicing:invoice_list' %}" 
+           class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+            Volver al Listado
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Información de la factura -->
+    <div class="lg:col-span-2">
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Datos del emisor -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Datos del Emisor</h3>
+                    <div class="space-y-2 text-sm">
+                        <p class="font-medium text-gray-900 dark:text-white">{{ invoice.company.name }}</p>
+                        <p class="text-gray-600 dark:text-gray-400">{{ invoice.company.tax_id }}</p>
+                        {% if invoice.company.address %}
+                            <p class="text-gray-600 dark:text-gray-400">{{ invoice.company.address }}</p>
+                        {% endif %}
+                        {% if invoice.company.city %}
+                            <p class="text-gray-600 dark:text-gray-400">{{ invoice.company.postal_code }} {{ invoice.company.city }}</p>
+                        {% endif %}
+                        {% if invoice.company.phone %}
+                            <p class="text-gray-600 dark:text-gray-400">Tel: {{ invoice.company.phone }}</p>
+                        {% endif %}
+                        {% if invoice.company.email %}
+                            <p class="text-gray-600 dark:text-gray-400">{{ invoice.company.email }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Datos del cliente -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Datos del Cliente</h3>
+                    <div class="space-y-2 text-sm">
+                        <p class="font-medium text-gray-900 dark:text-white">{{ invoice.client_name }}</p>
+                        <p class="text-gray-600 dark:text-gray-400">{{ invoice.client_tax_id }}</p>
+                        {% if invoice.client_address %}
+                            <p class="text-gray-600 dark:text-gray-400">{{ invoice.client_address }}</p>
+                        {% endif %}
+                        {% if invoice.client_city %}
+                            <p class="text-gray-600 dark:text-gray-400">{{ invoice.client_postal_code }} {{ invoice.client_city }}</p>
+                        {% endif %}
+                        {% if invoice.client_email %}
+                            <p class="text-gray-600 dark:text-gray-400">{{ invoice.client_email }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Líneas de factura -->
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Líneas de Factura</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Descripción
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Cantidad
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Precio Unit.
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                IVA %
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Total
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for line in invoice.lines.all %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                {{ line.description }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-center text-gray-900 dark:text-white">
+                                {{ line.quantity }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-right text-gray-900 dark:text-white">
+                                €{{ line.unit_price|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-right text-gray-900 dark:text-white">
+                                {{ line.vat_rate }}%
+                            </td>
+                            <td class="px-6 py-4 text-sm text-right font-medium text-gray-900 dark:text-white">
+                                €{{ line.total_amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen y totales -->
+    <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Información de la Factura</h3>
+            <dl class="space-y-3 text-sm">
+                <div class="flex justify-between">
+                    <dt class="text-gray-600 dark:text-gray-400">Referencia:</dt>
+                    <dd class="font-medium text-gray-900 dark:text-white">{{ invoice.reference }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-gray-600 dark:text-gray-400">Fecha emisión:</dt>
+                    <dd class="text-gray-900 dark:text-white">{{ invoice.issue_date|date:"d/m/Y" }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-gray-600 dark:text-gray-400">Fecha vencimiento:</dt>
+                    <dd class="text-gray-900 dark:text-white">{{ invoice.due_date|date:"d/m/Y" }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-gray-600 dark:text-gray-400">Estado:</dt>
+                    <dd>
+                        {% if invoice.is_paid %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                Pagada
+                            </span>
+                        {% else %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                Pendiente
+                            </span>
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Totales -->
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Totales</h3>
+            <dl class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <dt class="text-gray-600 dark:text-gray-400">Subtotal:</dt>
+                    <dd class="text-gray-900 dark:text-white">€{{ invoice.subtotal|floatformat:2 }}</dd>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <dt class="text-gray-600 dark:text-gray-400">IVA:</dt>
+                    <dd class="text-gray-900 dark:text-white">€{{ invoice.vat_amount|floatformat:2 }}</dd>
+                </div>
+                {% if invoice.irpf_amount > 0 %}
+                <div class="flex justify-between text-sm">
+                    <dt class="text-gray-600 dark:text-gray-400">IRPF ({{ invoice.irpf_rate }}%):</dt>
+                    <dd class="text-red-600 dark:text-red-400">-€{{ invoice.irpf_amount|floatformat:2 }}</dd>
+                </div>
+                {% endif %}
+                <div class="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <dt class="text-gray-900 dark:text-white">Total:</dt>
+                    <dd class="text-gray-900 dark:text-white">€{{ invoice.total_amount|floatformat:2 }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        {% if invoice.notes %}
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 mt-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Notas</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ invoice.notes|linebreaks }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
