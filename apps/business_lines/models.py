@@ -34,7 +34,7 @@ class BusinessLine(TimeStampedModel):
     )
     
     is_active = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name="Activo",
         db_index=True
     )

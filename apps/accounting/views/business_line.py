@@ -122,6 +122,9 @@ class BusinessLineHierarchyView(
 ):
     template_name = 'accounting/hierarchy_navigation.html'
     
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+    
     def get_template_names(self):
         line_path = self.kwargs.get('line_path')
         if line_path:
@@ -142,9 +145,42 @@ class BusinessLineHierarchyView(
                     parent=current_line
                 )
                 if not accessible_children.exists():
-                    # Los nodos hoja ahora se redirigen automáticamente,
-                    # esta vista solo maneja nodos padre con hijos
-                    pass
+                    current_line_descendant_ids = current_line.get_descendant_ids()
+                    current_line_payments = ServicePayment.objects.filter(
+                        client_service__business_line__id__in=current_line_descendant_ids
+                    )
+                    current_line.white_revenue = current_line_payments.filter(
+                        client_service__category='white'
+                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+                    current_line.black_revenue = current_line_payments.filter(
+                        client_service__category='black'
+                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
+                    current_line.white_services = ClientService.objects.filter(
+                        business_line__id__in=current_line_descendant_ids, category='white'
+                    ).count()
+                    current_line.black_services = ClientService.objects.filter(
+                        business_line__id__in=current_line_descendant_ids, category='black'
+                    ).count()
+                    
+                    context.update({
+                        'current_line': current_line,
+                        'children': [current_line],
+                        'items': [current_line],
+                        'business_lines': [current_line],
+                        'page_title': f'Líneas de negocio - {current_line.name}',
+                        'page_subtitle': f'Gestión de {current_line.name}',
+                        'subtitle': f'Gestión de {current_line.name}',
+                        'show_hierarchy': True,
+                        'view_type': 'business_lines',
+                        'is_leaf_node': True,
+                        'level_stats': {
+                            'white_revenue': current_line.white_revenue,
+                            'black_revenue': current_line.black_revenue,
+                            'white_services': current_line.white_services,
+                            'black_services': current_line.black_services,
+                            'children_count': 0,
+                        }
+                    })
                 else:
                     descendant_ids = current_line.get_descendant_ids()
                     

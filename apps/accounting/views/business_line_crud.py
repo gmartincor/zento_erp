@@ -7,12 +7,12 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 
 from apps.business_lines.models import BusinessLine
+from apps.business_lines.forms import BusinessLineCreateForm, BusinessLineUpdateForm
 from ..mixins import BusinessLinePathMixin, BusinessLineParentMixin
 
 
 class AdminRequiredMixin:
     def dispatch(self, request, *args, **kwargs):
-        # Permitir acceso a cualquier usuario autenticado
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -24,8 +24,8 @@ class BusinessLineCreateView(
     CreateView
 ):
     model = BusinessLine
+    form_class = BusinessLineCreateForm
     template_name = 'business_lines/business_line_form.html'
-    fields = ['name', 'parent']
     
     def get_initial(self):
         initial = super().get_initial()
@@ -45,17 +45,6 @@ class BusinessLineCreateView(
     def get_success_url(self):
         return self.get_business_line_url(self.object)
     
-    def get_initial(self):
-        initial = super().get_initial()
-        parent_id = self.kwargs.get('parent')
-        if parent_id:
-            try:
-                parent = BusinessLine.objects.get(pk=parent_id)
-                initial['parent'] = parent
-            except BusinessLine.DoesNotExist:
-                pass
-        return initial
-    
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(
@@ -72,8 +61,8 @@ class BusinessLineUpdateView(
     UpdateView
 ):
     model = BusinessLine
+    form_class = BusinessLineUpdateForm
     template_name = 'business_lines/business_line_form.html'
-    fields = ['name', 'parent']
     
     def get_success_url(self):
         return self.get_business_line_url(self.object)

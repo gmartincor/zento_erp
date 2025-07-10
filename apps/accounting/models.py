@@ -216,6 +216,18 @@ class ClientService(TimeStampedModel):
         
         self.clean()
         super().save(*args, **kwargs)
+        
+        # Actualizar el estado de la línea de negocio
+        if self.business_line:
+            self.business_line.update_active_status()
+
+    def delete(self, *args, **kwargs):
+        business_line = self.business_line
+        super().delete(*args, **kwargs)
+        
+        # Actualizar el estado de la línea de negocio después de eliminar el servicio
+        if business_line:
+            business_line.update_active_status()
 
     def __str__(self):
         return f"{self.client.full_name} - {self.business_line.name} ({self.category})"

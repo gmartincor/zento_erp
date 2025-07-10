@@ -25,8 +25,9 @@ class BusinessLineService:
         
         new_status = has_active_services or has_active_sublines
         if business_line.is_active != new_status:
+            from apps.business_lines.models import BusinessLine
+            BusinessLine.objects.filter(pk=business_line.pk).update(is_active=new_status)
             business_line.is_active = new_status
-            business_line.save(update_fields=['is_active'])
             if business_line.parent:
                 BusinessLineService.update_business_line_status(business_line.parent)
     

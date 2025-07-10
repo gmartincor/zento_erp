@@ -182,7 +182,7 @@
                     {% endif %}
                 </div>
 
-                <!-- Status and Order -->
+                {% if form.is_active %}
                 <div>
                     <div class="flex items-center">
                         {{ form.is_active }}
@@ -201,7 +201,9 @@
                         </div>
                     {% endif %}
                 </div>
+                {% endif %}
 
+                {% if form.order %}
                 <div>
                     <label for="{{ form.order.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         {{ form.order.label }}
@@ -221,6 +223,7 @@
                         </div>
                     {% endif %}
                 </div>
+                {% endif %}
             </div>
 
             <!-- Form Actions -->
