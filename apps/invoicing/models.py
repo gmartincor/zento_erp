@@ -82,7 +82,7 @@ class Invoice(TimeStampedModel):
     client_name = models.CharField(max_length=200, verbose_name="Nombre del cliente")
     client_tax_id = models.CharField(max_length=15, blank=True, verbose_name="NIF/CIF del cliente")
     client_address = models.TextField(verbose_name="Dirección del cliente")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT', verbose_name="Estado")
     payment_terms = models.TextField(default="Transferencia bancaria", verbose_name="Condiciones de pago")
     pdf_file = models.FileField(upload_to='invoices/pdfs/', blank=True)
 

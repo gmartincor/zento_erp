@@ -32,7 +32,7 @@
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                     Datos Básicos
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {{ form.issue_date.label }}
@@ -40,6 +40,15 @@
                         {{ form.issue_date }}
                         {% if form.issue_date.errors %}
                             <p class="mt-1 text-sm text-red-600">{{ form.issue_date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ form.status.label }}
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>
                         {% endif %}
                     </div>
                     <div>

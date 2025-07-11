@@ -218,3 +218,16 @@ def generate_pdf_view(request, pk):
         logger.error(f"Error generating PDF for invoice {invoice.reference}: {str(e)}")
         messages.error(request, f'Error al generar el PDF: {str(e)}')
         return redirect('invoicing:invoice_detail', pk=pk)
+
+def change_status_view(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status in [choice[0] for choice in Invoice.STATUS_CHOICES]:
+            invoice.status = new_status
+            invoice.save()
+            messages.success(request, f'Estado de la factura actualizado a {invoice.get_status_display()}.')
+            logger.info(f"Status changed for invoice {invoice.reference}: {new_status}")
+        else:
+            messages.error(request, 'Estado no válido.')
+    return redirect('invoicing:invoice_detail', pk=pk)

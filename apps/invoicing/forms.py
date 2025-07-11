@@ -41,7 +41,7 @@ class CompanyForm(forms.ModelForm):
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['client_type', 'client_name', 'client_tax_id', 'client_address', 'issue_date', 'payment_terms']
+        fields = ['client_type', 'client_name', 'client_tax_id', 'client_address', 'issue_date', 'payment_terms', 'status']
         widgets = {
             'client_type': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
             'client_name': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
@@ -49,6 +49,7 @@ class InvoiceForm(forms.ModelForm):
             'client_address': forms.Textarea(attrs={'rows': 3, 'class': FORM_CONTROL_CLASS}),
             'issue_date': forms.DateInput(attrs={'type': 'date', 'class': FORM_CONTROL_CLASS}),
             'payment_terms': forms.Textarea(attrs={'rows': 2, 'class': FORM_CONTROL_CLASS}),
+            'status': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
         }
 
     def clean_client_tax_id(self):
