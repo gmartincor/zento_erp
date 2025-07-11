@@ -77,13 +77,13 @@ class Invoice(TimeStampedModel):
     
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     reference = models.CharField(max_length=50, unique=True, blank=True)
-    issue_date = models.DateField(default=date.today)
-    client_type = models.CharField(max_length=20, choices=CLIENT_TYPES)
-    client_name = models.CharField(max_length=200)
-    client_tax_id = models.CharField(max_length=15, blank=True)
-    client_address = models.TextField()
+    issue_date = models.DateField(default=date.today, verbose_name="Fecha de emisión")
+    client_type = models.CharField(max_length=20, choices=CLIENT_TYPES, verbose_name="Tipo de cliente")
+    client_name = models.CharField(max_length=200, verbose_name="Nombre del cliente")
+    client_tax_id = models.CharField(max_length=15, blank=True, verbose_name="NIF/CIF del cliente")
+    client_address = models.TextField(verbose_name="Dirección del cliente")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
-    payment_terms = models.TextField(default="Transferencia bancaria")
+    payment_terms = models.TextField(default="Transferencia bancaria", verbose_name="Condiciones de pago")
     pdf_file = models.FileField(upload_to='invoices/pdfs/', blank=True)
 
     @property
@@ -133,11 +133,12 @@ class Invoice(TimeStampedModel):
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey('Invoice', on_delete=models.CASCADE, related_name='items')
-    description = models.TextField()
-    quantity = models.PositiveIntegerField(default=1)
+    description = models.TextField(verbose_name="Descripción")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Cantidad")
     unit_price = models.DecimalField(
         max_digits=10, decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))]
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name="Precio unitario"
     )
     vat_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=21.00,

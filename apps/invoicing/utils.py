@@ -226,11 +226,7 @@ def generate_invoice_pdf(invoice):
     service_table = create_service_table(invoice, styles)
     story.append(service_table)
     story.append(Spacer(1, 8*mm))
-    
-    # Add currency note
-    story.append(Paragraph("Importes visualizados en Euros", styles['note']))
-    story.append(Spacer(1, 8*mm))
-    
+
     # Add payment and totals
     final_table = create_payment_totals_table(invoice, styles)
     story.append(final_table)
