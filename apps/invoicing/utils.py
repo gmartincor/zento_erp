@@ -33,27 +33,22 @@ def get_pdf_styles():
 
 
 def create_header_table(invoice, styles):
-    left_header = []
-    if invoice.company.logo and os.path.exists(invoice.company.logo.path):
-        left_header.append(f'<img src="{invoice.company.logo.path}" width="80" height="40"/>')
-    
-    left_header.extend([
-        f"<b>{invoice.company.business_name}</b>",
-        f"{invoice.company.legal_name or ''}" if invoice.company.legal_name and invoice.company.legal_name != invoice.company.business_name else "",
-        f"NIF/CIF: {invoice.company.tax_id}",
-        f"{invoice.company.get_legal_form_display()}" if invoice.company.legal_form else "",
-        invoice.company.get_full_address()
-    ])
-    
     right_header = [
         f"<b>FACTURA {invoice.reference}</b>",
         f"Fecha: {invoice.issue_date.strftime('%d/%m/%Y')}"
     ]
     
-    left_content = Paragraph("<br/>".join(filter(None, left_header)), styles['header'])
+    left_content = ""
+    if invoice.company.logo and os.path.exists(invoice.company.logo.path):
+        left_content = f'<img src="{invoice.company.logo.path}" width="80" height="40"/>'
+    
     right_content = Paragraph("<br/>".join(right_header), styles['title'])
     
-    return create_two_column_table(left_content, right_content)
+    if left_content:
+        left_paragraph = Paragraph(left_content, styles['header'])
+        return create_two_column_table(left_paragraph, right_content)
+    else:
+        return create_two_column_table(Paragraph("", styles['header']), right_content)
 
 
 def create_customer_table(invoice, styles):
@@ -140,10 +135,20 @@ def create_payment_totals_table(invoice, styles):
             f"-{format_currency(invoice.irpf_amount)}"
         ])
     
-    totals_data.append(["<b>TOTAL A PAGAR</b>", f"<b>{format_currency(invoice.total_amount)}</b>"])
+    total_row = ["TOTAL A PAGAR", format_currency(invoice.total_amount)]
+    totals_data.append(total_row)
     
     totals_table = Table(totals_data, colWidths=[4*cm, 2.5*cm])
-    totals_table.setStyle(get_totals_table_style())
+    
+    style_rules = [
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+    ]
+    
+    totals_table.setStyle(TableStyle(style_rules))
     
     left_content = Paragraph("<br/>".join(payment_info), styles['section'])
     
@@ -176,16 +181,6 @@ def get_service_table_style():
         ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-    ])
-
-
-def get_totals_table_style():
-    """Return the TableStyle used for totals tables."""
-    return TableStyle([
-        ('FONTSIZE', (0, 0), (-1, -1), 9),
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
     ])
 
 
