@@ -151,8 +151,8 @@ def create_payment_totals_table(invoice, styles):
 
 
 def format_rate_display(rate):
-    """Format a rate object to display as a percentage."""
-    return f"{rate.rate:.0f}%" if rate else "0%"
+    """Format a rate decimal to display as a percentage."""
+    return f"{rate:.0f}%" if rate else "0%"
 
 
 def format_currency(amount):

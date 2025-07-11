@@ -138,10 +138,10 @@
                                 {{ item.unit_price|floatformat:2 }} €
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
-                                {% if item.vat_rate %}{{ item.vat_rate.rate|floatformat:0 }}%{% else %}0%{% endif %}
+                                {{ item.vat_rate|floatformat:0 }}%
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
-                                {% if item.irpf_rate %}{{ item.irpf_rate.rate|floatformat:0 }}%{% else %}0%{% endif %}
+                                {{ item.irpf_rate|floatformat:0 }}%
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
                                 {{ item.line_total|floatformat:2 }} €

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Company, Invoice, InvoiceItem, VATRate, IRPFRate
+from .models import Company, Invoice, InvoiceItem
 
 
 class InvoiceItemInline(admin.TabularInline):
@@ -69,21 +69,4 @@ class InvoiceAdmin(admin.ModelAdmin):
 @admin.register(InvoiceItem)
 class InvoiceItemAdmin(admin.ModelAdmin):
     list_display = ['invoice', 'description', 'quantity', 'unit_price', 'vat_rate', 'irpf_rate']
-    list_filter = ['vat_rate', 'irpf_rate']
     search_fields = ['invoice__reference', 'description']
-
-
-@admin.register(VATRate)
-class VATRateAdmin(admin.ModelAdmin):
-    list_display = ['name', 'rate', 'is_default']
-    list_filter = ['is_default']
-    search_fields = ['name']
-    ordering = ['rate']
-
-
-@admin.register(IRPFRate)
-class IRPFRateAdmin(admin.ModelAdmin):
-    list_display = ['name', 'rate', 'is_default']
-    list_filter = ['is_default']
-    search_fields = ['name']
-    ordering = ['rate']

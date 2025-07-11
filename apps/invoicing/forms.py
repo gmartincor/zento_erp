@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import inlineformset_factory
-from .models import Company, Invoice, InvoiceItem, VATRate, IRPFRate
+from .models import Company, Invoice, InvoiceItem
 
 FORM_CONTROL_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white'
 
@@ -73,28 +73,15 @@ class InvoiceItemForm(forms.ModelForm):
             }),
             'quantity': forms.NumberInput(attrs={'class': FORM_CONTROL_CLASS, 'min': '1', 'value': '1'}),
             'unit_price': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS, 'min': '0.01'}),
-            'vat_rate': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
-            'irpf_rate': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
+            'vat_rate': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS, 'min': '0', 'max': '100'}),
+            'irpf_rate': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS, 'min': '0', 'max': '100'}),
         }
 
     def __init__(self, *args, **kwargs):
         company = kwargs.pop('company', None)
         super().__init__(*args, **kwargs)
         
-        self.fields['vat_rate'].queryset = VATRate.objects.all()
-        self.fields['irpf_rate'].queryset = IRPFRate.objects.all()
         self.fields['irpf_rate'].required = False
-        self.fields['irpf_rate'].empty_label = "Sin retención"
-        
-        if company:
-            default_vat = company.get_default_vat_rate()
-            if default_vat:
-                self.fields['vat_rate'].initial = default_vat
-                
-            if hasattr(company, 'is_freelancer') and company.is_freelancer:
-                default_irpf = company.get_default_irpf_rate()
-                if default_irpf:
-                    self.fields['irpf_rate'].initial = default_irpf
     
     def has_changed(self):
         return bool(self.data.get(self.add_prefix('description')))

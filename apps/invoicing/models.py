@@ -42,12 +42,6 @@ class Company(TimeStampedModel):
     def get_display_name(self):
         return self.legal_name or self.business_name
 
-    def get_default_vat_rate(self):
-        return VATRate.objects.filter(is_default=True).first()
-    
-    def get_default_irpf_rate(self):
-        return IRPFRate.objects.filter(is_default=True).first()
-
     def save(self, *args, **kwargs):
         if not self.pk and Company.objects.exists():
             raise ValidationError('Solo puede existir una empresa por tenant.')
@@ -55,12 +49,10 @@ class Company(TimeStampedModel):
 
     @property
     def is_freelancer(self):
-        """Determina si la empresa es un autónomo para cálculo de IRPF"""
         return self.legal_form == 'AUTONOMO'
     
     @property 
     def is_company(self):
-        """Determina si es una empresa (no autónomo)"""
         return self.legal_form != 'AUTONOMO'
 
     def __str__(self):
@@ -68,36 +60,6 @@ class Company(TimeStampedModel):
 
     class Meta:
         verbose_name_plural = "Companies"
-
-
-class VATRate(models.Model):
-    name = models.CharField(max_length=50)
-    rate = models.DecimalField(
-        max_digits=5, decimal_places=2,
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    is_default = models.BooleanField(default=False)
-    
-    def __str__(self):
-        return f"{self.name} ({self.rate}%)"
-
-    class Meta:
-        ordering = ['rate']
-
-
-class IRPFRate(models.Model):
-    name = models.CharField(max_length=50)
-    rate = models.DecimalField(
-        max_digits=5, decimal_places=2,
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    is_default = models.BooleanField(default=False)
-    
-    def __str__(self):
-        return f"{self.name} ({self.rate}%)"
-
-    class Meta:
-        ordering = ['rate']
 
 
 class Invoice(TimeStampedModel):
@@ -153,7 +115,7 @@ class Invoice(TimeStampedModel):
             return f"{company.invoice_prefix}{company.current_number:03d}_{year}"
 
     def get_legal_note(self):
-        if any(item.vat_rate and item.vat_rate.rate == 0 for item in self.items.all()):
+        if any(item.vat_rate == 0 for item in self.items.all()):
             return "Exenta de IVA según el artículo correspondiente de la Ley del IVA."
         return ""
 
@@ -177,8 +139,16 @@ class InvoiceItem(models.Model):
         max_digits=10, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
-    vat_rate = models.ForeignKey(VATRate, on_delete=models.PROTECT, null=True, blank=True)
-    irpf_rate = models.ForeignKey(IRPFRate, on_delete=models.PROTECT, null=True, blank=True)
+    vat_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, default=21.00,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name="IVA (%)"
+    )
+    irpf_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, default=0.00,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name="IRPF (%)"
+    )
     
     @property
     def line_total(self):
@@ -186,15 +156,11 @@ class InvoiceItem(models.Model):
     
     @property
     def vat_amount(self):
-        if not self.vat_rate:
-            return Decimal('0.00')
-        return self.line_total * self.vat_rate.rate / 100
+        return self.line_total * self.vat_rate / 100
     
     @property
     def irpf_amount(self):
-        if not self.irpf_rate:
-            return Decimal('0.00')
-        return self.line_total * self.irpf_rate.rate / 100
+        return self.line_total * self.irpf_rate / 100
     
     def __str__(self):
         return f"{self.description} - {self.quantity} x {self.unit_price}€"
