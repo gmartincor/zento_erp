@@ -4,12 +4,12 @@ from .models import Company, Invoice, VATRate, IRPFRate
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ['business_name', 'entity_type', 'tax_id', 'city']
-    list_filter = ['entity_type']
+    list_display = ['business_name', 'legal_form', 'tax_id', 'city']
+    list_filter = ['legal_form']
     search_fields = ['business_name', 'tax_id']
     fieldsets = (
         ('Información básica', {
-            'fields': ('entity_type', 'business_name', 'legal_name', 'tax_id')
+            'fields': ('legal_form', 'business_name', 'legal_name', 'tax_id')
         }),
         ('Dirección', {
             'fields': ('address', 'postal_code', 'city')

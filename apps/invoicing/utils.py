@@ -38,8 +38,10 @@ def create_header_table(invoice, styles):
         left_header.append(f'<img src="{invoice.company.logo.path}" width="80" height="40"/>')
     
     left_header.extend([
-        f"<b>{invoice.company.business_name}</b> {invoice.company.tax_id}",
-        invoice.company.get_display_name() if invoice.company.legal_name else "",
+        f"<b>{invoice.company.business_name}</b>",
+        f"{invoice.company.legal_name or ''}" if invoice.company.legal_name and invoice.company.legal_name != invoice.company.business_name else "",
+        f"NIF/CIF: {invoice.company.tax_id}",
+        f"{invoice.company.get_legal_form_display()}" if invoice.company.legal_form else "",
         invoice.company.get_full_address()
     ])
     
@@ -58,12 +60,23 @@ def create_customer_table(invoice, styles):
     emisor_text = [
         "<b>Emisor:</b>",
         f"{invoice.company.business_name}",
-        f"{invoice.company.get_full_address()}"
+        f"NIF/CIF: {invoice.company.tax_id}",
     ]
+    
+    if invoice.company.legal_form:
+        emisor_text.append(f"{invoice.company.get_legal_form_display()}")
+    
+    emisor_text.append(f"{invoice.company.get_full_address()}")
+    
+    if invoice.company.phone:
+        emisor_text.append(f"Tel: {invoice.company.phone}")
+    if invoice.company.email:
+        emisor_text.append(f"Email: {invoice.company.email}")
     
     enviar_text = [
         "<b>Enviar a:</b>",
         f"{invoice.client_name}",
+        f"{invoice.get_client_type_display()}",
         f"{invoice.client_address}"
     ]
     
@@ -104,13 +117,19 @@ def create_payment_totals_table(invoice, styles):
     vat_display = format_rate_display(invoice.vat_rate)
     irpf_display = format_rate_display(invoice.irpf_rate)
     
-    payment_info = [
-        f"<b>Condiciones de pago:</b> {invoice.payment_terms}",
-        "",
-        "<b>Pago mediante transferencia a la cuenta bancaria siguiente:</b>",
-        f"Banco: {invoice.company.bank_name}",
-        f"Número de cuenta IBAN: {invoice.company.iban}"
-    ]
+    payment_info = []
+    if invoice.payment_terms:
+        payment_info.extend([
+            f"<b>Condiciones de pago:</b> {invoice.payment_terms}",
+            ""
+        ])
+    
+    if invoice.company.bank_name and invoice.company.iban:
+        payment_info.extend([
+            "<b>Datos bancarios para el pago:</b>",
+            f"Banco: {invoice.company.bank_name}",
+            f"IBAN: {invoice.company.iban}"
+        ])
     
     totals_data = [
         [f"Total (Base imp).", format_currency(invoice.base_amount)],
@@ -119,11 +138,11 @@ def create_payment_totals_table(invoice, styles):
     
     if invoice.irpf_amount > 0:
         totals_data.append([
-            f"Total IRPF {irpf_display}", 
+            f"Retención IRPF {irpf_display}", 
             f"-{format_currency(invoice.irpf_amount)}"
         ])
     
-    totals_data.append(["<b>Total</b>", f"<b>{format_currency(invoice.total_amount)}</b>"])
+    totals_data.append(["<b>TOTAL A PAGAR</b>", f"<b>{format_currency(invoice.total_amount)}</b>"])
     
     totals_table = Table(totals_data, colWidths=[4*cm, 2.5*cm])
     totals_table.setStyle(get_totals_table_style())
@@ -226,8 +245,38 @@ def generate_invoice_pdf(invoice):
         story.append(Paragraph(legal_note, styles['note']))
         story.append(Spacer(1, 5*mm))
     
+    # Add mandatory legal information
+    legal_info = []
+    
+    # Add optional but recommended company information
+    optional_info = []
+    if invoice.company.mercantile_registry:
+        optional_info.append(f"Registro Mercantil: {invoice.company.mercantile_registry}")
+    if invoice.company.share_capital:
+        optional_info.append(f"Capital Social: {invoice.company.share_capital:.2f} €")
+    
+    # Add tax information (mandatory)
+    if invoice.irpf_amount > 0:
+        legal_info.append("Factura sujeta a retención de IRPF según normativa fiscal vigente")
+    if invoice.vat_amount > 0:
+        legal_info.append("IVA incluido según legislación vigente")
+    
+    legal_info.append("Factura emitida según Real Decreto 1619/2012 sobre obligaciones de facturación")
+    
+    # Add optional information first if exists
+    if optional_info:
+        optional_text = " | ".join(optional_info)
+        story.append(Paragraph(f"Información adicional: {optional_text}", styles['note']))
+        story.append(Spacer(1, 3*mm))
+    
+    # Add mandatory legal information
+    if legal_info:
+        legal_text = " | ".join(legal_info)
+        story.append(Paragraph(legal_text, styles['note']))
+        story.append(Spacer(1, 5*mm))
+    
     # Add footer
-    entity_display = "Empresario Individual" if invoice.company.entity_type == 'FREELANCER' else "S.L."
+    entity_display = "Empresario Individual" if invoice.company.is_freelancer else invoice.company.get_legal_form_display()
     story.append(Paragraph(f"{entity_display} - Página 1", styles['footer']))
     
     # Build PDF and return

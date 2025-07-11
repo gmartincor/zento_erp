@@ -10,22 +10,36 @@ class CompanyForm(forms.ModelForm):
         model = Company
         exclude = ['current_number']
         widgets = {
-            'entity_type': forms.RadioSelect(),
+            'legal_form': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
             'address': forms.Textarea(attrs={'rows': 3, 'class': FORM_CONTROL_CLASS}),
             'business_name': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'legal_name': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'tax_id': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'postal_code': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'city': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
+            'province': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'phone': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'email': forms.EmailInput(attrs={'class': FORM_CONTROL_CLASS}),
             'bank_name': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'iban': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
+            'mercantile_registry': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
+            'share_capital': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS}),
             'default_vat_rate': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS}),
             'irpf_rate': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS}),
             'invoice_prefix': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'logo': forms.ClearableFileInput(attrs={'class': FORM_CONTROL_CLASS}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Legal form es obligatorio
+        self.fields['legal_form'].required = True
+        
+        # Ayudas contextuales
+        self.fields['invoice_prefix'].help_text = 'Prefijo para numeración de facturas (ej: FN, FACT)'
+        self.fields['irpf_rate'].help_text = 'Solo se aplica a autónomos que facturen a empresas por importes > 300€'
+        self.fields['share_capital'].help_text = 'Opcional en facturas, pero obligatorio en correspondencia comercial para SL/SA'
+        self.fields['mercantile_registry'].help_text = 'Opcional en facturas, pero recomendable para transparencia'
 
 
 class InvoiceForm(forms.ModelForm):

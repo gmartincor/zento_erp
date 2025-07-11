@@ -8,31 +8,41 @@ from django.conf import settings
 
 
 class Company(TimeStampedModel):
-    ENTITY_TYPES = [
-        ('COMPANY', 'Empresa'),
-        ('FREELANCER', 'Autónomo'),
+    LEGAL_FORMS = [
+        ('AUTONOMO', 'Autónomo/a'),
+        ('SL', 'Sociedad Limitada (SL)'),
+        ('SA', 'Sociedad Anónima (SA)'),
+        ('SLU', 'Sociedad Limitada Unipersonal (SLU)'),
+        ('SCP', 'Sociedad Civil Privada (SCP)'),
+        ('CB', 'Comunidad de Bienes (CB)'),
     ]
     
-    entity_type = models.CharField(max_length=20, choices=ENTITY_TYPES)
-    business_name = models.CharField(max_length=200)
-    legal_name = models.CharField(max_length=200, blank=True)
-    tax_id = models.CharField(max_length=15)
-    address = models.TextField()
-    postal_code = models.CharField(max_length=10)
-    city = models.CharField(max_length=100)
-    phone = models.CharField(max_length=20, blank=True)
-    email = models.EmailField(blank=True)
-    bank_name = models.CharField(max_length=100)
-    iban = models.CharField(max_length=34)
+    # Campo unificado que sustituye a entity_type
+    legal_form = models.CharField(max_length=20, choices=LEGAL_FORMS, verbose_name="Forma jurídica")
+    business_name = models.CharField(max_length=200, verbose_name="Nombre comercial")
+    legal_name = models.CharField(max_length=200, blank=True, verbose_name="Razón social")
+    tax_id = models.CharField(max_length=15, verbose_name="NIF/CIF")
+    address = models.TextField(verbose_name="Dirección")
+    postal_code = models.CharField(max_length=10, verbose_name="Código postal")
+    city = models.CharField(max_length=100, verbose_name="Ciudad")
+    province = models.CharField(max_length=100, blank=True, verbose_name="Provincia")
+    phone = models.CharField(max_length=20, blank=True, verbose_name="Teléfono")
+    email = models.EmailField(blank=True, verbose_name="Email")
+    bank_name = models.CharField(max_length=100, verbose_name="Banco")
+    iban = models.CharField(max_length=34, verbose_name="IBAN")
+    mercantile_registry = models.CharField(max_length=200, blank=True, verbose_name="Registro Mercantil")
+    share_capital = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Capital social")
     default_vat_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=21.00,
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name="Tipo de IVA por defecto"
     )
     irpf_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=15.00,
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name="Tipo de IRPF por defecto"
     )
-    invoice_prefix = models.CharField(max_length=10, default="FN")
+    invoice_prefix = models.CharField(max_length=10, default="FN", verbose_name="Prefijo de factura")
     current_number = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     logo = models.ImageField(upload_to='company/logos/', blank=True, null=True)
 
@@ -46,6 +56,16 @@ class Company(TimeStampedModel):
         if not self.pk and Company.objects.exists():
             raise ValidationError('Solo puede existir una empresa por tenant.')
         super().save(*args, **kwargs)
+
+    @property
+    def is_freelancer(self):
+        """Determina si la empresa es un autónomo para cálculo de IRPF"""
+        return self.legal_form == 'AUTONOMO'
+    
+    @property 
+    def is_company(self):
+        """Determina si es una empresa (no autónomo)"""
+        return self.legal_form != 'AUTONOMO'
 
     def __str__(self):
         return self.business_name
@@ -130,11 +150,22 @@ class Invoice(TimeStampedModel):
     def irpf_amount(self):
         if not self.irpf_rate:
             return Decimal('0.00')
-        if (self.company.entity_type == 'FREELANCER' and 
+        
+        # IRPF solo se aplica si:
+        # 1. El emisor (company) es autónomo/freelancer
+        # 2. El cliente es empresa 
+        # 3. El importe base es mayor a 300€
+        if (self.company.is_freelancer and 
             self.client_type == 'COMPANY' and 
             self.base_amount > 300):
             return self.base_amount * self.irpf_rate.rate / 100
         return Decimal('0.00')
+    
+    def should_apply_irpf(self):
+        """Determina si debe aplicarse retención IRPF según la normativa española"""
+        return (self.company.is_freelancer and 
+                self.client_type == 'COMPANY' and 
+                self.base_amount > 300)
 
     @property
     def total_amount(self):

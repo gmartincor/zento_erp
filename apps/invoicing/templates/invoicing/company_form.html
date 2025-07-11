@@ -50,27 +50,54 @@
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.legal_name.errors.0 }}</p>
                                 {% endif %}
                             </div>
+                            
+                            <div>
+                                <label for="{{ form.legal_form.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.legal_form.label }}
+                                </label>
+                                {{ form.legal_form }}
+                                {% if form.legal_form.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.legal_form.errors.0 }}</p>
+                                {% endif %}
+                                {% if form.legal_form.help_text %}
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ form.legal_form.help_text }}</p>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 
                     <div>
-                        <label for="{{ form.entity_type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {{ form.entity_type.label }}
-                        </label>
-                        <div class="space-y-2">
-                            {% for choice in form.entity_type %}
-                                <label class="flex items-center">
-                                    {{ choice.tag }}
-                                    <span class="ml-2 text-sm text-gray-600">{{ choice.choice_label }}</span>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                            Información Legal Adicional 
+                            <span class="text-sm font-normal text-gray-500">(Opcional en facturas)</span>
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="{{ form.mercantile_registry.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.mercantile_registry.label }}
                                 </label>
-                            {% endfor %}
+                                {{ form.mercantile_registry }}
+                                {% if form.mercantile_registry.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.mercantile_registry.errors.0 }}</p>
+                                {% endif %}
+                                {% if form.mercantile_registry.help_text %}
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ form.mercantile_registry.help_text }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.share_capital.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ form.share_capital.label }}
+                                </label>
+                                {{ form.share_capital }}
+                                {% if form.share_capital.errors %}
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.share_capital.errors.0 }}</p>
+                                {% endif %}
+                                {% if form.share_capital.help_text %}
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ form.share_capital.help_text }}</p>
+                                {% endif %}
+                            </div>
                         </div>
-                        {% if form.entity_type.errors %}
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.entity_type.errors.0 }}</p>
-                        {% endif %}
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Esto afecta el cálculo de IRPF en las facturas
-                        </p>
                     </div>
 
                     <div>
@@ -97,13 +124,23 @@
                                     {% endif %}
                                 </div>
                                 
-                                <div class="md:col-span-2">
+                                <div>
                                     <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         {{ form.city.label }}
                                     </label>
                                     {{ form.city }}
                                     {% if form.city.errors %}
                                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.city.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <div>
+                                    <label for="{{ form.province.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        {{ form.province.label }}
+                                    </label>
+                                    {{ form.province }}
+                                    {% if form.province.errors %}
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.province.errors.0 }}</p>
                                     {% endif %}
                                 </div>
                             </div>
@@ -223,12 +260,19 @@
                     <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
                         <ul class="list-disc pl-5 space-y-1">
                             <li>Esta configuración se utilizará como emisor en todas las facturas.</li>
-                            <li>El tipo de entidad (empresa/autónomo) afecta el cálculo automático de IRPF.</li>
+                            <li>La forma jurídica determina el cálculo automático de IRPF y otros aspectos legales.</li>
+                            <li>Solo algunos campos son obligatorios por ley en facturas (según RD 1619/2012).</li>
+                            <li>Los campos adicionales mejoran la profesionalidad y transparencia.</li>
                             <li>Puedes modificar esta configuración en cualquier momento.</li>
                         </ul>
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- Ayuda adicional sobre campos legales -->
+        <div class="mt-4">
+            {% include 'invoicing/partials/legal_help.html' %}
         </div>
     </div>
 </div>
