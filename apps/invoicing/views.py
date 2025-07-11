@@ -48,8 +48,7 @@ class CompanyCreateView(CompanyFormMixin, CreateView):
     
     def get(self, request, *args, **kwargs):
         if Company.objects.exists():
-            company = Company.objects.first()
-            return redirect('invoicing:company_edit', pk=company.pk)
+            return redirect('invoicing:company_edit')
         return super().get(request, *args, **kwargs)
 
 class CompanyUpdateView(CompanyFormMixin, UpdateView):
@@ -119,8 +118,7 @@ class InvoiceCreateView(CompanyMixin, CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        company = self.get_company()
-        form.instance.company = company
+        form.instance.company = self.get_company()
         response = super().form_valid(form)
         
         logger.info(f"Invoice created: {self.object.reference} for {self.object.client_name}")

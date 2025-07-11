@@ -158,13 +158,10 @@ class Invoice(TimeStampedModel):
         return ""
 
     def clean(self):
-        if not self.reference:
-            self.reference = self.generate_reference()
-        if not self.company:
-            raise ValidationError('La factura debe tener una empresa asociada.')
+        pass
 
     def save(self, *args, **kwargs):
-        if not self.reference:
+        if not self.reference and self.company:
             self.reference = self.generate_reference()
         super().save(*args, **kwargs)
 
