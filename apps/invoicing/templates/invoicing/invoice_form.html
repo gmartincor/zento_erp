@@ -113,14 +113,6 @@
                             <div style="display: none;">{{ form.DELETE }}</div>
                         {% endif %}
                         
-                        {% if formset.forms|length > 1 %}
-                        <button type="button" 
-                                class="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold delete-form-btn"
-                                title="Eliminar línea">
-                            ×
-                        </button>
-                        {% endif %}
-                        
                         <div class="space-y-4 pr-8">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

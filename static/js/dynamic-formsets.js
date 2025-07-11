@@ -137,8 +137,9 @@ class DynamicFormsetManager {
         
         const form = e.target.closest(this.formSelector);
         const deleteInput = form.querySelector('input[name*="DELETE"]');
+        const isExistingForm = deleteInput && deleteInput.name.includes('-DELETE');
         
-        if (deleteInput) {
+        if (isExistingForm) {
             deleteInput.checked = true;
             form.style.display = 'none';
         } else {

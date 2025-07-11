@@ -139,11 +139,10 @@ class InvoiceCreateView(CompanyMixin, CreateView):
         context = self.get_context_data()
         formset = context['formset']
         
-        with transaction.atomic():
-            form.instance.company = self.get_company()
-            self.object = form.save()
-            
-            if formset.is_valid():
+        if formset.is_valid():
+            with transaction.atomic():
+                form.instance.company = self.get_company()
+                self.object = form.save()
                 formset.instance = self.object
                 formset.save()
                 
@@ -153,8 +152,8 @@ class InvoiceCreateView(CompanyMixin, CreateView):
                     f'Factura {self.object.reference} creada correctamente.'
                 )
                 return redirect(self.get_success_url())
-            else:
-                return self.form_invalid(form)
+        
+        return self.form_invalid(form)
 
     def get_success_url(self):
         return reverse_lazy('invoicing:invoice_detail', kwargs={'pk': self.object.pk})

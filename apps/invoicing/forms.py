@@ -71,7 +71,7 @@ class InvoiceItemForm(forms.ModelForm):
                 'class': FORM_CONTROL_CLASS,
                 'placeholder': 'Descripción del servicio o producto'
             }),
-            'quantity': forms.NumberInput(attrs={'class': FORM_CONTROL_CLASS, 'min': '1'}),
+            'quantity': forms.NumberInput(attrs={'class': FORM_CONTROL_CLASS, 'min': '1', 'value': '1'}),
             'unit_price': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS, 'min': '0.01'}),
             'vat_rate': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
             'irpf_rate': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
@@ -81,33 +81,55 @@ class InvoiceItemForm(forms.ModelForm):
         company = kwargs.pop('company', None)
         super().__init__(*args, **kwargs)
         
-        # Configurar querysets y opciones
         self.fields['vat_rate'].queryset = VATRate.objects.all()
         self.fields['irpf_rate'].queryset = IRPFRate.objects.all()
         self.fields['irpf_rate'].required = False
         self.fields['irpf_rate'].empty_label = "Sin retención"
         
-        # Aplicar valores por defecto basados en la empresa
         if company:
             default_vat = company.get_default_vat_rate()
             if default_vat:
                 self.fields['vat_rate'].initial = default_vat
                 
-            # Solo aplicar IRPF por defecto si es autónomo
-            if company.is_freelancer:
+            if hasattr(company, 'is_freelancer') and company.is_freelancer:
                 default_irpf = company.get_default_irpf_rate()
                 if default_irpf:
                     self.fields['irpf_rate'].initial = default_irpf
+    
+    def has_changed(self):
+        return bool(self.data.get(self.add_prefix('description')))
 
+class BaseInvoiceItemFormSet(forms.BaseInlineFormSet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance or not self.instance.pk or not self.instance.items.exists():
+            self.extra = 1
+        else:
+            self.extra = 0
+    
+    def clean(self):
+        if any(self.errors):
+            return
+        
+        valid_forms = 0
+        for form in self.forms:
+            if form.cleaned_data.get('DELETE', False):
+                continue
+            if form.cleaned_data.get('description'):
+                valid_forms += 1
+        
+        if valid_forms < 1:
+            raise forms.ValidationError('Debe añadir al menos un producto o servicio.')
 
-# Formset para manejar múltiples líneas de factura
 InvoiceItemFormSet = inlineformset_factory(
     Invoice, 
     InvoiceItem,
     form=InvoiceItemForm,
+    formset=BaseInvoiceItemFormSet,
     fields=['description', 'quantity', 'unit_price', 'vat_rate', 'irpf_rate'],
-    extra=1,
-    min_num=1,
-    validate_min=True,
-    can_delete=True
+    extra=0,
+    min_num=0,
+    validate_min=False,
+    can_delete=True,
+    max_num=50
 )
