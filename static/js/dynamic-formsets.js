@@ -6,6 +6,7 @@ class DynamicFormsetManager {
         this.formSelector = config.formSelector || '.formset-form';
         this.deleteButtonClass = config.deleteButtonClass || 'delete-form-btn';
         this.minForms = config.minForms || 1;
+        this.prefix = config.prefix || 'items';
         
         this.init();
     }
@@ -21,9 +22,14 @@ class DynamicFormsetManager {
         this.updateDeleteButtons();
     }
     
+    getVisibleForms() {
+        return Array.from(this.container.querySelectorAll(this.formSelector))
+            .filter(form => form.style.display !== 'none');
+    }
+    
     updateFormIndexes() {
-        const forms = this.container.querySelectorAll(this.formSelector);
-        forms.forEach((form, index) => {
+        const visibleForms = this.getVisibleForms();
+        visibleForms.forEach((form, index) => {
             form.setAttribute('data-form-index', index);
             
             const inputs = form.querySelectorAll('input, textarea, select');
@@ -36,34 +42,21 @@ class DynamicFormsetManager {
                 this.updateLabelFor(label, index);
             });
         });
-        this.totalFormsInput.value = forms.length;
     }
     
     updateInputNames(input, index) {
-        if (input.name && input.name.includes('-')) {
-            const parts = input.name.split('-');
-            if (parts.length >= 3) {
-                parts[1] = index;
-                input.name = parts.join('-');
-            }
+        if (input.name && input.name.includes(`${this.prefix}-`)) {
+            input.name = input.name.replace(new RegExp(`${this.prefix}-\\d+`), `${this.prefix}-${index}`);
         }
-        if (input.id && input.id.includes('-')) {
-            const parts = input.id.split('-');
-            if (parts.length >= 3) {
-                parts[1] = index;
-                input.id = parts.join('-');
-            }
+        if (input.id && input.id.includes(`${this.prefix}-`)) {
+            input.id = input.id.replace(new RegExp(`id_${this.prefix}-\\d+`), `id_${this.prefix}-${index}`);
         }
     }
     
     updateLabelFor(label, index) {
         const forAttr = label.getAttribute('for');
-        if (forAttr && forAttr.includes('-')) {
-            const parts = forAttr.split('-');
-            if (parts.length >= 3) {
-                parts[1] = index;
-                label.setAttribute('for', parts.join('-'));
-            }
+        if (forAttr && forAttr.includes(`${this.prefix}-`)) {
+            label.setAttribute('for', forAttr.replace(new RegExp(`id_${this.prefix}-\\d+`), `id_${this.prefix}-${index}`));
         }
     }
     
@@ -77,14 +70,14 @@ class DynamicFormsetManager {
     }
     
     updateDeleteButtons() {
-        const forms = this.container.querySelectorAll(this.formSelector);
-        forms.forEach((form, index) => {
+        const visibleForms = this.getVisibleForms();
+        visibleForms.forEach((form) => {
             const existingButton = form.querySelector(`.${this.deleteButtonClass}`);
             if (existingButton) {
                 existingButton.remove();
             }
             
-            if (forms.length > this.minForms) {
+            if (visibleForms.length > this.minForms) {
                 const deleteButton = this.createDeleteButton();
                 form.appendChild(deleteButton);
             }
@@ -92,14 +85,31 @@ class DynamicFormsetManager {
     }
     
     addForm() {
-        const forms = this.container.querySelectorAll(this.formSelector);
-        const lastForm = forms[forms.length - 1];
+        const visibleForms = this.getVisibleForms();
+        const lastForm = visibleForms[visibleForms.length - 1];
         const newForm = lastForm.cloneNode(true);
+        const newIndex = parseInt(this.totalFormsInput.value);
         
         this.clearFormData(newForm);
+        this.updateNewFormIndexes(newForm, newIndex);
+        
         this.container.appendChild(newForm);
-        this.updateFormIndexes();
+        this.totalFormsInput.value = newIndex + 1;
         this.updateDeleteButtons();
+    }
+    
+    updateNewFormIndexes(form, index) {
+        form.setAttribute('data-form-index', index);
+        
+        const inputs = form.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            this.updateInputNames(input, index);
+        });
+        
+        const labels = form.querySelectorAll('label');
+        labels.forEach(label => {
+            this.updateLabelFor(label, index);
+        });
     }
     
     clearFormData(form) {
@@ -133,8 +143,9 @@ class DynamicFormsetManager {
             form.style.display = 'none';
         } else {
             form.remove();
-            this.updateFormIndexes();
         }
+        
+        this.updateFormIndexes();
         this.updateDeleteButtons();
     }
 }
