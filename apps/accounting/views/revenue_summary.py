@@ -6,22 +6,27 @@ from decimal import Decimal
 from datetime import date, timedelta
 from apps.business_lines.models import BusinessLine
 from ..models import ServicePayment
+from ..services.revenue_analytics_service import RevenueAnalyticsService
 
 
-def _get_period_filters(period):
+def _get_period_filters_and_range(period):
     today = timezone.now().date()
+    analytics_service = RevenueAnalyticsService()
     
+    # Para períodos simples que pueden usar year/month
     if period == 'current_month':
-        return {'year': today.year, 'month': today.month}
-    elif period == 'last_month':
-        last_month = today.replace(day=1) - timedelta(days=1)
-        return {'year': last_month.year, 'month': last_month.month}
+        return {'year': today.year, 'month': today.month, 'date_range': None}
     elif period == 'current_year':
-        return {'year': today.year, 'month': None}
+        return {'year': today.year, 'month': None, 'date_range': None}
     elif period == 'last_year':
-        return {'year': today.year - 1, 'month': None}
+        return {'year': today.year - 1, 'month': None, 'date_range': None}
     else:
-        return {'year': None, 'month': None}
+        # Para todos los demás períodos (incluyendo last_month), usar rangos de fechas
+        # para garantizar precisión en el cálculo
+        period_dates = analytics_service._get_period_dates(period)
+        if period_dates:
+            return {'year': None, 'month': None, 'date_range': period_dates}
+        return {'year': None, 'month': None, 'date_range': None}
 
 
 @login_required
@@ -37,9 +42,10 @@ def revenue_summary_view(request, category='white'):
         except (ValueError, TypeError):
             business_line_id = None
 
-    period_filters = _get_period_filters(period)
+    period_filters = _get_period_filters_and_range(period)
     year = period_filters['year']
     month = period_filters['month']
+    date_range = period_filters['date_range']
 
     business_lines_choices = []
     for line in BusinessLine.objects.filter(is_active=True).order_by('name'):
@@ -91,7 +97,7 @@ def revenue_summary_view(request, category='white'):
     
     def build_line_data(line, level=0, force_include=False):
         stats = calculate_revenue_stats_filtered(
-            business_line=line, category=category, year=year, month=month, payment_method=payment_method
+            business_line=line, category=category, year=year, month=month, payment_method=payment_method, date_range=date_range
         )
         
         should_include = force_include
@@ -135,7 +141,7 @@ def revenue_summary_view(request, category='white'):
         try:
             selected_line = BusinessLine.objects.get(id=business_line_id, is_active=True)
             stats = calculate_revenue_stats_filtered(
-                business_line=selected_line, category=category, year=year, month=month, payment_method=payment_method
+                business_line=selected_line, category=category, year=year, month=month, payment_method=payment_method, date_range=date_range
             )
             total_summary = {
                 'total_amount': stats['total_amount'],
@@ -143,7 +149,7 @@ def revenue_summary_view(request, category='white'):
                 'average_amount': stats['average_amount']
             }
         except BusinessLine.DoesNotExist:
-            stats = calculate_revenue_stats_filtered(category=category, year=year, month=month, payment_method=payment_method)
+            stats = calculate_revenue_stats_filtered(category=category, year=year, month=month, payment_method=payment_method, date_range=date_range)
             total_summary = {
                 'total_amount': stats['total_amount'],
                 'total_payments': stats['total_payments'],
@@ -175,7 +181,7 @@ def get_all_descendant_lines(business_line):
         descendants.extend(get_all_descendant_lines(child))
     return descendants
 
-def calculate_revenue_stats_filtered(business_line=None, category='white', year=None, month=None, payment_method=None):
+def calculate_revenue_stats_filtered(business_line=None, category='white', year=None, month=None, payment_method=None, date_range=None):
     from ..services.payment_service import PaymentService
     
     if business_line:
@@ -199,10 +205,16 @@ def calculate_revenue_stats_filtered(business_line=None, category='white', year=
             amount__isnull=False
         )
     
-    if year:
-        payments = payments.filter(payment_date__year=year)
-    if month:
-        payments = payments.filter(payment_date__month=month)
+    # Aplicar filtros de fecha
+    if date_range:
+        start_date, end_date = date_range
+        payments = payments.filter(payment_date__range=[start_date, end_date])
+    else:
+        if year:
+            payments = payments.filter(payment_date__year=year)
+        if month:
+            payments = payments.filter(payment_date__month=month)
+    
     if payment_method:
         payments = payments.filter(payment_method=payment_method)
     

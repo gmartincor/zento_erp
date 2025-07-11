@@ -200,7 +200,7 @@ class StatisticsService(RevenueCalculationMixin):
             'has_remanentes': (stats['total_count'] or 0) > 0
         }
     
-    def calculate_remanente_stats_filtered(self, business_line=None, client_service=None, year=None, month=None):
+    def calculate_remanente_stats_filtered(self, business_line=None, client_service=None, year=None, month=None, date_range=None):
         if client_service:
             query = ServicePayment.objects.filter(client_service=client_service)
         elif business_line:
@@ -209,7 +209,7 @@ class StatisticsService(RevenueCalculationMixin):
         else:
             query = ServicePayment.objects.all()
         
-        query = self._apply_payment_date_filters(query, year, month)
+        query = self._apply_payment_date_filters(query, year, month, date_range)
         remanentes = query.filter(
             remanente__isnull=False,
             client_service__category='black'
@@ -286,11 +286,15 @@ class StatisticsService(RevenueCalculationMixin):
             'total_remanentes': stats.get('total_remanentes') or Decimal('0')
         }
     
-    def _apply_payment_date_filters(self, payments_query, year=None, month=None):
-        if year:
-            payments_query = payments_query.filter(payment_date__year=year)
-        if month:
-            payments_query = payments_query.filter(payment_date__month=month)
+    def _apply_payment_date_filters(self, payments_query, year=None, month=None, date_range=None):
+        if date_range:
+            start_date, end_date = date_range
+            payments_query = payments_query.filter(payment_date__range=[start_date, end_date])
+        else:
+            if year:
+                payments_query = payments_query.filter(payment_date__year=year)
+            if month:
+                payments_query = payments_query.filter(payment_date__month=month)
         return payments_query
     
     def _get_period_info(self, year, month):

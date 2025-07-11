@@ -6,22 +6,31 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 from apps.business_lines.models import BusinessLine
 from ..services.statistics_service import StatisticsService
+from ..services.revenue_analytics_service import RevenueAnalyticsService
 
 
-def _get_period_filters(period):
+def _get_period_filters_and_range(period):
+    """
+    Convierte período a year/month para compatibilidad con código existente
+    y también devuelve el rango de fechas para filtros complejos
+    """
     today = timezone.now().date()
+    analytics_service = RevenueAnalyticsService()
     
+    # Para períodos simples que pueden usar year/month
     if period == 'current_month':
-        return {'year': today.year, 'month': today.month}
-    elif period == 'last_month':
-        last_month = today.replace(day=1) - timedelta(days=1)
-        return {'year': last_month.year, 'month': last_month.month}
+        return {'year': today.year, 'month': today.month, 'date_range': None}
     elif period == 'current_year':
-        return {'year': today.year, 'month': None}
+        return {'year': today.year, 'month': None, 'date_range': None}
     elif period == 'last_year':
-        return {'year': today.year - 1, 'month': None}
+        return {'year': today.year - 1, 'month': None, 'date_range': None}
     else:
-        return {'year': None, 'month': None}
+        # Para todos los demás períodos (incluyendo last_month), usar rangos de fechas
+        # para garantizar precisión en el cálculo
+        period_dates = analytics_service._get_period_dates(period)
+        if period_dates:
+            return {'year': None, 'month': None, 'date_range': period_dates}
+        return {'year': None, 'month': None, 'date_range': None}
 
 
 @login_required
@@ -37,9 +46,10 @@ def remanentes_summary_view(request):
             business_line_id = None
     
     # Convertir período a year/month para compatibilidad con el servicio existente
-    period_filters = _get_period_filters(period)
+    period_filters = _get_period_filters_and_range(period)
     year = period_filters['year']
     month = period_filters['month']
+    date_range = period_filters['date_range']
     
     business_lines_choices = []
     for line in BusinessLine.objects.filter(is_active=True).order_by('name'):
@@ -87,7 +97,7 @@ def remanentes_summary_view(request):
     
     def build_line_data(line, level=0, force_include=False):
         stats = StatisticsService().calculate_remanente_stats_filtered(
-            business_line=line, year=year, month=month
+            business_line=line, year=year, month=month, date_range=date_range
         )
         
         should_include = force_include
@@ -131,7 +141,7 @@ def remanentes_summary_view(request):
         try:
             selected_line = BusinessLine.objects.get(id=business_line_id, is_active=True)
             stats = StatisticsService().calculate_remanente_stats_filtered(
-                business_line=selected_line, year=year, month=month
+                business_line=selected_line, year=year, month=month, date_range=date_range
             )
             total_general = {
                 'total_amount': stats['total_amount'],
@@ -139,7 +149,7 @@ def remanentes_summary_view(request):
                 'has_remanentes': stats['has_remanentes']
             }
         except BusinessLine.DoesNotExist:
-            stats = StatisticsService().calculate_remanente_stats_filtered(year=year, month=month)
+            stats = StatisticsService().calculate_remanente_stats_filtered(year=year, month=month, date_range=date_range)
             total_general = {
                 'total_amount': stats['total_amount'],
                 'total_count': stats['total_count'],
