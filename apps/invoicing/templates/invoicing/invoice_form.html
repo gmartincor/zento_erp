@@ -2,6 +2,8 @@
 
 {% block title %}{% if is_edit %}Editar Factura{% else %}Nueva Factura{% endif %}{% endblock %}
 
+{% load static %}
+
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">
@@ -105,10 +107,21 @@
                 
                 <div id="formset-container">
                     {% for form in formset %}
-                    <div class="formset-form border border-gray-200 dark:border-gray-600 rounded-lg p-4 mb-4">
+                    <div class="formset-form border border-gray-200 dark:border-gray-600 rounded-lg p-4 mb-4 relative" data-form-index="{{ forloop.counter0 }}">
                         {% if form.id %}{{ form.id }}{% endif %}
+                        {% if form.DELETE %}
+                            <div style="display: none;">{{ form.DELETE }}</div>
+                        {% endif %}
                         
-                        <div class="space-y-4">
+                        {% if not forloop.first or formset.forms|length > 1 %}
+                        <button type="button" 
+                                class="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold delete-form-btn"
+                                title="Eliminar línea">
+                            ×
+                        </button>
+                        {% endif %}
+                        
+                        <div class="space-y-4 pr-8">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     {{ form.description.label }}
@@ -160,17 +173,6 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
-                            {% if formset.can_delete %}
-                            <div class="flex justify-end">
-                                {{ form.DELETE }}
-                                {% if form.DELETE %}
-                                <label for="{{ form.DELETE.id_for_label }}" class="ml-2 text-sm text-red-600 hover:text-red-800 cursor-pointer">
-                                    Eliminar línea
-                                </label>
-                                {% endif %}
-                            </div>
-                            {% endif %}
                         </div>
                         
                         {% if form.non_field_errors %}
@@ -189,7 +191,7 @@
                 {% endif %}
                 
                 <div class="mt-4">
-                    <button type="button" id="add-form" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
+                    <button type="button" id="add-form-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
                         + Añadir línea
                     </button>
                 </div>
@@ -209,42 +211,19 @@
     </div>
 </div>
 
+    </div>
+</div>
+
+<script src="{% static 'js/dynamic-formsets.js' %}"></script>
 <script>
-// JavaScript para manejar el formset dinámico
 document.addEventListener('DOMContentLoaded', function() {
-    const addButton = document.getElementById('add-form');
-    const container = document.getElementById('formset-container');
-    const totalForms = document.getElementById('id_items-TOTAL_FORMS');
-    
-    addButton.addEventListener('click', function() {
-        const formCount = parseInt(totalForms.value);
-        const emptyForm = container.children[container.children.length - 1].cloneNode(true);
-        
-        // Limpiar valores del formulario clonado
-        const inputs = emptyForm.querySelectorAll('input, textarea, select');
-        inputs.forEach(input => {
-            if (input.type !== 'hidden') {
-                input.value = '';
-            }
-            // Actualizar nombres e IDs
-            if (input.name) {
-                input.name = input.name.replace(/-\d+-/, `-${formCount}-`);
-            }
-            if (input.id) {
-                input.id = input.id.replace(/-\d+-/, `-${formCount}-`);
-            }
-        });
-        
-        // Actualizar labels
-        const labels = emptyForm.querySelectorAll('label');
-        labels.forEach(label => {
-            if (label.getAttribute('for')) {
-                label.setAttribute('for', label.getAttribute('for').replace(/-\d+-/, `-${formCount}-`));
-            }
-        });
-        
-        container.appendChild(emptyForm);
-        totalForms.value = formCount + 1;
+    new DynamicFormsetManager({
+        containerId: 'formset-container',
+        totalFormsId: 'id_items-TOTAL_FORMS',
+        addButtonId: 'add-form-btn',
+        formSelector: '.formset-form',
+        deleteButtonClass: 'delete-form-btn',
+        minForms: 1
     });
 });
 </script>

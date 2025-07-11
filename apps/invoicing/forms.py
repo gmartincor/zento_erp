@@ -106,8 +106,8 @@ InvoiceItemFormSet = inlineformset_factory(
     InvoiceItem,
     form=InvoiceItemForm,
     fields=['description', 'quantity', 'unit_price', 'vat_rate', 'irpf_rate'],
-    extra=1,  # Una línea extra por defecto
-    min_num=1,  # Al menos una línea obligatoria
+    extra=1,
+    min_num=1,
     validate_min=True,
     can_delete=True
 )
