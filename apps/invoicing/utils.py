@@ -11,185 +11,174 @@ import os
 def get_pdf_styles():
     styles = getSampleStyleSheet()
     return {
-        'header': ParagraphStyle(
-            'Header', parent=styles['Normal'], fontSize=10, spaceAfter=6
-        ),
-        'title': ParagraphStyle(
-            'Title', parent=styles['Normal'], fontSize=14, 
-            alignment=TA_RIGHT, spaceBefore=0, spaceAfter=12
-        ),
-        'section': ParagraphStyle(
-            'Section', parent=styles['Normal'], fontSize=9, 
-            spaceBefore=6, spaceAfter=6
-        ),
-        'note': ParagraphStyle(
-            'Note', parent=styles['Normal'], fontSize=8, 
-            alignment=TA_CENTER, spaceBefore=3, spaceAfter=8
-        ),
-        'footer': ParagraphStyle(
-            'Footer', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER
-        )
+        'company': ParagraphStyle('Company', parent=styles['Normal'], fontSize=10, spaceBefore=0, spaceAfter=0),
+        'invoice_title': ParagraphStyle('InvoiceTitle', parent=styles['Normal'], fontSize=16, alignment=TA_RIGHT, fontName='Helvetica-Bold'),
+        'invoice_data': ParagraphStyle('InvoiceData', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT),
+        'section_title': ParagraphStyle('SectionTitle', parent=styles['Normal'], fontSize=11, fontName='Helvetica-Bold', spaceBefore=8, spaceAfter=4),
+        'client': ParagraphStyle('Client', parent=styles['Normal'], fontSize=9),
+        'table_content': ParagraphStyle('TableContent', parent=styles['Normal'], fontSize=9),
+        'legal': ParagraphStyle('Legal', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER, spaceBefore=3, spaceAfter=8),
+        'footer': ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER)
     }
 
 
-def create_header_table(invoice, styles):
-    right_header = [
+def create_professional_header(invoice, styles):
+    company_info = [f"<b>{invoice.company.business_name}</b>"]
+    
+    if invoice.company.legal_name and invoice.company.legal_name != invoice.company.business_name:
+        company_info.append(invoice.company.legal_name)
+    
+    company_info.extend([
+        f"NIF/CIF: {invoice.company.tax_id}",
+        f"Régimen empresarial: {invoice.company.get_legal_form_display()}" if invoice.company.legal_form else "Régimen empresarial: Empresario Individual",
+        f"Dirección: {invoice.company.get_full_address()}"
+    ])
+    
+    if invoice.company.phone:
+        company_info.append(f"Tel: {invoice.company.phone}")
+    if invoice.company.email:
+        company_info.append(f"Email: {invoice.company.email}")
+    
+    invoice_info = [
         f"<b>FACTURA {invoice.reference}</b>",
         f"Fecha: {invoice.issue_date.strftime('%d/%m/%Y')}"
     ]
     
-    left_content = ""
+    if hasattr(invoice, 'due_date') and invoice.due_date:
+        invoice_info.append(f"Vencimiento: {invoice.due_date.strftime('%d/%m/%Y')}")
+    
+    left_content = company_info
     if invoice.company.logo and os.path.exists(invoice.company.logo.path):
-        left_content = f'<img src="{invoice.company.logo.path}" width="80" height="40"/>'
+        left_content.insert(0, f'<img src="{invoice.company.logo.path}" width="60" height="30" valign="top"/>')
     
-    right_content = Paragraph("<br/>".join(right_header), styles['title'])
+    header_data = [[
+        Paragraph("<br/>".join(left_content), styles['company']),
+        Paragraph("<br/>".join(invoice_info), styles['invoice_data'])
+    ]]
     
-    if left_content:
-        left_paragraph = Paragraph(left_content, styles['header'])
-        return create_two_column_table(left_paragraph, right_content)
-    else:
-        return create_two_column_table(Paragraph("", styles['header']), right_content)
+    header_table = Table(header_data, colWidths=[11*cm, 6*cm])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    
+    return header_table
 
 
-def create_customer_table(invoice, styles):
-    emisor_text = [
-        "<b>Emisor:</b>",
-        f"{invoice.company.business_name}",
-        f"NIF/CIF: {invoice.company.tax_id}",
-    ]
-    
-    if invoice.company.legal_form:
-        emisor_text.append(f"{invoice.company.get_legal_form_display()}")
-    
-    emisor_text.append(f"{invoice.company.get_full_address()}")
-    
-    if invoice.company.phone:
-        emisor_text.append(f"Tel: {invoice.company.phone}")
-    if invoice.company.email:
-        emisor_text.append(f"Email: {invoice.company.email}")
-    
-    enviar_text = [
-        "<b>Enviar a:</b>",
+def create_client_section(invoice, styles):
+    client_info = [
+        f"<b>FACTURAR A:</b>",
         f"{invoice.client_name}",
-        f"{invoice.get_client_type_display()}",
-        f"{invoice.client_address}"
+        f"Régimen empresarial: {invoice.get_client_type_display()}",
+        f"Dirección: {invoice.client_address}"
     ]
     
     if invoice.client_tax_id:
-        enviar_text.append(f"NIF/CIF: {invoice.client_tax_id}")
+        client_info.append(f"NIF/CIF: {invoice.client_tax_id}")
     
-    left_content = Paragraph("<br/>".join(emisor_text), styles['section'])
-    right_content = Paragraph("<br/>".join(enviar_text), styles['section'])
+    client_data = [[Paragraph("<br/>".join(client_info), styles['client'])]]
     
-    return create_two_column_table(left_content, right_content, 8.5*cm, 8.5*cm)
+    client_table = Table(client_data, colWidths=[17*cm])
+    client_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    
+    return client_table
 
 
-def create_service_table(invoice, styles):
-    service_headers = ['Descripción', 'Cant.', 'Precio Unit.', 'IVA', 'IRPF', 'Total']
-    
-    service_data = [service_headers]
+def format_percentage(rate):
+    if not rate:
+        return "0%"
+    percentage = rate if rate >= 1 else rate * 100
+    return f"{percentage:.0f}%"
+
+
+def create_services_section(invoice, styles):
+    headers = ['Descripción', 'Cant.', 'Precio Unit.', 'IVA', 'IRPF', 'Total']
+    service_data = [headers]
     
     for item in invoice.items.all():
-        description_formatted = item.description.replace('\n', '<br/>')
-        irpf_display = format_rate_display(item.irpf_rate)
-        vat_display = format_rate_display(item.vat_rate)
-        
         service_data.append([
-            Paragraph(description_formatted, styles['section']),
+            Paragraph(item.description.replace('\n', '<br/>'), styles['table_content']),
             str(item.quantity),
             format_currency(item.unit_price),
-            vat_display,
-            irpf_display,
+            format_percentage(item.vat_rate),
+            format_percentage(item.irpf_rate),
             format_currency(item.line_total)
         ])
     
     service_table = Table(service_data, colWidths=[7*cm, 1*cm, 2*cm, 1.5*cm, 1.5*cm, 2*cm])
-    service_table.setStyle(get_service_table_style())
-    
-    return service_table
-
-
-def create_payment_totals_table(invoice, styles):
-    payment_info = []
-    if invoice.payment_terms:
-        payment_info.extend([
-            f"<b>Condiciones de pago:</b> {invoice.payment_terms}",
-            ""
-        ])
-    
-    if invoice.company.bank_name and invoice.company.iban:
-        payment_info.extend([
-            "<b>Datos bancarios para el pago:</b>",
-            f"Banco: {invoice.company.bank_name}",
-            f"IBAN: {invoice.company.iban}"
-        ])
-    
-    totals_data = [
-        [f"Total (Base imp).", format_currency(invoice.base_amount)],
-        [f"Total IVA", format_currency(invoice.vat_amount)]
-    ]
-    
-    if invoice.irpf_amount > 0:
-        totals_data.append([
-            f"Retención IRPF", 
-            f"-{format_currency(invoice.irpf_amount)}"
-        ])
-    
-    total_row = ["TOTAL A PAGAR", format_currency(invoice.total_amount)]
-    totals_data.append(total_row)
-    
-    totals_table = Table(totals_data, colWidths=[4*cm, 2.5*cm])
-    
-    style_rules = [
-        ('FONTSIZE', (0, 0), (-1, -1), 9),
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-    ]
-    
-    totals_table.setStyle(TableStyle(style_rules))
-    
-    left_content = Paragraph("<br/>".join(payment_info), styles['section'])
-    
-    return create_two_column_table(left_content, totals_table)
-
-
-def format_rate_display(rate):
-    """Format a rate decimal to display as a percentage."""
-    return f"{rate:.0f}%" if rate else "0%"
-
-
-def format_currency(amount):
-    return f"{amount:.2f} €"
-
-
-def get_common_table_style():
-    return TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-    ])
-
-
-def get_service_table_style():
-    """Return the TableStyle used for service tables."""
-    return TableStyle([
+    service_table.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
         ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-    ])
+    ]))
+    
+    return service_table
 
 
-def create_two_column_table(left_content, right_content, left_width=10*cm, right_width=7*cm, style=None):
-    """Create a common two-column table structure."""
-    table_data = [[left_content, right_content]]
-    table = Table(table_data, colWidths=[left_width, right_width])
-    table.setStyle(style or get_common_table_style())
-    return table
+def create_totals_section(invoice, styles):
+    payment_info = []
+    if invoice.payment_terms:
+        payment_info.extend([
+            f"<b>FORMA DE PAGO</b>",
+            f"Condiciones: {invoice.payment_terms}",
+            ""
+        ])
+    
+    if invoice.company.bank_name and invoice.company.iban:
+        payment_info.extend([
+            "<b>Datos bancarios:</b>",
+            f"Banco: {invoice.company.bank_name}",
+            f"IBAN: {invoice.company.iban}"
+        ])
+    
+    totals_data = [
+        ["Subtotal (Base imponible)", format_currency(invoice.base_amount)]
+    ]
+    
+    if invoice.vat_amount > 0:
+        vat_rate = invoice.items.first().vat_rate if invoice.items.exists() else 0
+        totals_data.append([f"IVA ({format_percentage(vat_rate)})", format_currency(invoice.vat_amount)])
+    
+    if invoice.irpf_amount > 0:
+        irpf_rate = invoice.items.first().irpf_rate if invoice.items.exists() else 0
+        totals_data.append([f"Retención IRPF ({format_percentage(irpf_rate)})", f"-{format_currency(invoice.irpf_amount)}"])
+    
+    totals_data.append(["TOTAL A PAGAR", format_currency(invoice.total_amount)])
+    
+    totals_table = Table(totals_data, colWidths=[4*cm, 2.5*cm])
+    totals_table.setStyle(TableStyle([
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+    ]))
+    
+    final_data = [[
+        Paragraph("<br/>".join(payment_info), styles['table_content']),
+        totals_table
+    ]]
+    
+    final_table = Table(final_data, colWidths=[10.5*cm, 6.5*cm])
+    final_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    
+    return final_table
+
+
+def format_currency(amount):
+    return f"{amount:.2f} €"
 
 
 def generate_invoice_pdf(invoice):
@@ -203,47 +192,34 @@ def generate_invoice_pdf(invoice):
         bottomMargin=30*mm
     )
     
-    # Use the predefined styles
     styles = get_pdf_styles()
     story = []
     
-    # Add header
-    header_table = create_header_table(invoice, styles)
-    story.append(header_table)
-    story.append(Spacer(1, 15*mm))
+    story.append(create_professional_header(invoice, styles))
+    story.append(Spacer(1, 12*mm))
     
-    # Add customer information
-    customer_table = create_customer_table(invoice, styles)
-    story.append(customer_table)
-    story.append(Spacer(1, 10*mm))
-    
-    # Add service details
-    service_table = create_service_table(invoice, styles)
-    story.append(service_table)
+    story.append(create_client_section(invoice, styles))
     story.append(Spacer(1, 8*mm))
-
-    # Add payment and totals
-    final_table = create_payment_totals_table(invoice, styles)
-    story.append(final_table)
+    
+    story.append(create_services_section(invoice, styles))
+    story.append(Spacer(1, 8*mm))
+    
+    story.append(create_totals_section(invoice, styles))
     story.append(Spacer(1, 10*mm))
     
-    # Add legal note if available
     legal_note = invoice.get_legal_note()
     if legal_note:
-        story.append(Paragraph(legal_note, styles['note']))
+        story.append(Paragraph(legal_note, styles['legal']))
         story.append(Spacer(1, 5*mm))
     
-    # Add mandatory legal information
     legal_info = []
-    
-    # Add optional but recommended company information
     optional_info = []
+    
     if invoice.company.mercantile_registry:
         optional_info.append(f"Registro Mercantil: {invoice.company.mercantile_registry}")
     if invoice.company.share_capital:
         optional_info.append(f"Capital Social: {invoice.company.share_capital:.2f} €")
     
-    # Add tax information (mandatory)
     if invoice.irpf_amount > 0:
         legal_info.append("Factura sujeta a retención de IRPF según normativa fiscal vigente")
     if invoice.vat_amount > 0:
@@ -251,23 +227,17 @@ def generate_invoice_pdf(invoice):
     
     legal_info.append("Factura emitida según Real Decreto 1619/2012 sobre obligaciones de facturación")
     
-    # Add optional information first if exists
     if optional_info:
-        optional_text = " | ".join(optional_info)
-        story.append(Paragraph(f"Información adicional: {optional_text}", styles['note']))
+        story.append(Paragraph(" | ".join(optional_info), styles['legal']))
         story.append(Spacer(1, 3*mm))
     
-    # Add mandatory legal information
     if legal_info:
-        legal_text = " | ".join(legal_info)
-        story.append(Paragraph(legal_text, styles['note']))
+        story.append(Paragraph(" | ".join(legal_info), styles['legal']))
         story.append(Spacer(1, 5*mm))
     
-    # Add footer
     entity_display = "Empresario Individual" if invoice.company.is_freelancer else invoice.company.get_legal_form_display()
     story.append(Paragraph(f"{entity_display} - Página 1", styles['footer']))
     
-    # Build PDF and return
     doc.build(story)
     pdf = buffer.getvalue()
     buffer.close()
