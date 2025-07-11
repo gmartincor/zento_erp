@@ -3,61 +3,69 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Q
 from decimal import Decimal
+from datetime import date, timedelta
 from apps.business_lines.models import BusinessLine
 from ..models import ServicePayment
 
 
+def _get_period_filters(period):
+    today = timezone.now().date()
+    
+    if period == 'current_month':
+        return {'year': today.year, 'month': today.month}
+    elif period == 'last_month':
+        last_month = today.replace(day=1) - timedelta(days=1)
+        return {'year': last_month.year, 'month': last_month.month}
+    elif period == 'current_year':
+        return {'year': today.year, 'month': None}
+    elif period == 'last_year':
+        return {'year': today.year - 1, 'month': None}
+    else:
+        return {'year': None, 'month': None}
+
+
 @login_required
 def revenue_summary_view(request, category='white'):
-    year = request.GET.get('year')
-    month = request.GET.get('month')
     search = request.GET.get('search', '').strip()
     business_line_id = request.GET.get('business_line')
     payment_method = request.GET.get('payment_method')
+    period = request.GET.get('period', 'current_month')
     
     if business_line_id:
         try:
             business_line_id = int(business_line_id)
         except (ValueError, TypeError):
             business_line_id = None
-    
-    if year:
-        try:
-            year = int(year)
-        except (ValueError, TypeError):
-            year = None
-    
-    if month:
-        try:
-            month = int(month)
-        except (ValueError, TypeError):
-            month = None
-    
-    current_year = timezone.now().year
-    current_month = timezone.now().month
-    
+
+    period_filters = _get_period_filters(period)
+    year = period_filters['year']
+    month = period_filters['month']
+
     business_lines_choices = []
     for line in BusinessLine.objects.filter(is_active=True).order_by('name'):
         level_prefix = "  " * line.level
         business_lines_choices.append((line.id, f"{level_prefix}{line.name}"))
-    
+
     context = {
         'category': category,
         'category_display': 'White' if category == 'white' else 'Black',
         'page_title': f'Ingresos - Categoría {category.title()}',
         'page_subtitle': f'Análisis de ingresos por líneas de negocio - Categoría {category.title()}',
-        'selected_year': year or current_year,
-        'selected_month': month,
         'selected_payment_method': payment_method,
         'search': search,
         'selected_business_line': business_line_id,
         'business_lines_choices': business_lines_choices,
         'payment_methods': ServicePayment.PaymentMethodChoices.choices,
-        'years': range(current_year - 5, current_year + 1),
-        'months': [
-            (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'),
-            (5, 'Mayo'), (6, 'Junio'), (7, 'Julio'), (8, 'Agosto'),
-            (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')
+        'period': period,
+        'available_periods': [
+            ('current_month', 'Mes actual'),
+            ('last_month', 'Mes anterior'),
+            ('current_year', 'Año actual'),
+            ('last_year', 'Año anterior'),
+            ('last_3_months', 'Últimos 3 meses'),
+            ('last_6_months', 'Últimos 6 meses'),
+            ('last_12_months', 'Últimos 12 meses'),
+            ('all_time', 'Histórico total'),
         ]
     }
     

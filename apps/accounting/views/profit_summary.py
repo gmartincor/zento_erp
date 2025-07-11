@@ -3,43 +3,51 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Q, Sum, F
 from decimal import Decimal
+from datetime import date, timedelta
 from apps.expenses.models import Expense
 from ..models import ServicePayment, ClientService
 from ..services.payment_service import PaymentService
 
 
+def _get_period_filters(period):
+    today = timezone.now().date()
+    
+    if period == 'current_month':
+        return {'year': today.year, 'month': today.month}
+    elif period == 'last_month':
+        last_month = today.replace(day=1) - timedelta(days=1)
+        return {'year': last_month.year, 'month': last_month.month}
+    elif period == 'current_year':
+        return {'year': today.year, 'month': None}
+    elif period == 'last_year':
+        return {'year': today.year - 1, 'month': None}
+    else:
+        return {'year': None, 'month': None}
+
+
 @login_required
 def profit_summary_view(request, category='white'):
-    year = request.GET.get('year')
-    month = request.GET.get('month')
+    period = request.GET.get('period', 'current_month')
     
-    if year:
-        try:
-            year = int(year)
-        except (ValueError, TypeError):
-            year = None
-    
-    if month:
-        try:
-            month = int(month)
-        except (ValueError, TypeError):
-            month = None
-    
-    current_year = timezone.now().year
-    current_month = timezone.now().month
-    
+    period_filters = _get_period_filters(period)
+    year = period_filters['year']
+    month = period_filters['month']
+
     context = {
         'category': category,
         'category_display': 'White' if category == 'white' else 'Black',
         'page_title': f'Beneficios - Categoría {category.title()}',
         'page_subtitle': f'Análisis de beneficios por categoría - {category.title()}',
-        'selected_year': year or current_year,
-        'selected_month': month,
-        'years': range(current_year - 5, current_year + 1),
-        'months': [
-            (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'),
-            (5, 'Mayo'), (6, 'Junio'), (7, 'Julio'), (8, 'Agosto'),
-            (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')
+        'period': period,
+        'available_periods': [
+            ('current_month', 'Mes actual'),
+            ('last_month', 'Mes anterior'),
+            ('current_year', 'Año actual'),
+            ('last_year', 'Año anterior'),
+            ('last_3_months', 'Últimos 3 meses'),
+            ('last_6_months', 'Últimos 6 meses'),
+            ('last_12_months', 'Últimos 12 meses'),
+            ('all_time', 'Histórico total'),
         ]
     }
     

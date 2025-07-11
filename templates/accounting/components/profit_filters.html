@@ -1,24 +1,14 @@
 {% load tenant_tags %}
 
-<div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 mb-6">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
     <form method="get" class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
         <div class="flex flex-col lg:flex-row gap-4 flex-1">
-            <div class="flex flex-col space-y-2 min-w-32">
-                <label for="year-filter" class="text-sm font-medium text-gray-700 dark:text-gray-300">Año</label>
-                <select id="year-filter" name="year" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Todos</option>
-                    {% for year in years %}
-                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="flex flex-col space-y-2 min-w-40">
-                <label for="month-filter" class="text-sm font-medium text-gray-700 dark:text-gray-300">Mes</label>
-                <select id="month-filter" name="month" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Todos</option>
-                    {% for month_num, month_name in months %}
-                        <option value="{{ month_num }}" {% if month_num == selected_month %}selected{% endif %}>{{ month_name }}</option>
+            <div>
+                <select name="period" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    {% for period_value, period_label in available_periods %}
+                        <option value="{{ period_value }}" {% if period_value == period %}selected{% endif %}>
+                            {{ period_label }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
@@ -28,6 +18,10 @@
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
                 Aplicar Filtros
             </button>
+            <a href="{{ request.path }}" 
+               class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500 px-4 py-2 rounded-md transition-colors">
+                Limpiar
+            </a>
         </div>
     </form>
 </div>
