@@ -30,88 +30,106 @@
     </a>
     {% endif %}
 </div>
-
-{% if has_company %}
-<div class="mb-6 bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4">
-    <form method="get" class="flex gap-4">
-        <div class="flex-1">
-            <input type="text" name="search" value="{{ search }}" 
-                   placeholder="Buscar por referencia, cliente o NIF..."
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-        </div>
-        <div>
-            <select name="status" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                <option value="">Todos los estados</option>
-                <option value="DRAFT" {% if status == 'DRAFT' %}selected{% endif %}>Borrador</option>
-                <option value="SENT" {% if status == 'SENT' %}selected{% endif %}>Enviada</option>
-                <option value="PAID" {% if status == 'PAID' %}selected{% endif %}>Pagada</option>
-            </select>
-        </div>
-        <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md">
-            Buscar
-        </button>
-        {% if search or status %}
-            <a href="{% url 'invoicing:invoice_list' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md">
-                Limpiar
-            </a>
-        {% endif %}
-    </form>
-</div>
-{% endif %}
 {% endblock %}
 
 {% block content %}
-{% if not has_company %}
-<div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6 mb-6">
-    <div class="flex">
-        <div class="flex-shrink-0">
-            <svg class="h-6 w-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
-            </svg>
-        </div>
-        <div class="ml-3">
-            <h3 class="text-lg font-medium text-orange-800 dark:text-orange-200">
-                Configuración de empresa requerida
-            </h3>
-            <div class="mt-2 text-sm text-orange-700 dark:text-orange-300">
-                <p>Para comenzar a crear facturas, necesitas configurar los datos de tu empresa primero.</p>
+<div class="space-y-6">
+    {% if has_company %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <form method="get" class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <div class="flex flex-col lg:flex-row gap-4 flex-1">
+                <div class="flex-1 min-w-64">
+                    <input type="text" name="search" value="{{ search }}" 
+                           placeholder="Buscar por referencia, cliente o NIF..."
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <select name="period" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        {% for period_value, period_label in available_periods %}
+                            <option value="{{ period_value }}" {% if period_value == period %}selected{% endif %}>
+                                {{ period_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <select name="status" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        <option value="">Todos los estados</option>
+                        <option value="DRAFT" {% if status == 'DRAFT' %}selected{% endif %}>Borrador</option>
+                        <option value="SENT" {% if status == 'SENT' %}selected{% endif %}>Enviada</option>
+                        <option value="PAID" {% if status == 'PAID' %}selected{% endif %}>Pagada</option>
+                    </select>
+                </div>
             </div>
-            <div class="mt-4">
-                <a href="{% url 'invoicing:company_create' %}" 
-                   class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                    Configurar Empresa Ahora
+            <div class="flex gap-3 lg:ml-4">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                    Aplicar Filtros
+                </button>
+                <a href="{{ request.path }}" 
+                   class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500 px-4 py-2 rounded-md transition-colors">
+                    Limpiar
                 </a>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    {% if not has_company %}
+    <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-orange-800 dark:text-orange-200">
+                    Configuración de empresa requerida
+                </h3>
+                <div class="mt-2 text-sm text-orange-700 dark:text-orange-300">
+                    <p>Para comenzar a crear facturas, necesitas configurar los datos de tu empresa primero.</p>
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'invoicing:company_create' %}" 
+                       class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        Configurar Empresa Ahora
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-</div>
-{% elif invoices %}
-<div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Referencia
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Cliente
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Fecha
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Total
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Estado
-                    </th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Acciones
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+    {% elif invoices %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                Facturas Emitidas
+            </h2>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Referencia
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Cliente
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Fecha
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Total
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Estado
+                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 {% for invoice in invoices %}
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -162,52 +180,53 @@
                     </td>
                 </tr>
                 {% endfor %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
-<!-- Paginación -->
-{% if is_paginated %}
-<div class="mt-6 flex justify-center">
-    <nav class="flex items-center space-x-2">
-        {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}" 
-               class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
-                Anterior
-            </a>
-        {% endif %}
-        
-        <span class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-        </span>
-        
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" 
-               class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
-                Siguiente
-            </a>
-        {% endif %}
-    </nav>
-</div>
-{% endif %}
+    {% if is_paginated %}
+    <div class="flex justify-center">
+        <nav class="flex items-center space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?{% if search %}search={{ search }}&{% endif %}{% if status %}status={{ status }}&{% endif %}{% if period %}period={{ period }}&{% endif %}page={{ page_obj.previous_page_number }}" 
+                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                    Anterior
+                </a>
+            {% endif %}
+            
+            <span class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?{% if search %}search={{ search }}&{% endif %}{% if status %}status={{ status }}&{% endif %}{% if period %}period={{ period }}&{% endif %}page={{ page_obj.next_page_number }}" 
+                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                    Siguiente
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
 
-{% elif has_company %}
-<!-- Estado vacío -->
-<div class="text-center py-12">
-    <div class="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
+    {% elif has_company %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+        <div class="text-center">
+            <div class="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No hay facturas</h3>
+            <p class="mt-2 text-gray-500 dark:text-gray-400">Empieza creando tu primera factura</p>
+            <div class="mt-6">
+                <a href="{% url 'invoicing:invoice_create' %}" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    Crear Primera Factura
+                </a>
+            </div>
+        </div>
     </div>
-    <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No hay facturas</h3>
-    <p class="mt-2 text-gray-500 dark:text-gray-400">Empieza creando tu primera factura</p>
-    <div class="mt-6">
-        <a href="{% url 'invoicing:invoice_create' %}" 
-           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-            Crear Primera Factura
-        </a>
-    </div>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}

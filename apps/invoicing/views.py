@@ -5,6 +5,8 @@ from django.urls import reverse_lazy
 from django.http import HttpResponse, Http404
 from django.db.models import Q
 from django.db import transaction
+from datetime import datetime, date, timedelta
+from django.utils import timezone
 import logging
 
 from .models import Company, Invoice, InvoiceItem
@@ -83,6 +85,7 @@ class InvoiceListView(ListView):
         queryset = super().get_queryset()
         search = self.request.GET.get('search')
         status = self.request.GET.get('status')
+        period = self.request.GET.get('period', 'current_month')
         
         if search:
             queryset = queryset.filter(
@@ -93,14 +96,62 @@ class InvoiceListView(ListView):
         
         if status:
             queryset = queryset.filter(status=status)
+            
+        queryset = self._apply_period_filter(queryset, period)
         
         return queryset
+
+    def _apply_period_filter(self, queryset, period_type):
+        today = timezone.now().date()
+        
+        if period_type == 'current_month':
+            start = today.replace(day=1)
+            end = today
+        elif period_type == 'last_month':
+            last_month = today.replace(day=1) - timedelta(days=1)
+            start = last_month.replace(day=1)
+            end = last_month
+        elif period_type == 'current_year':
+            start = today.replace(month=1, day=1)
+            end = today
+        elif period_type == 'last_year':
+            last_year = today.year - 1
+            start = date(last_year, 1, 1)
+            end = date(last_year, 12, 31)
+        elif period_type == 'last_3_months':
+            start = today - timedelta(days=90)
+            end = today
+        elif period_type == 'last_6_months':
+            start = today - timedelta(days=180)
+            end = today
+        elif period_type == 'last_12_months':
+            start = today - timedelta(days=365)
+            end = today
+        elif period_type == 'all_time':
+            return queryset
+        else:
+            return queryset
+            
+        return queryset.filter(issue_date__range=[start, end])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search'] = self.request.GET.get('search', '')
         context['status'] = self.request.GET.get('status', '')
+        context['period'] = self.request.GET.get('period', 'current_month')
         context['has_company'] = Company.objects.exists()
+        
+        context['available_periods'] = [
+            ('current_month', 'Mes actual'),
+            ('last_month', 'Mes anterior'),
+            ('current_year', 'Año actual'),
+            ('last_year', 'Año anterior'),
+            ('last_3_months', 'Últimos 3 meses'),
+            ('last_6_months', 'Últimos 6 meses'),
+            ('last_12_months', 'Últimos 12 meses'),
+            ('all_time', 'Histórico total'),
+        ]
+        
         return context
 
 class InvoiceDetailView(DetailView):
