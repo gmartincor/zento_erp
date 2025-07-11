@@ -90,33 +90,31 @@ def create_customer_table(invoice, styles):
 
 
 def create_service_table(invoice, styles):
-    service_headers = ['Descripción', 'IVA', 'IRPF', 'Cant.', 'Total (Base imp.)']
+    service_headers = ['Descripción', 'Cant.', 'Precio Unit.', 'IVA', 'IRPF', 'Total']
     
-    description_formatted = invoice.service_description.replace('\n', '<br/>')
-    irpf_display = format_rate_display(invoice.irpf_rate)
-    vat_display = format_rate_display(invoice.vat_rate)
+    service_data = [service_headers]
     
-    service_data = [
-        service_headers,
-        [
+    for item in invoice.items.all():
+        description_formatted = item.description.replace('\n', '<br/>')
+        irpf_display = format_rate_display(item.irpf_rate)
+        vat_display = format_rate_display(item.vat_rate)
+        
+        service_data.append([
             Paragraph(description_formatted, styles['section']),
+            str(item.quantity),
+            format_currency(item.unit_price),
             vat_display,
             irpf_display,
-            str(invoice.quantity),
-            format_currency(invoice.base_amount)
-        ]
-    ]
+            format_currency(item.line_total)
+        ])
     
-    service_table = Table(service_data, colWidths=[8*cm, 1.5*cm, 1.5*cm, 1.5*cm, 2.5*cm])
+    service_table = Table(service_data, colWidths=[7*cm, 1*cm, 2*cm, 1.5*cm, 1.5*cm, 2*cm])
     service_table.setStyle(get_service_table_style())
     
     return service_table
 
 
 def create_payment_totals_table(invoice, styles):
-    vat_display = format_rate_display(invoice.vat_rate)
-    irpf_display = format_rate_display(invoice.irpf_rate)
-    
     payment_info = []
     if invoice.payment_terms:
         payment_info.extend([
@@ -133,12 +131,12 @@ def create_payment_totals_table(invoice, styles):
     
     totals_data = [
         [f"Total (Base imp).", format_currency(invoice.base_amount)],
-        [f"Total IVA {vat_display}", format_currency(invoice.vat_amount)]
+        [f"Total IVA", format_currency(invoice.vat_amount)]
     ]
     
     if invoice.irpf_amount > 0:
         totals_data.append([
-            f"Retención IRPF {irpf_display}", 
+            f"Retención IRPF", 
             f"-{format_currency(invoice.irpf_amount)}"
         ])
     
@@ -162,7 +160,6 @@ def format_currency(amount):
 
 
 def get_common_table_style():
-    """Return a common TableStyle used for many tables."""
     return TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0),

@@ -4,10 +4,11 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.http import HttpResponse, Http404
 from django.db.models import Q
+from django.db import transaction
 import logging
 
-from .models import Company, Invoice
-from .forms import CompanyForm, InvoiceForm
+from .models import Company, Invoice, InvoiceItem
+from .forms import CompanyForm, InvoiceForm, InvoiceItemFormSet
 from .utils import generate_invoice_pdf
 
 logger = logging.getLogger(__name__)
@@ -117,16 +118,43 @@ class InvoiceCreateView(CompanyMixin, CreateView):
             return redirect('invoicing:company_create')
         return super().dispatch(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        form.instance.company = self.get_company()
-        response = super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['company'] = self.get_company()
         
-        logger.info(f"Invoice created: {self.object.reference} for {self.object.client_name}")
-        messages.success(
-            self.request, 
-            f'Factura {self.object.reference} creada correctamente.'
-        )
-        return response
+        if self.request.POST:
+            context['formset'] = InvoiceItemFormSet(
+                self.request.POST, 
+                instance=self.object,
+                form_kwargs={'company': self.get_company()}
+            )
+        else:
+            context['formset'] = InvoiceItemFormSet(
+                instance=self.object,
+                form_kwargs={'company': self.get_company()}
+            )
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formset = context['formset']
+        
+        with transaction.atomic():
+            form.instance.company = self.get_company()
+            self.object = form.save()
+            
+            if formset.is_valid():
+                formset.instance = self.object
+                formset.save()
+                
+                logger.info(f"Invoice created: {self.object.reference} for {self.object.client_name}")
+                messages.success(
+                    self.request, 
+                    f'Factura {self.object.reference} creada correctamente.'
+                )
+                return redirect(self.get_success_url())
+            else:
+                return self.form_invalid(form)
 
     def get_success_url(self):
         return reverse_lazy('invoicing:invoice_detail', kwargs={'pk': self.object.pk})
@@ -140,16 +168,38 @@ class InvoiceUpdateView(UpdateView):
         context = super().get_context_data(**kwargs)
         context['company'] = self.object.company
         context['is_edit'] = True
+        
+        if self.request.POST:
+            context['formset'] = InvoiceItemFormSet(
+                self.request.POST, 
+                instance=self.object,
+                form_kwargs={'company': self.object.company}
+            )
+        else:
+            context['formset'] = InvoiceItemFormSet(
+                instance=self.object,
+                form_kwargs={'company': self.object.company}
+            )
         return context
 
     def form_valid(self, form):
-        response = super().form_valid(form)
-        logger.info(f"Invoice updated: {self.object.reference} for {self.object.client_name}")
-        messages.success(
-            self.request, 
-            f'Factura {self.object.reference} actualizada correctamente.'
-        )
-        return response
+        context = self.get_context_data()
+        formset = context['formset']
+        
+        with transaction.atomic():
+            self.object = form.save()
+            
+            if formset.is_valid():
+                formset.save()
+                
+                logger.info(f"Invoice updated: {self.object.reference} for {self.object.client_name}")
+                messages.success(
+                    self.request, 
+                    f'Factura {self.object.reference} actualizada correctamente.'
+                )
+                return redirect(self.get_success_url())
+            else:
+                return self.form_invalid(form)
 
     def get_success_url(self):
         return reverse_lazy('invoicing:invoice_detail', kwargs={'pk': self.object.pk})

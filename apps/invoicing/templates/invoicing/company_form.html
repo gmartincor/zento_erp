@@ -198,28 +198,8 @@
                     </div>
 
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Configuración Fiscal</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label for="{{ form.default_vat_rate.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ form.default_vat_rate.label }}
-                                </label>
-                                {{ form.default_vat_rate }}
-                                {% if form.default_vat_rate.errors %}
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.default_vat_rate.errors.0 }}</p>
-                                {% endif %}
-                            </div>
-                            
-                            <div>
-                                <label for="{{ form.irpf_rate.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ form.irpf_rate.label }}
-                                </label>
-                                {{ form.irpf_rate }}
-                                {% if form.irpf_rate.errors %}
-                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.irpf_rate.errors.0 }}</p>
-                                {% endif %}
-                            </div>
-                            
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Configuración de Facturación</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
                             <div>
                                 <label for="{{ form.invoice_prefix.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {{ form.invoice_prefix.label }}
@@ -228,6 +208,7 @@
                                 {% if form.invoice_prefix.errors %}
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.invoice_prefix.errors.0 }}</p>
                                 {% endif %}
+                            </div>
                             </div>
                         </div>
                     </div>

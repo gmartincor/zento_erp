@@ -98,58 +98,100 @@
 
             <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Servicio
+                    Servicios y Productos
                 </h2>
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {{ form.service_description.label }}
-                        </label>
-                        {{ form.service_description }}
-                        {% if form.service_description.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ form.service_description.errors.0 }}</p>
+                
+                {{ formset.management_form }}
+                
+                <div id="formset-container">
+                    {% for form in formset %}
+                    <div class="formset-form border border-gray-200 dark:border-gray-600 rounded-lg p-4 mb-4">
+                        {% if form.id %}{{ form.id }}{% endif %}
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    {{ form.description.label }}
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {{ form.quantity.label }}
+                                    </label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ form.quantity.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {{ form.unit_price.label }}
+                                    </label>
+                                    {{ form.unit_price }}
+                                    {% if form.unit_price.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ form.unit_price.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {{ form.vat_rate.label }}
+                                    </label>
+                                    {{ form.vat_rate }}
+                                    {% if form.vat_rate.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ form.vat_rate.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {{ form.irpf_rate.label }}
+                                    </label>
+                                    {{ form.irpf_rate }}
+                                    {% if form.irpf_rate.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ form.irpf_rate.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if formset.can_delete %}
+                            <div class="flex justify-end">
+                                {{ form.DELETE }}
+                                {% if form.DELETE %}
+                                <label for="{{ form.DELETE.id_for_label }}" class="ml-2 text-sm text-red-600 hover:text-red-800 cursor-pointer">
+                                    Eliminar línea
+                                </label>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                        <div class="mt-4 text-sm text-red-600">
+                            {{ form.non_field_errors }}
+                        </div>
                         {% endif %}
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ form.quantity.label }}
-                            </label>
-                            {{ form.quantity }}
-                            {% if form.quantity.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.quantity.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ form.unit_price.label }}
-                            </label>
-                            {{ form.unit_price }}
-                            {% if form.unit_price.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.unit_price.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ form.vat_rate.label }}
-                            </label>
-                            {{ form.vat_rate }}
-                            {% if form.vat_rate.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.vat_rate.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ form.irpf_rate.label }}
-                            </label>
-                            {{ form.irpf_rate }}
-                            {% if form.irpf_rate.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ form.irpf_rate.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if formset.non_form_errors %}
+                <div class="mt-4 text-sm text-red-600">
+                    {{ formset.non_form_errors }}
+                </div>
+                {% endif %}
+                
+                <div class="mt-4">
+                    <button type="button" id="add-form" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
+                        + Añadir línea
+                    </button>
                 </div>
             </div>
 
@@ -166,4 +208,44 @@
         </form>
     </div>
 </div>
+
+<script>
+// JavaScript para manejar el formset dinámico
+document.addEventListener('DOMContentLoaded', function() {
+    const addButton = document.getElementById('add-form');
+    const container = document.getElementById('formset-container');
+    const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+    
+    addButton.addEventListener('click', function() {
+        const formCount = parseInt(totalForms.value);
+        const emptyForm = container.children[container.children.length - 1].cloneNode(true);
+        
+        // Limpiar valores del formulario clonado
+        const inputs = emptyForm.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            if (input.type !== 'hidden') {
+                input.value = '';
+            }
+            // Actualizar nombres e IDs
+            if (input.name) {
+                input.name = input.name.replace(/-\d+-/, `-${formCount}-`);
+            }
+            if (input.id) {
+                input.id = input.id.replace(/-\d+-/, `-${formCount}-`);
+            }
+        });
+        
+        // Actualizar labels
+        const labels = emptyForm.querySelectorAll('label');
+        labels.forEach(label => {
+            if (label.getAttribute('for')) {
+                label.setAttribute('for', label.getAttribute('for').replace(/-\d+-/, `-${formCount}-`));
+            }
+        });
+        
+        container.appendChild(emptyForm);
+        totalForms.value = formCount + 1;
+    });
+});
+</script>
 {% endblock %}

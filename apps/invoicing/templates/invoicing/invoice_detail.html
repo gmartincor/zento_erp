@@ -100,7 +100,7 @@
         </div>
 
         <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Servicios</h3>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Servicios y Productos</h3>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-900">
@@ -108,38 +108,46 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Descripción
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                IVA
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                IRPF
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                 Cant.
                             </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Total (Base imp.)
+                                Precio Unit.
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                IVA
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                IRPF
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Total
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for item in invoice.items.all %}
                         <tr>
-                            <td class="px-6 py-4 whitespace-pre-line text-sm text-gray-900 dark:text-white">
-                                {{ invoice.service_description }}
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                {{ item.description|linebreaks }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                {% if invoice.vat_rate %}{{ invoice.vat_rate.rate|floatformat:0 }}%{% else %}0%{% endif %}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                {% if invoice.irpf_rate %}{{ invoice.irpf_rate.rate|floatformat:0 }}%{% else %}0%{% endif %}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                {{ invoice.quantity }}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
+                                {{ item.quantity }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
-                                {{ invoice.base_amount|floatformat:2 }} €
+                                {{ item.unit_price|floatformat:2 }} €
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
+                                {% if item.vat_rate %}{{ item.vat_rate.rate|floatformat:0 }}%{% else %}0%{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
+                                {% if item.irpf_rate %}{{ item.irpf_rate.rate|floatformat:0 }}%{% else %}0%{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
+                                {{ item.line_total|floatformat:2 }} €
                             </td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -170,18 +178,16 @@
                     <span class="text-sm font-medium text-gray-900 dark:text-white">{{ invoice.base_amount|floatformat:2 }} €</span>
                 </div>
                 
+                {% if invoice.vat_amount > 0 %}
                 <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">
-                        Total IVA {% if invoice.vat_rate %}{{ invoice.vat_rate.rate|floatformat:0 }}%{% else %}0%{% endif %}:
-                    </span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Total IVA:</span>
                     <span class="text-sm font-medium text-gray-900 dark:text-white">{{ invoice.vat_amount|floatformat:2 }} €</span>
                 </div>
+                {% endif %}
 
                 {% if invoice.irpf_amount > 0 %}
                 <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">
-                        Total IRPF {{ invoice.irpf_rate.rate|floatformat:0 }}%:
-                    </span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Total IRPF:</span>
                     <span class="text-sm font-medium text-red-600">-{{ invoice.irpf_amount|floatformat:2 }} €</span>
                 </div>
                 {% endif %}
