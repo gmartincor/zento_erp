@@ -1,6 +1,6 @@
 from django import forms
-from django.forms import inlineformset_factory
-from .models import Company, Invoice, InvoiceLine
+from django.core.exceptions import ValidationError
+from .models import Company, Invoice, VATRate, IRPFRate
 
 FORM_CONTROL_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white'
 
@@ -8,7 +8,7 @@ FORM_CONTROL_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:o
 class CompanyForm(forms.ModelForm):
     class Meta:
         model = Company
-        fields = '__all__'
+        exclude = ['current_number']
         widgets = {
             'entity_type': forms.RadioSelect(),
             'address': forms.Textarea(attrs={'rows': 3, 'class': FORM_CONTROL_CLASS}),
@@ -24,41 +24,62 @@ class CompanyForm(forms.ModelForm):
             'default_vat_rate': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS}),
             'irpf_rate': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS}),
             'invoice_prefix': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
-            'current_number': forms.NumberInput(attrs={'class': FORM_CONTROL_CLASS}),
+            'logo': forms.ClearableFileInput(attrs={'class': FORM_CONTROL_CLASS}),
         }
 
 
 class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
-        fields = ['client_type', 'client_name', 'client_tax_id', 'client_address', 'issue_date', 'payment_terms']
+        fields = [
+            'client_type', 'client_name', 'client_tax_id', 'client_address',
+            'issue_date', 'service_description', 'quantity', 'unit_price',
+            'vat_rate', 'irpf_rate', 'payment_terms'
+        ]
         widgets = {
-            'client_type': forms.RadioSelect(),
-            'issue_date': forms.DateInput(attrs={'type': 'date', 'class': FORM_CONTROL_CLASS}),
-            'client_address': forms.Textarea(attrs={'rows': 3, 'class': FORM_CONTROL_CLASS}),
+            'client_type': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
             'client_name': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'client_tax_id': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
+            'client_address': forms.Textarea(attrs={'rows': 3, 'class': FORM_CONTROL_CLASS}),
+            'issue_date': forms.DateInput(attrs={'type': 'date', 'class': FORM_CONTROL_CLASS}),
+            'service_description': forms.Textarea(attrs={
+                'rows': 6, 
+                'class': FORM_CONTROL_CLASS,
+                'placeholder': 'Descripción del servicio. Puede usar viñetas:\n• Servicio 1\n• Servicio 2\n• Servicio 3'
+            }),
+            'quantity': forms.NumberInput(attrs={'class': FORM_CONTROL_CLASS, 'min': '1'}),
+            'unit_price': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS, 'min': '0.01'}),
+            'vat_rate': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
+            'irpf_rate': forms.Select(attrs={'class': FORM_CONTROL_CLASS}),
             'payment_terms': forms.Textarea(attrs={'rows': 2, 'class': FORM_CONTROL_CLASS}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['vat_rate'].queryset = VATRate.objects.all()
+        self.fields['irpf_rate'].queryset = IRPFRate.objects.all()
+        self.fields['irpf_rate'].required = False
+        self.fields['irpf_rate'].empty_label = "Sin retención"
+        
+        try:
+            default_vat = VATRate.objects.filter(is_default=True).first()
+            if default_vat:
+                self.fields['vat_rate'].initial = default_vat
+        except VATRate.DoesNotExist:
+            pass
+            
+        try:
+            default_irpf = IRPFRate.objects.filter(is_default=True).first()
+            if default_irpf:
+                self.fields['irpf_rate'].initial = default_irpf
+        except IRPFRate.DoesNotExist:
+            pass
 
-class InvoiceLineForm(forms.ModelForm):
-    class Meta:
-        model = InvoiceLine
-        fields = ['description', 'quantity', 'unit_price', 'vat_rate']
-        widgets = {
-            'description': forms.Textarea(attrs={'rows': 2, 'class': FORM_CONTROL_CLASS}),
-            'quantity': forms.NumberInput(attrs={'class': FORM_CONTROL_CLASS}),
-            'unit_price': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS}),
-            'vat_rate': forms.Select(choices=[
-                (0, '0% - Exento'),
-                (4, '4% - Tipo reducido'),
-                (10, '10% - Tipo reducido'),
-                (21, '21% - Tipo general'),
-            ], attrs={'class': FORM_CONTROL_CLASS}),
-        }
-
-
-InvoiceLineFormSet = inlineformset_factory(
-    Invoice, InvoiceLine, form=InvoiceLineForm, extra=1, can_delete=True
-)
+    def clean_client_tax_id(self):
+        client_type = self.cleaned_data.get('client_type')
+        client_tax_id = self.cleaned_data.get('client_tax_id')
+        
+        if client_type == 'COMPANY' and not client_tax_id:
+            raise ValidationError("El CIF es obligatorio para empresas.")
+        
+        return client_tax_id

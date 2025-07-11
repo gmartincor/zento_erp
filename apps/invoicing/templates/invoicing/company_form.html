@@ -7,7 +7,7 @@
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-2xl mx-auto">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-            Configuración de Empresa
+            {% if object %}Editar Configuración de Empresa{% else %}Configuración de Empresa{% endif %}
         </h1>
         <p class="text-gray-600 dark:text-gray-400 mb-6">
             Configura los datos de tu empresa para la emisión de facturas
@@ -194,19 +194,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <div>
-                        <label for="{{ form.current_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {{ form.current_number.label }}
-                        </label>
-                        {{ form.current_number }}
-                        {% if form.current_number.errors %}
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.current_number.errors.0 }}</p>
-                        {% endif %}
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Número actual de facturación (se incrementa automáticamente)
-                        </p>
-                    </div>
                 </div>
 
                 <div class="mt-8 flex justify-end space-x-3">
@@ -216,7 +203,7 @@
                     </a>
                     <button type="submit" 
                             class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
-                        Guardar Configuración
+                        {% if object %}Actualizar Configuración{% else %}Guardar Configuración{% endif %}
                     </button>
                 </div>
             </form>

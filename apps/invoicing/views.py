@@ -1,23 +1,76 @@
 from django.shortcuts import redirect, get_object_or_404
-from django.views.generic import CreateView, ListView, DetailView
+from django.views.generic import CreateView, ListView, DetailView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.http import HttpResponse
-from .models import Company, Invoice, InvoiceLine
-from .forms import CompanyForm, InvoiceForm, InvoiceLineFormSet
+from django.http import HttpResponse, Http404
+from django.db.models import Q
+import logging
+
+from .models import Company, Invoice
+from .forms import CompanyForm, InvoiceForm
 from .utils import generate_invoice_pdf
 
+logger = logging.getLogger(__name__)
 
-class CompanyCreateView(CreateView):
+class CompanyMixin:
+    def get_company(self):
+        try:
+            return Company.objects.get()
+        except Company.DoesNotExist:
+            messages.error(
+                self.request, 
+                'Debe configurar los datos de la empresa antes de crear facturas.'
+            )
+            logger.warning("Attempted to access invoicing without company configuration")
+            return None
+        except Company.MultipleObjectsReturned:
+            logger.error("Multiple companies found for tenant")
+            return Company.objects.first()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['company'] = self.get_company()
+        return context
+
+class CompanyFormMixin:
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        action = 'creada' if not self.object.pk else 'actualizada'
+        messages.success(self.request, f'Configuración de empresa {action} correctamente.')
+        logger.info(f"Company configuration {action}: {form.instance.business_name}")
+        return response
+
+class CompanyCreateView(CompanyFormMixin, CreateView):
     model = Company
     form_class = CompanyForm
     template_name = 'invoicing/company_form.html'
     success_url = reverse_lazy('invoicing:invoice_list')
+    
+    def get(self, request, *args, **kwargs):
+        if Company.objects.exists():
+            company = Company.objects.first()
+            return redirect('invoicing:company_edit', pk=company.pk)
+        return super().get(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        messages.success(self.request, 'Configuración de empresa guardada correctamente.')
-        return super().form_valid(form)
-
+class CompanyUpdateView(CompanyFormMixin, UpdateView):
+    model = Company
+    form_class = CompanyForm
+    template_name = 'invoicing/company_form.html'
+    success_url = reverse_lazy('invoicing:invoice_list')
+    
+    def get_object(self):
+        try:
+            return Company.objects.get()
+        except Company.DoesNotExist:
+            raise Http404("No existe configuración de empresa.")
+            
+    def get(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+        except Http404:
+            messages.error(request, 'No existe configuración de empresa.')
+            return redirect('invoicing:company_create')
+        return super().get(request, *args, **kwargs)
 
 class InvoiceListView(ListView):
     model = Invoice
@@ -26,73 +79,95 @@ class InvoiceListView(ListView):
     paginate_by = 20
     ordering = ['-issue_date']
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search = self.request.GET.get('search')
+        status = self.request.GET.get('status')
+        
+        if search:
+            queryset = queryset.filter(
+                Q(reference__icontains=search) |
+                Q(client_name__icontains=search) |
+                Q(client_tax_id__icontains=search)
+            )
+        
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['status'] = self.request.GET.get('status', '')
+        context['has_company'] = Company.objects.exists()
+        return context
 
 class InvoiceDetailView(DetailView):
     model = Invoice
     template_name = 'invoicing/invoice_detail.html'
     context_object_name = 'invoice'
 
+class InvoiceCreateView(CompanyMixin, CreateView):
+    model = Invoice
+    form_class = InvoiceForm
+    template_name = 'invoicing/invoice_form.html'
 
-class InvoiceCreateView(CreateView):
+    def dispatch(self, request, *args, **kwargs):
+        if not self.get_company():
+            return redirect('invoicing:company_create')
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        company = self.get_company()
+        form.instance.company = company
+        response = super().form_valid(form)
+        
+        logger.info(f"Invoice created: {self.object.reference} for {self.object.client_name}")
+        messages.success(
+            self.request, 
+            f'Factura {self.object.reference} creada correctamente.'
+        )
+        return response
+
+    def get_success_url(self):
+        return reverse_lazy('invoicing:invoice_detail', kwargs={'pk': self.object.pk})
+
+class InvoiceUpdateView(UpdateView):
     model = Invoice
     form_class = InvoiceForm
     template_name = 'invoicing/invoice_form.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        if self.request.POST:
-            context['formset'] = InvoiceLineFormSet(self.request.POST)
-        else:
-            context['formset'] = InvoiceLineFormSet()
-        
-        company = Company.objects.first()
-        if not company:
-            company = Company.objects.create(
-                entity_type='COMPANY',
-                business_name='Mi Empresa',
-                legal_name='Mi Empresa S.L.',
-                tax_id='12345678A',
-                address='Calle Principal 123',
-                postal_code='28001',
-                city='Madrid',
-                bank_name='Banco Ejemplo',
-                iban='ES1234567890123456789012',
-            )
-        
-        context['company'] = company
+        context['company'] = self.object.company
+        context['is_edit'] = True
         return context
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        formset = context['formset']
-        
-        if formset.is_valid():
-            company = context['company']
-            form.instance.company = company
-            
-            # Save the invoice first
-            self.object = form.save()
-            
-            # Generate the reference now that we have the saved object
-            if not self.object.reference:
-                self.object.reference = self.object.generate_reference()
-                self.object.save()
-            
-            # Save the formset
-            formset.instance = self.object
-            formset.save()
-            
-            messages.success(self.request, f'Factura {self.object.reference} creada correctamente.')
-            return redirect('invoicing:invoice_detail', pk=self.object.pk)
-        else:
-            return self.form_invalid(form)
+        response = super().form_valid(form)
+        logger.info(f"Invoice updated: {self.object.reference} for {self.object.client_name}")
+        messages.success(
+            self.request, 
+            f'Factura {self.object.reference} actualizada correctamente.'
+        )
+        return response
 
+    def get_success_url(self):
+        return reverse_lazy('invoicing:invoice_detail', kwargs={'pk': self.object.pk})
 
 def generate_pdf_view(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
-    pdf_content = generate_invoice_pdf(invoice)
-    
-    response = HttpResponse(pdf_content, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="factura_{invoice.reference}.pdf"'
-    return response
+    try:
+        pdf_content = generate_invoice_pdf(invoice)
+        
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        filename = f'factura_{invoice.reference}.pdf'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        logger.info(f"PDF generated for invoice: {invoice.reference}")
+        return response
+    except Exception as e:
+        logger.error(f"Error generating PDF for invoice {invoice.reference}: {str(e)}")
+        messages.error(request, f'Error al generar el PDF: {str(e)}')
+        return redirect('invoicing:invoice_detail', pk=pk)

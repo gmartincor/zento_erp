@@ -1,206 +1,169 @@
 {% extends "base.html" %}
 
-{% block title %}Nueva Factura{% endblock %}
+{% block title %}{% if is_edit %}Editar Factura{% else %}Nueva Factura{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-            Nueva Factura
+            {% if is_edit %}Editar Factura{% else %}Nueva Factura{% endif %}
         </h1>
 
         <form method="post" class="space-y-6">
             {% csrf_token %}
             
-            <!-- Información de la Empresa -->
+            {% if company %}
             <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                     Información de la Empresa
                 </h2>
-                
-                {% if company %}
                 <div class="space-y-2">
                     <p class="text-lg font-medium text-gray-900 dark:text-white">{{ company.business_name }}</p>
-                    <p class="text-gray-600 dark:text-gray-400">{{ company.address }}</p>
-                    <p class="text-gray-600 dark:text-gray-400">{{ company.postal_code }} {{ company.city }}</p>
-                    <p class="text-gray-600 dark:text-gray-400">NIF: {{ company.tax_id }}</p>
+                    {% if company.legal_name %}<p class="text-gray-600 dark:text-gray-400">{{ company.legal_name }}</p>{% endif %}
+                    <p class="text-gray-600 dark:text-gray-400">{{ company.get_full_address }}</p>
+                    <p class="text-gray-600 dark:text-gray-400">{{ company.tax_id }}</p>
                 </div>
-                {% endif %}
             </div>
+            {% endif %}
 
-            <!-- Información de la Factura -->
             <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Información de la Factura
+                    Datos Básicos
                 </h2>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {% for field in form %}
-                        <div class="{% if field.name == 'notes' %}md:col-span-2{% endif %}">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ form.issue_date.label }}
+                        </label>
+                        {{ form.issue_date }}
+                        {% if form.issue_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.issue_date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ form.payment_terms.label }}
+                        </label>
+                        {{ form.payment_terms }}
+                        {% if form.payment_terms.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.payment_terms.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                    Cliente
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ form.client_type.label }}
+                        </label>
+                        {{ form.client_type }}
+                        {% if form.client_type.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.client_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ form.client_name.label }}
+                        </label>
+                        {{ form.client_name }}
+                        {% if form.client_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.client_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ form.client_tax_id.label }}
+                        </label>
+                        {{ form.client_tax_id }}
+                        {% if form.client_tax_id.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.client_tax_id.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ form.client_address.label }}
+                        </label>
+                        {{ form.client_address }}
+                        {% if form.client_address.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.client_address.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                    Servicio
+                </h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {{ form.service_description.label }}
+                        </label>
+                        {{ form.service_description }}
+                        {% if form.service_description.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.service_description.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ field.label }}
+                                {{ form.quantity.label }}
                             </label>
-                            {{ field }}
-                            {% if field.help_text %}
-                                <p class="mt-1 text-sm text-gray-500" id="{{ field.name }}-help">
-                                    {{ field.help_text }}
-                                </p>
-                            {% endif %}
-                            {% if field.errors %}
-                                <p class="mt-1 text-sm text-red-600">{{ field.errors.0 }}</p>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.quantity.errors.0 }}</p>
                             {% endif %}
                         </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Líneas de Factura -->
-            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Líneas de Factura
-                </h2>
-                
-                {{ formset.management_form }}
-                <div id="formset-container">
-                    {% for form in formset %}
-                        <div class="formset-form border-b border-gray-200 pb-4 mb-4">
-                            {{ form.id }}
-                            {% if form.DELETE %}
-                                {{ form.DELETE }}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {{ form.unit_price.label }}
+                            </label>
+                            {{ form.unit_price }}
+                            {% if form.unit_price.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.unit_price.errors.0 }}</p>
                             {% endif %}
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                                <div class="md:col-span-6">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Descripción
-                                    </label>
-                                    {{ form.description }}
-                                </div>
-                                
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Cantidad
-                                    </label>
-                                    {{ form.quantity }}
-                                </div>
-                                
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Precio Unitario
-                                    </label>
-                                    {{ form.unit_price }}
-                                </div>
-                                
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        IVA %
-                                    </label>
-                                    {{ form.vat_rate }}
-                                </div>
-                            </div>
                         </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- Resumen de Totales -->
-            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Resumen
-                </h2>
-                
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                        <span id="subtotal" class="font-medium">0,00 €</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600 dark:text-gray-400">IVA:</span>
-                        <span id="vat-total" class="font-medium">0,00 €</span>
-                    </div>
-                    <div id="irpf-row" class="flex justify-between" style="display: none;">
-                        <span class="text-gray-600 dark:text-gray-400">IRPF (15%):</span>
-                        <span id="irpf-total" class="font-medium text-red-600">-0,00 €</span>
-                    </div>
-                    <div class="flex justify-between pt-2 border-t border-gray-200">
-                        <span class="text-lg font-semibold text-gray-900 dark:text-white">Total:</span>
-                        <span id="total" class="text-lg font-semibold text-gray-900 dark:text-white">0,00 €</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {{ form.vat_rate.label }}
+                            </label>
+                            {{ form.vat_rate }}
+                            {% if form.vat_rate.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.vat_rate.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {{ form.irpf_rate.label }}
+                            </label>
+                            {{ form.irpf_rate }}
+                            {% if form.irpf_rate.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.irpf_rate.errors.0 }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Botones -->
             <div class="flex justify-end space-x-4">
                 <a href="{% url 'invoicing:invoice_list' %}" 
-                   class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-lg">
+                   class="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
                     Cancelar
                 </a>
                 <button type="submit" 
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg">
-                    Crear Factura
+                        class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    {% if is_edit %}Actualizar{% else %}Crear{% endif %} Factura
                 </button>
             </div>
         </form>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    function calculateTotals() {
-        let subtotal = 0;
-        let vatTotal = 0;
-        
-        document.querySelectorAll('.formset-form').forEach(form => {
-            const quantity = parseFloat(form.querySelector('input[name$="-quantity"]')?.value) || 0;
-            const unitPrice = parseFloat(form.querySelector('input[name$="-unit_price"]')?.value) || 0;
-            const vatRate = parseFloat(form.querySelector('select[name$="-vat_rate"]')?.value) || 0;
-            
-            const lineTotal = quantity * unitPrice;
-            const lineVat = lineTotal * vatRate / 100;
-            
-            subtotal += lineTotal;
-            vatTotal += lineVat;
-        });
-        
-        // Calcular IRPF para autónomos
-        let irpfAmount = 0;
-        const companyType = '{{ company.entity_type|default:"" }}';
-        const clientTypeField = document.querySelector('input[name="client_type"]:checked');
-        const selectedClientType = clientTypeField?.value;
-        
-        if (companyType === 'FREELANCER' && selectedClientType === 'COMPANY' && subtotal > 300) {
-            irpfAmount = subtotal * 0.15;
-            document.getElementById('irpf-row').style.display = 'flex';
-        } else {
-            document.getElementById('irpf-row').style.display = 'none';
-        }
-        
-        const total = subtotal + vatTotal - irpfAmount;
-        
-        document.getElementById('subtotal').textContent = subtotal.toFixed(2).replace('.', ',') + ' €';
-        document.getElementById('vat-total').textContent = vatTotal.toFixed(2).replace('.', ',') + ' €';
-        document.getElementById('irpf-total').textContent = '-' + irpfAmount.toFixed(2).replace('.', ',') + ' €';
-        document.getElementById('total').textContent = total.toFixed(2).replace('.', ',') + ' €';
-    }
-    
-    // Escuchar cambios en los campos de cantidad, precio y IVA
-    document.addEventListener('input', function(e) {
-        if (e.target.matches('input[name$="-quantity"], input[name$="-unit_price"], select[name$="-vat_rate"]')) {
-            calculateTotals();
-        }
-    });
-    
-    // Escuchar cambios en el tipo de cliente
-    document.addEventListener('change', function(e) {
-        if (e.target.matches('input[name="client_type"]')) {
-            calculateTotals();
-        }
-    });
-    
-    // Calcular totales iniciales
-    calculateTotals();
-});
-</script>
 {% endblock %}
