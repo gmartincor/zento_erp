@@ -1,7 +1,18 @@
 {% extends 'base.html' %}
 {% load tenant_tags %}
 
-{% block title %}Facturas - {% if tenant %}{{ tenant.name }}{% else %}Nutrition Pro CRM{% endif %}{% endblock %}
+{% block title %}Facturas - {% if tenant %}{{ tenant.name }}{% e                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Cliente
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Total
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Fecha de Emisión
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Estado
+                        </th>ion Pro CRM{% endif %}{% endblock %}
 
 {% block page_header %}
 <div class="mb-6 flex justify-between items-center">
@@ -116,10 +127,10 @@
                             Cliente
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Fecha
+                            Total
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Total
+                            Fecha de Emisión
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Estado
@@ -141,11 +152,11 @@
                         <div class="text-sm text-gray-900 dark:text-white">{{ invoice.client_name }}</div>
                         <div class="text-sm text-gray-500 dark:text-gray-400">{{ invoice.client_tax_id }}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {{ invoice.issue_date|date:"d/m/Y" }}
-                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                         €{{ invoice.total_amount|floatformat:2 }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {{ invoice.issue_date|date:"d/m/Y"|default:"--" }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         {% if invoice.status == 'PAID' %}
