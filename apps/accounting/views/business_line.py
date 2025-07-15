@@ -14,6 +14,7 @@ from apps.accounting.services.template_service import TemplateDataService
 from apps.accounting.services.presentation_service import PresentationService
 from apps.accounting.services.business_line_service import BusinessLineService
 from apps.accounting.services.revenue_calculation_utils import RevenueCalculationMixin
+from apps.accounting.services.business_line_stats_calculator import BusinessLineStatsCalculator
 from apps.core.mixins import (
     BusinessLinePermissionMixin,
     BusinessLineHierarchyMixin
@@ -146,21 +147,7 @@ class BusinessLineHierarchyView(
                 )
                 if not accessible_children.exists():
                     current_line_descendant_ids = current_line.get_descendant_ids()
-                    current_line_payments = ServicePayment.objects.filter(
-                        client_service__business_line__id__in=current_line_descendant_ids
-                    )
-                    current_line.personal_revenue = current_line_payments.filter(
-                        client_service__category=SERVICE_CATEGORIES['PERSONAL']
-                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                    current_line.business_revenue = current_line_payments.filter(
-                        client_service__category=SERVICE_CATEGORIES['BUSINESS']
-                    ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                    current_line.personal_services = ClientService.objects.filter(
-                        business_line__id__in=current_line_descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
-                    ).count()
-                    current_line.business_services = ClientService.objects.filter(
-                        business_line__id__in=current_line_descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
-                    ).count()
+                    BusinessLineStatsCalculator.enrich_business_line_with_stats(current_line)
                     
                     context.update({
                         'current_line': current_line,
@@ -205,22 +192,7 @@ class BusinessLineHierarchyView(
                     ).count()
                     
                     for child in accessible_children:
-                        child_descendant_ids = child.get_descendant_ids()
-                        child_payments = ServicePayment.objects.filter(
-                            client_service__business_line__id__in=child_descendant_ids
-                        )
-                        child.personal_revenue = child_payments.filter(
-                            client_service__category=SERVICE_CATEGORIES['PERSONAL']
-                        ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                        child.business_revenue = child_payments.filter(
-                            client_service__category=SERVICE_CATEGORIES['BUSINESS']
-                        ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                        child.personal_services = ClientService.objects.filter(
-                            business_line__id__in=child_descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
-                        ).count()
-                        child.business_services = ClientService.objects.filter(
-                            business_line__id__in=child_descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
-                        ).count()
+                        BusinessLineStatsCalculator.enrich_business_line_with_stats(child)
                     
                     context.update({
                         'current_line': current_line,
@@ -263,23 +235,7 @@ class BusinessLineHierarchyView(
             
             total_lines = accessible_lines.count()
             
-            for line in root_lines:
-                line_descendant_ids = line.get_descendant_ids()
-                line_payments = ServicePayment.objects.filter(
-                    client_service__business_line__id__in=line_descendant_ids
-                )
-                line.personal_revenue = line_payments.filter(
-                    client_service__category=SERVICE_CATEGORIES['PERSONAL']
-                ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                line.business_revenue = line_payments.filter(
-                    client_service__category=SERVICE_CATEGORIES['BUSINESS']
-                ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                line.personal_services = ClientService.objects.filter(
-                    business_line__id__in=line_descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
-                ).count()
-                line.business_services = ClientService.objects.filter(
-                    business_line__id__in=line_descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
-                ).count()
+            BusinessLineStatsCalculator.enrich_business_lines_with_stats(root_lines)
             
             context.update({
                 'business_lines': root_lines,

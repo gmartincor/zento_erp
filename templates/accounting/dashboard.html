@@ -211,11 +211,11 @@
                             {% if not business_line.children.exists %}
                             <a href="{% tenant_url 'accounting:category-services' line_path=business_line.slug category='personal' %}"
                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 transition-colors">
-                                White
+                                Personal
                             </a>
                             <a href="{% tenant_url 'accounting:category-services' line_path=business_line.slug category='business' %}"
                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-gray-800 hover:bg-gray-900 transition-colors">
-                                Black
+                                Business
                             </a>
                             {% endif %}
                         </div>
