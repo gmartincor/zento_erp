@@ -27,8 +27,7 @@ def get_temporal_data():
     ).order_by('mes')
     
     gastos_por_mes = Expense.objects.filter(
-        date__gte=start_date,
-        service_category='business'
+        date__gte=start_date
     ).annotate(
         mes=TruncMonth('date')
     ).values('mes').annotate(
@@ -75,15 +74,12 @@ def dashboard_home(request):
         payment_date__gte=start_of_month
     ).aggregate(total=get_net_revenue_aggregation())['total'] or 0
     
-    total_gastos = Expense.objects.filter(
-        service_category='business'
-    ).aggregate(
+    total_gastos = Expense.objects.aggregate(
         total=Sum('amount')
     )['total'] or 0
     
     gastos_mes = Expense.objects.filter(
-        date__gte=start_of_month,
-        service_category='business'
+        date__gte=start_of_month
     ).aggregate(total=Sum('amount'))['total'] or 0
     
     resultado_total = total_ingresos - total_gastos
@@ -112,8 +108,8 @@ def dashboard_home(request):
     lineas_negocio.sort(key=lambda x: x['total_ingresos'], reverse=True)
     
     gastos_por_categoria = ExpenseCategory.objects.annotate(
-        total=Sum('expenses__amount', filter=Q(expenses__service_category='business')),
-        count=Count('expenses', filter=Q(expenses__service_category='business'))
+        total=Sum('expenses__amount'),
+        count=Count('expenses')
     ).filter(total__isnull=False).order_by('-total')
     
     # Datos temporales para gráficos

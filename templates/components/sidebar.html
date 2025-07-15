@@ -20,24 +20,16 @@
     <nav class="px-6 pb-6">
         <ul class="space-y-2">
             <!-- Dashboard -->
-            <li x-data="{ open: {% is_active_section 'dashboard' as is_dashboard %}{% if is_dashboard %}true{% else %}false{% endif %} }">
-                <button @click="open = !open" 
-                        class="w-full flex items-center justify-between px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {% if request.resolver_match.app_name == 'dashboard' %}bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300{% endif %}">
+            <li>
+                <a href="{% tenant_url 'dashboard:home' %}" 
+                   class="w-full flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {% if request.resolver_match.app_name == 'dashboard' %}bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300{% endif %}">
                     <div class="flex items-center space-x-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2V7zm0 0a2 2 0 012-2h.01a2 2 0 012 2v.01a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"></path>
                         </svg>
                         <span class="font-medium">Dashboard</span>
                     </div>
-                    <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                
-                <ul x-show="open" x-transition class="mt-2 ml-8 space-y-1">
-                    <li><a href="{% tenant_url 'dashboard:home' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Dashboard Principal</a></li>
-                    <li><a href="{% tenant_url 'dashboard:financial' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Dashboard Financiero</a></li>
-                </ul>
+                </a>
             </li>
 
             <!-- Ingresos -->

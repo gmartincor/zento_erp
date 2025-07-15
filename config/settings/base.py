@@ -139,7 +139,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication settings
 LOGIN_URL = 'unified_login'
-LOGIN_REDIRECT_URL = 'tenant_dashboard'
+LOGIN_REDIRECT_URL = 'dashboard:home'
 LOGOUT_REDIRECT_URL = 'unified_login'
 
 # Messages framework settings

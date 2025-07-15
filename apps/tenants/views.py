@@ -56,7 +56,7 @@ def tenant_logout_view(request):
 def _handle_authenticated_user(request, current_tenant):
     user_tenant = getattr(request.user, 'tenant', None)
     if user_tenant and user_tenant.id == current_tenant.id:
-        return redirect('tenant_dashboard')
+        return redirect('dashboard:home')
     
     messages.error(request, 'No tienes acceso a este espacio de trabajo.')
     logout(request)
@@ -106,7 +106,7 @@ def _process_login(request, current_tenant):
     
     login(request, user)
     messages.success(request, f'¡Bienvenido/a, {user.get_full_name() or user.username}!')
-    return redirect('tenant_dashboard')
+    return redirect('dashboard:home')
 
 
 def _render_login_form(current_tenant, request=None):

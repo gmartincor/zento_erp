@@ -4,12 +4,156 @@
 
 {% block title %}Dashboard - {% if tenant %}{{ tenant.name }}{% else %}Nutrition Pro CRM{% endif %}{% endblock %}
 
-{% block extra_head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'js/dashboard-utils.js' %}"></script>
-<script src="{% static 'js/chart-config.js' %}"></script>
-<script src="{% static 'js/dashboard.js' %}"></script>
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== DEBUG DASHBOARD ===');
+    console.log('Chart disponible:', typeof Chart);
+    
+    // Datos generados por Django - con validación
+    const data = {
+        temporal: [
+            {% for data in temporal_data %}
+            {
+                month: "{{ data.month|escapejs }}",
+                ingresos: parseFloat("{{ data.ingresos|default:0|floatformat:2 }}") || 0,
+                gastos: parseFloat("{{ data.gastos|default:0|floatformat:2 }}") || 0,
+                beneficio: parseFloat("{{ data.beneficio|default:0|floatformat:2 }}") || 0
+            }{% if not forloop.last %},{% endif %}
+            {% empty %}
+            {% endfor %}
+        ],
+        expenses: [
+            {% for cat in gastos_por_categoria %}
+            {
+                name: "{{ cat.name|escapejs }}",
+                total: parseFloat("{{ cat.total|default:0|floatformat:2 }}") || 0
+            }{% if not forloop.last %},{% endif %}
+            {% empty %}
+            {% endfor %}
+        ],
+        businessLines: [
+            {% for linea in lineas_negocio %}
+            {
+                name: "{{ linea.name|escapejs }}",
+                ingresos: parseFloat("{{ linea.total_ingresos|default:0|floatformat:2 }}") || 0
+            }{% if not forloop.last %},{% endif %}
+            {% empty %}
+            {% endfor %}
+        ]
+    };
+    
+    console.log('Datos del dashboard:', data);
+    
+    if (typeof Chart === 'undefined') {
+        console.error('❌ Chart.js NO disponible');
+        return;
+    }
+    
+    // 1. Gráfico Temporal
+    const temporalCanvas = document.getElementById('temporalChart');
+    if (temporalCanvas && data.temporal.length > 0) {
+        new Chart(temporalCanvas, {
+            type: 'line',
+            data: {
+                labels: data.temporal.map(d => d.month),
+                datasets: [{
+                    label: 'Ingresos',
+                    data: data.temporal.map(d => d.ingresos),
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Gastos',
+                    data: data.temporal.map(d => d.gastos),
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        console.log('✅ Gráfico temporal creado');
+    }
+    
+    // 2. Gráfico de Gastos por Categoría
+    const expensesCanvas = document.getElementById('expensesChart');
+    if (expensesCanvas && data.expenses.length > 0) {
+        new Chart(expensesCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: data.expenses.map(d => d.name),
+                datasets: [{
+                    data: data.expenses.map(d => d.total),
+                    backgroundColor: [
+                        '#ef4444', '#f97316', '#eab308', 
+                        '#22c55e', '#06b6d4', '#3b82f6'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+        console.log('✅ Gráfico gastos creado');
+    }
+    
+    // 3. Gráfico de Margen de Beneficio
+    const marginCanvas = document.getElementById('marginChart');
+    if (marginCanvas && data.temporal.length > 0) {
+        new Chart(marginCanvas, {
+            type: 'bar',
+            data: {
+                labels: data.temporal.map(d => d.month),
+                datasets: [{
+                    label: 'Margen %',
+                    data: data.temporal.map(d => d.ingresos > 0 ? ((d.beneficio / d.ingresos) * 100) : 0),
+                    backgroundColor: '#3b82f6'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        console.log('✅ Gráfico margen creado');
+    }
+    
+    // 4. Gráfico de Líneas de Negocio
+    const businessCanvas = document.getElementById('businessLinesChart');
+    if (businessCanvas && data.businessLines.length > 0) {
+        new Chart(businessCanvas, {
+            type: 'bar',
+            data: {
+                labels: data.businessLines.map(d => d.name),
+                datasets: [{
+                    label: 'Ingresos',
+                    data: data.businessLines.map(d => d.ingresos),
+                    backgroundColor: '#22c55e'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y'
+            }
+        });
+        console.log('✅ Gráfico líneas negocio creado');
+    }
+    
+    console.log('🎉 Todos los gráficos creados');
+});
+</script>
 {% endblock %}
+
 
 {% block page_header %}
 <div class="mb-6">
@@ -134,41 +278,4 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const dashboardCharts = new DashboardCharts();
-    
-    const data = {
-        temporal: [
-            {% for data in temporal_data %}
-            {
-                month: "{{ data.month }}",
-                ingresos: {{ data.ingresos|default:0 }},
-                gastos: {{ data.gastos|default:0 }},
-                beneficio: {{ data.beneficio|default:0 }}
-            }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ],
-        expenses: [
-            {% for cat in gastos_por_categoria %}
-            {
-                name: "{{ cat.name }}",
-                total: {{ cat.total|default:0 }}
-            }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ],
-        businessLines: [
-            {% for linea in lineas_negocio %}
-            {
-                name: "{{ linea.name }}",
-                ingresos: {{ linea.total_ingresos|default:0 }}
-            }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ]
-    };
-    
-    dashboardCharts.init(data);
-});
-</script>
 {% endblock %}
