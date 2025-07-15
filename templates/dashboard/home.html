@@ -143,7 +143,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <!-- Gastos por Categoría -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Distribución de Gastos</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Distribución de Gastos</h3>
+                <div class="flex space-x-2 text-sm">
+                    <button class="filter-btn px-3 py-1 rounded bg-blue-500 text-white" data-chart="expenses" data-period="30">30d</button>
+                    <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="expenses" data-period="90">90d</button>
+                    <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="expenses" data-period="365">1a</button>
+                    <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="expenses" data-period="all">Todo</button>
+                </div>
+            </div>
             <div class="h-80" id="expenses-chart">
                 <canvas id="expensesChart"></canvas>
             </div>
@@ -159,7 +167,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <!-- Líneas de Negocio -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ingresos por Línea de Negocio</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Ingresos por Línea de Negocio</h3>
+                <div class="flex space-x-2 text-sm">
+                    <button class="filter-btn px-3 py-1 rounded bg-blue-500 text-white" data-chart="business-lines" data-period="30">30d</button>
+                    <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="business-lines" data-period="90">90d</button>
+                    <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="business-lines" data-period="365">1a</button>
+                    <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="business-lines" data-period="all">Todo</button>
+                </div>
+            </div>
             <div class="h-80" id="business-lines-chart">
                 <canvas id="businessLinesChart"></canvas>
             </div>

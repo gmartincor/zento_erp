@@ -1,4 +1,4 @@
-from django.db.models import Sum, Count, F, Value
+from django.db.models import Sum, Count, F, Value, Q
 from django.db.models.functions import Coalesce, TruncMonth
 from django.utils import timezone
 from datetime import timedelta
@@ -94,12 +94,17 @@ class DashboardDataService:
         return months[-12:]
     
     @classmethod
-    def get_business_lines_data(cls):
+    def get_business_lines_data(cls, start_date=None, end_date=None):
         business_lines = []
         
         for bl in BusinessLine.objects.filter(parent__isnull=False):
             servicios = ClientService.objects.filter(business_line=bl)
             pagos = ServicePayment.objects.filter(client_service__in=servicios)
+            
+            if start_date:
+                pagos = pagos.filter(payment_date__gte=start_date)
+            if end_date:
+                pagos = pagos.filter(payment_date__lte=end_date)
             
             ingresos_netos = pagos.aggregate(
                 total=cls.get_net_revenue_aggregation()
@@ -120,15 +125,21 @@ class DashboardDataService:
         return business_lines
     
     @staticmethod
-    def get_expense_categories_data():
+    def get_expense_categories_data(start_date=None, end_date=None):
+        expense_filter = Q()
+        if start_date:
+            expense_filter &= Q(expenses__date__gte=start_date)
+        if end_date:
+            expense_filter &= Q(expenses__date__lte=end_date)
+        
         categories = list(ExpenseCategory.objects.annotate(
-            total=Sum('expenses__amount'),
-            count=Count('expenses')
+            total=Sum('expenses__amount', filter=expense_filter),
+            count=Count('expenses', filter=expense_filter)
         ).filter(total__isnull=False).order_by('-total'))
         
-        total_gastos = sum(cat.total for cat in categories)
+        total_gastos = sum(cat.total for cat in categories if cat.total)
         
         for cat in categories:
-            cat.porcentaje = (cat.total / total_gastos * 100) if total_gastos > 0 else 0
+            cat.porcentaje = (cat.total / total_gastos * 100) if total_gastos > 0 and cat.total else 0
         
         return categories
