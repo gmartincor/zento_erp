@@ -10,10 +10,29 @@ from apps.business_lines.models import BusinessLine
 
 class DashboardDataService:
     
+    BUSINESS_CATEGORY = 'business'
+    
     @staticmethod
     def get_net_revenue_aggregation():
         from django.db import models
         return Sum(F('amount') - Coalesce(F('refunded_amount'), Value(0, output_field=models.DecimalField())))
+    
+    @classmethod
+    def get_business_expenses_queryset(cls):
+        return Expense.objects.filter(service_category=cls.BUSINESS_CATEGORY)
+    
+    @classmethod
+    def get_business_payments_queryset(cls):
+        business_services = ClientService.objects.filter(
+            business_line__parent__isnull=False
+        )
+        return ServicePayment.objects.filter(client_service__in=business_services)
+    
+    @classmethod
+    def get_business_expense_categories_queryset(cls):
+        return ExpenseCategory.objects.filter(
+            expenses__service_category=cls.BUSINESS_CATEGORY
+        ).distinct()
     
     @classmethod
     def get_financial_summary(cls):
@@ -21,14 +40,16 @@ class DashboardDataService:
         start_of_month = today.replace(day=1)
         
         net_revenue_agg = cls.get_net_revenue_aggregation()
+        business_payments = cls.get_business_payments_queryset()
+        business_expenses = cls.get_business_expenses_queryset()
         
-        total_ingresos = ServicePayment.objects.aggregate(total=net_revenue_agg)['total'] or 0
-        ingresos_mes = ServicePayment.objects.filter(
+        total_ingresos = business_payments.aggregate(total=net_revenue_agg)['total'] or 0
+        ingresos_mes = business_payments.filter(
             payment_date__gte=start_of_month
         ).aggregate(total=net_revenue_agg)['total'] or 0
         
-        total_gastos = Expense.objects.aggregate(total=Sum('amount'))['total'] or 0
-        gastos_mes = Expense.objects.filter(
+        total_gastos = business_expenses.aggregate(total=Sum('amount'))['total'] or 0
+        gastos_mes = business_expenses.filter(
             date__gte=start_of_month
         ).aggregate(total=Sum('amount'))['total'] or 0
         
@@ -53,17 +74,20 @@ class DashboardDataService:
         today = timezone.now().date()
         start_date = today.replace(day=1) - timedelta(days=365)
         
-        ingresos_por_mes = ServicePayment.objects.filter(
+        business_payments = cls.get_business_payments_queryset().filter(
             payment_date__gte=start_date
-        ).annotate(
+        )
+        business_expenses = cls.get_business_expenses_queryset().filter(
+            date__gte=start_date
+        )
+        
+        ingresos_por_mes = business_payments.annotate(
             mes=TruncMonth('payment_date')
         ).values('mes').annotate(
             total=cls.get_net_revenue_aggregation()
         ).order_by('mes')
         
-        gastos_por_mes = Expense.objects.filter(
-            date__gte=start_date
-        ).annotate(
+        gastos_por_mes = business_expenses.annotate(
             mes=TruncMonth('date')
         ).values('mes').annotate(
             total=Sum('amount')
@@ -98,7 +122,10 @@ class DashboardDataService:
         business_lines = []
         
         for bl in BusinessLine.objects.filter(parent__isnull=False):
-            servicios = ClientService.objects.filter(business_line=bl)
+            servicios = ClientService.objects.filter(
+                business_line=bl,
+                category=ClientService.CategoryChoices.BUSINESS
+            )
             pagos = ServicePayment.objects.filter(client_service__in=servicios)
             
             if start_date:
@@ -126,7 +153,7 @@ class DashboardDataService:
     
     @staticmethod
     def get_expense_categories_data(start_date=None, end_date=None):
-        expense_filter = Q()
+        expense_filter = Q(expenses__service_category=Expense.ServiceCategoryChoices.BUSINESS)
         if start_date:
             expense_filter &= Q(expenses__date__gte=start_date)
         if end_date:
