@@ -70,19 +70,23 @@ class ExpiringServicesView(LoginRequiredMixin, BusinessLinePermissionMixin, List
         accessible_lines = self.get_allowed_business_lines()
         days = int(self.request.GET.get('days', 30))
         
-        all_services = ClientService.objects.filter(
+        queryset = ClientService.objects.filter(
             business_line__in=accessible_lines,
             is_active=True
         ).select_related('client', 'business_line').prefetch_related('payments')
         
+        category = self.request.GET.get('category')
+        if category:
+            queryset = queryset.filter(category=category)
+        
         expiring_services = []
-        for service in all_services:
+        for service in queryset:
             if service.end_date:
                 days_left = (service.end_date - timezone.now().date()).days
                 if 0 <= days_left <= days:
                     expiring_services.append(service.id)
         
-        return all_services.filter(id__in=expiring_services).order_by('created')
+        return queryset.filter(id__in=expiring_services).order_by('created')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -104,6 +108,8 @@ class ExpiringServicesView(LoginRequiredMixin, BusinessLinePermissionMixin, List
         context.update({
             'services_with_status': services_with_status,
             'days_filter': int(self.request.GET.get('days', 30)),
+            'category_filter': self.request.GET.get('category', ''),
+            'category_choices': ClientService.CategoryChoices.choices,
             'page_title': 'Servicios Próximos a Vencer',
         })
         
