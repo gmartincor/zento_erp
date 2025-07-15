@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
             {
                 fecha: "{{ data.month|escapejs }}",
                 ingresos: "{{ data.ingresos|default:0|floatformat:2 }}",
-                gastos: "{{ data.gastos|default:0|floatformat:2 }}"
+                gastos: "{{ data.gastos|default:0|floatformat:2 }}",
+                beneficio: "{{ data.beneficio|default:0|floatformat:2 }}"
             }{% if not forloop.last %},{% endif %}
             {% empty %}
             {% endfor %}
@@ -135,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Evolución Temporal -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Evolución Temporal (12 meses)</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Evolución Financiera (12 meses)</h3>
             <div class="h-80" id="temporal-chart">
                 <canvas id="temporalChart"></canvas>
             </div>
