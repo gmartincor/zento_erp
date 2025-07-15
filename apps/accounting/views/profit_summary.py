@@ -43,7 +43,7 @@ def profit_summary_view(request, category=SERVICE_CATEGORIES['PERSONAL']):
 
     context = {
         'category': category,
-        'category_display': CATEGORY_CONFIG[category]['display_name'],
+        'category_display': CATEGORY_CONFIG[category]['name'],
         'page_title': f'Beneficios - Categoría {category.title()}',
         'page_subtitle': f'Análisis de beneficios por categoría - {category.title()}',
         'period': period,

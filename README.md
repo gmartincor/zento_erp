@@ -6,8 +6,8 @@ Sistema CRM para gestión de clientes y servicios de nutrición con múltiples l
 
 - Gestión de clientes con soft-delete
 - Líneas de negocio jerárquicas (hasta 3 niveles)
-- Servicios de clientes con categorización WHITE/BLACK
-- Sistema de remanentes para categoría BLACK
+- Servicios de clientes con categorización PERSONAL/BUSINESS
+- Sistema de remanentes para categoría BUSINESS
 - Control de gastos por categorías
 - Interfaz de administración avanzada
 
@@ -117,7 +117,7 @@ El sistema incluye una estructura jerárquica predefinida:
 
 ## Sistema de Remanentes
 
-- Solo aplicable a servicios de categoría BLACK
+- Solo aplicable a servicios de categoría BUSINESS
 - Cada línea de negocio tiene su tipo específico de remanente:
   - PEPE-normal → remanente_pepe
   - PEPE-videoCall → remanente_pepe_video

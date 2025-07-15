@@ -107,7 +107,7 @@ class ClientServiceAdmin(admin.ModelAdmin):
         ('Remanentes', {
             'fields': ('remanentes',),
             'classes': ('collapse',),
-            'description': 'Solo aplicable para categoría BLACK'
+            'description': 'Solo aplicable para categoría BUSINESS'
         }),
         ('Estado', {
             'fields': ('is_active',)
@@ -176,7 +176,7 @@ class ClientServiceAdmin(admin.ModelAdmin):
         
         if 'remanentes' in form.base_fields:
             form.base_fields['remanentes'].help_text = (
-                'Formato JSON. Solo válido para categoría BLACK. '
+                'Formato JSON. Solo válido para categoría BUSINESS. '
                 'Cada línea de negocio solo acepta su tipo específico de remanente. Ejemplos:<br>'
                 '- PEPE-normal: {"remanente_pepe": 100.50}<br>'
                 '- PEPE-videoCall: {"remanente_pepe_video": 75.25}<br>'

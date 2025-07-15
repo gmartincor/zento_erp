@@ -117,8 +117,8 @@ class HierarchicalNavigationService(RevenueCalculationMixin):
             )
         service_stats = services.aggregate(
             total_services=Count('id'),
-            white_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
-            black_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS'])),
+            personal_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
+            business_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS'])),
         )
         
         payment_stats = ServicePayment.objects.filter(

@@ -13,8 +13,7 @@ from ..services.revenue_analytics_service import RevenueAnalyticsService
 def _get_period_filters_and_range(period):
     today = timezone.now().date()
     analytics_service = RevenueAnalyticsService()
-    
-    # Para períodos simples que pueden usar year/month
+
     if period == 'current_month':
         return {'year': today.year, 'month': today.month, 'date_range': None}
     elif period == 'current_year':
@@ -22,8 +21,6 @@ def _get_period_filters_and_range(period):
     elif period == 'last_year':
         return {'year': today.year - 1, 'month': None, 'date_range': None}
     else:
-        # Para todos los demás períodos (incluyendo last_month), usar rangos de fechas
-        # para garantizar precisión en el cálculo
         period_dates = analytics_service._get_period_dates(period)
         if period_dates:
             return {'year': None, 'month': None, 'date_range': period_dates}
@@ -55,7 +52,7 @@ def revenue_summary_view(request, category=SERVICE_CATEGORIES['PERSONAL']):
 
     context = {
         'category': category,
-        'category_display': CATEGORY_CONFIG[category]['display_name'],
+        'category_display': CATEGORY_CONFIG[category]['name'],
         'page_title': f'Ingresos - Categoría {category.title()}',
         'page_subtitle': f'Análisis de ingresos por líneas de negocio - Categoría {category.title()}',
         'selected_payment_method': payment_method,

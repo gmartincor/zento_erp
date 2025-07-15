@@ -280,12 +280,12 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
         if hasattr(self, 'filter_business_lines_by_permission'):
             base_queryset = self.filter_business_lines_by_permission(base_queryset)
         
-        white_count = base_queryset.filter(category='white').count()
-        black_count = base_queryset.filter(category='black').count()
+        personal_count = base_queryset.filter(category='personal').count()
+        business_count = base_queryset.filter(category='business').count()
         
         return {
-            'white_count': white_count,
-            'black_count': black_count,
+            'personal_count': personal_count,
+            'business_count': business_count,
         }
 
 class TenantMixin:
