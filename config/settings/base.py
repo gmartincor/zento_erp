@@ -1,15 +1,6 @@
 """
 Django settings for config project.
-Base settings to be importDATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='crm_nutricion_db'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
-}r settings files.
+Base settings to be imported by other settings files.
 """
 
 import os

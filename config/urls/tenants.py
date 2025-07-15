@@ -8,7 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', unified_login_view, name='tenant_login'),
     path('login/', unified_login_view, name='unified_login'),
-    path('dashboard/', tenant_dashboard_view, name='tenant_dashboard'),
+    path('dashboard/', include('apps.dashboard.urls')),
     path('logout/', tenant_logout_view, name='tenant_logout'),
     path('accounting/', include('apps.accounting.urls')),
     path('expenses/', include('apps.expenses.urls')),

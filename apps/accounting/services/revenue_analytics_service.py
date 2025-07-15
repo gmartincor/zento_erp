@@ -3,8 +3,11 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
+from calendar import month_name
 
 from apps.accounting.models import ServicePayment, ClientService
+from apps.expenses.models import Expense
+from apps.business_lines.models import BusinessLine
 from .revenue_calculation_utils import RevenueCalculationMixin
 
 
@@ -23,7 +26,234 @@ class RevenueAnalyticsService(RevenueCalculationMixin):
     
     def __init__(self):
         self.today = timezone.now().date()
-    
+
+    def get_temporal_financial_overview(self, months: int = 12) -> Dict[str, Any]:
+        """Obtiene datos financieros temporales para dashboard"""
+        end_date = self.today
+        start_date = end_date - timedelta(days=30 * months)
+        
+        monthly_data = []
+        current_date = start_date.replace(day=1)
+        
+        while current_date <= end_date:
+            next_month = (current_date.replace(day=28) + timedelta(days=4)).replace(day=1)
+            month_end = min(next_month - timedelta(days=1), end_date)
+            
+            month_stats = self._get_month_financial_data(current_date, month_end)
+            monthly_data.append({
+                'period': current_date.strftime('%Y-%m'),
+                'month_name': month_name[current_date.month],
+                'year': current_date.year,
+                **month_stats
+            })
+            
+            current_date = next_month
+            
+        return {
+            'temporal_data': monthly_data,
+            'summary': self._calculate_temporal_summary(monthly_data)
+        }
+
+    def get_expense_categories_breakdown(self, period_months: int = 12) -> Dict[str, Any]:
+        """Distribución de gastos por categorías"""
+        from apps.expenses.models import ExpenseCategory
+        
+        end_date = self.today
+        start_date = end_date - timedelta(days=30 * period_months)
+        
+        expenses = Expense.objects.filter(
+            date__range=[start_date, end_date]
+        ).select_related('category')
+        
+        category_data = expenses.values(
+            'category__name',
+            'category__category_type'
+        ).annotate(
+            total_amount=Sum('amount'),
+            count=Count('id')
+        ).order_by('-total_amount')
+        
+        total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        
+        categories = []
+        for item in category_data:
+            amount = item['total_amount']
+            percentage = (amount / total_expenses * 100) if total_expenses > 0 else 0
+            categories.append({
+                'name': item['category__name'],
+                'type': item['category__category_type'],
+                'amount': amount,
+                'count': item['count'],
+                'percentage': round(percentage, 2)
+            })
+            
+        return {
+            'categories': categories,
+            'total_amount': total_expenses,
+            'period_months': period_months
+        }
+
+    def get_business_lines_performance(self, period_months: int = 12) -> Dict[str, Any]:
+        """Performance por líneas de negocio"""
+        end_date = self.today
+        start_date = end_date - timedelta(days=30 * period_months)
+        
+        business_lines = BusinessLine.objects.filter(
+            parent__isnull=False,
+            is_active=True
+        ).prefetch_related('client_services')
+        
+        lines_data = []
+        for line in business_lines:
+            services = line.client_services.filter(is_active=True)
+            
+            payments = ServicePayment.objects.filter(
+                client_service__in=services,
+                payment_date__range=[start_date, end_date],
+                status=ServicePayment.StatusChoices.PAID
+            )
+            
+            revenue_stats = payments.aggregate(
+                total_revenue=self.get_net_revenue_aggregation(),
+                payment_count=Count('id')
+            )
+            
+            lines_data.append({
+                'name': line.name,
+                'level': line.level,
+                'total_revenue': revenue_stats['total_revenue'] or Decimal('0'),
+                'payment_count': revenue_stats['payment_count'] or 0,
+                'service_count': services.count(),
+                'avg_revenue_per_service': self._calculate_avg_revenue_per_service(
+                    revenue_stats['total_revenue'], services.count()
+                )
+            })
+            
+        lines_data.sort(key=lambda x: x['total_revenue'], reverse=True)
+        
+        return {
+            'business_lines': lines_data,
+            'period_months': period_months,
+            'total_lines': len(lines_data)
+        }
+
+    def get_client_metrics_overview(self, period_months: int = 12) -> Dict[str, Any]:
+        """Métricas de clientes para dashboard"""
+        end_date = self.today
+        start_date = end_date - timedelta(days=30 * period_months)
+        
+        active_services = ClientService.objects.filter(is_active=True)
+        period_payments = ServicePayment.objects.filter(
+            payment_date__range=[start_date, end_date],
+            status=ServicePayment.StatusChoices.PAID
+        )
+        
+        client_stats = {
+            'active_clients': active_services.values('client').distinct().count(),
+            'total_services': active_services.count(),
+            'period_revenue': period_payments.aggregate(
+                total=self.get_net_revenue_aggregation()
+            )['total'] or Decimal('0'),
+            'period_payments': period_payments.count()
+        }
+        
+        if client_stats['active_clients'] > 0:
+            client_stats['avg_revenue_per_client'] = (
+                client_stats['period_revenue'] / client_stats['active_clients']
+            )
+        else:
+            client_stats['avg_revenue_per_client'] = Decimal('0')
+            
+        if client_stats['period_payments'] > 0:
+            client_stats['avg_payment_amount'] = (
+                client_stats['period_revenue'] / client_stats['period_payments']
+            )
+        else:
+            client_stats['avg_payment_amount'] = Decimal('0')
+            
+        return client_stats
+
+    def _get_month_financial_data(self, start_date: date, end_date: date) -> Dict[str, Any]:
+        """Datos financieros para un mes específico"""
+        payments = ServicePayment.objects.filter(
+            payment_date__range=[start_date, end_date],
+            status=ServicePayment.StatusChoices.PAID
+        )
+        
+        expenses = Expense.objects.filter(
+            date__range=[start_date, end_date]
+        )
+        
+        revenue_stats = payments.aggregate(
+            total_revenue=self.get_net_revenue_aggregation(),
+            payment_count=Count('id')
+        )
+        
+        expense_stats = expenses.aggregate(
+            total_expenses=Sum('amount'),
+            expense_count=Count('id')
+        )
+        
+        total_revenue = revenue_stats['total_revenue'] or Decimal('0')
+        total_expenses = expense_stats['total_expenses'] or Decimal('0')
+        profit = total_revenue - total_expenses
+        
+        profit_margin = (profit / total_revenue * 100) if total_revenue > 0 else Decimal('0')
+        
+        return {
+            'revenue': total_revenue,
+            'expenses': total_expenses,
+            'profit': profit,
+            'profit_margin': round(profit_margin, 2),
+            'payment_count': revenue_stats['payment_count'] or 0,
+            'expense_count': expense_stats['expense_count'] or 0
+        }
+
+    def _calculate_temporal_summary(self, monthly_data: List[Dict]) -> Dict[str, Any]:
+        """Calcula resumen de datos temporales"""
+        if not monthly_data:
+            return {}
+            
+        total_revenue = sum(month['revenue'] for month in monthly_data)
+        total_expenses = sum(month['expenses'] for month in monthly_data)
+        total_profit = total_revenue - total_expenses
+        
+        avg_monthly_revenue = total_revenue / len(monthly_data) if monthly_data else Decimal('0')
+        avg_monthly_expenses = total_expenses / len(monthly_data) if monthly_data else Decimal('0')
+        
+        revenue_growth = self._calculate_growth_rate(monthly_data, 'revenue')
+        profit_growth = self._calculate_growth_rate(monthly_data, 'profit')
+        
+        best_month = max(monthly_data, key=lambda x: x['profit']) if monthly_data else {}
+        worst_month = min(monthly_data, key=lambda x: x['profit']) if monthly_data else {}
+        
+        return {
+            'total_revenue': total_revenue,
+            'total_expenses': total_expenses,
+            'total_profit': total_profit,
+            'avg_monthly_revenue': avg_monthly_revenue,
+            'avg_monthly_expenses': avg_monthly_expenses,
+            'revenue_growth_rate': revenue_growth,
+            'profit_growth_rate': profit_growth,
+            'best_month': best_month,
+            'worst_month': worst_month,
+            'months_analyzed': len(monthly_data)
+        }
+
+    def _calculate_growth_rate(self, monthly_data: List[Dict], metric: str) -> Decimal:
+        """Calcula tasa de crecimiento para una métrica"""
+        if len(monthly_data) < 2:
+            return Decimal('0')
+            
+        first_value = monthly_data[0][metric]
+        last_value = monthly_data[-1][metric]
+        
+        if first_value == 0:
+            return Decimal('100') if last_value > 0 else Decimal('0')
+            
+        growth = ((last_value - first_value) / first_value) * 100
+        return round(growth, 2)
+
     def get_business_line_revenue_summary(
         self, 
         business_line, 
