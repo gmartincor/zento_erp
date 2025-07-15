@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from apps.business_lines.models import BusinessLine
 from apps.accounting.models import ClientService, ServicePayment
+from apps.core.constants import SERVICE_CATEGORIES
 from .revenue_calculation_utils import RevenueCalculationMixin, RevenueCalculationUtils
 
 
@@ -24,22 +25,22 @@ class StatisticsService(RevenueCalculationMixin):
         
         service_stats = services_query.aggregate(
             total_services=Count('id'),
-            white_services=Count('id', filter=Q(category='WHITE')),
-            black_services=Count('id', filter=Q(category='BLACK')),
+            white_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
+            black_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS'])),
             unique_clients=Count('client', distinct=True)
         )
         
         category_revenue = {
             'white_revenue': paid_payments.filter(
-                client_service__category='WHITE'
+                client_service__category=SERVICE_CATEGORIES['PERSONAL']
             ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0'),
             'black_revenue': paid_payments.filter(
-                client_service__category='BLACK'
+                client_service__category=SERVICE_CATEGORIES['BUSINESS']
             ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0')
         }
         
         total_remanentes = self._calculate_remanente_totals(
-            services_query.filter(category='BLACK')
+            services_query.filter(category=SERVICE_CATEGORIES['BUSINESS'])
         )
         
         combined_stats = {**stats, **service_stats, **category_revenue}
@@ -70,10 +71,10 @@ class StatisticsService(RevenueCalculationMixin):
         
         category_revenue = {
             'white_revenue': payments_query.filter(
-                client_service__category='WHITE'
+                client_service__category=SERVICE_CATEGORIES['PERSONAL']
             ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0'),
             'black_revenue': payments_query.filter(
-                client_service__category='BLACK'
+                client_service__category=SERVICE_CATEGORIES['BUSINESS']
             ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0')
         }
         
@@ -111,7 +112,7 @@ class StatisticsService(RevenueCalculationMixin):
         
         combined_stats = {**stats, **service_stats}
         
-        if category == 'BLACK':
+        if category == SERVICE_CATEGORIES['BUSINESS']:
             combined_stats['total_remanentes'] = self._calculate_remanente_totals(services_query)
         
         return self._normalize_basic_stats(combined_stats)
@@ -185,7 +186,7 @@ class StatisticsService(RevenueCalculationMixin):
         
         remanentes = query.filter(
             remanente__isnull=False,
-            client_service__category='black'
+            client_service__category=SERVICE_CATEGORIES['BUSINESS']
         )
         stats = remanentes.aggregate(
             total_amount=Sum('remanente'),
@@ -212,7 +213,7 @@ class StatisticsService(RevenueCalculationMixin):
         query = self._apply_payment_date_filters(query, year, month, date_range)
         remanentes = query.filter(
             remanente__isnull=False,
-            client_service__category='black'
+            client_service__category=SERVICE_CATEGORIES['BUSINESS']
         )
         stats = remanentes.aggregate(
             total_amount=Sum('remanente'),
@@ -254,7 +255,7 @@ class StatisticsService(RevenueCalculationMixin):
         total = ServicePayment.objects.filter(
             client_service__in=services_query,
             remanente__isnull=False,
-            client_service__category='black'
+            client_service__category=SERVICE_CATEGORIES['BUSINESS']
         ).aggregate(total=Sum('remanente'))['total'] or Decimal('0')
         
         return total

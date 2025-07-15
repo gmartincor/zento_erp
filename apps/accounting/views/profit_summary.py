@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Q, Sum, F
 from decimal import Decimal
+from apps.core.constants import SERVICE_CATEGORIES, CATEGORY_CONFIG
 from datetime import date, timedelta
 from apps.expenses.models import Expense
 from ..models import ServicePayment, ClientService
@@ -32,7 +33,7 @@ def _get_period_filters_and_range(period):
 
 
 @login_required
-def profit_summary_view(request, category='white'):
+def profit_summary_view(request, category=SERVICE_CATEGORIES['PERSONAL']):
     period = request.GET.get('period', 'current_month')
     
     period_filters = _get_period_filters_and_range(period)
@@ -42,7 +43,7 @@ def profit_summary_view(request, category='white'):
 
     context = {
         'category': category,
-        'category_display': 'White' if category == 'white' else 'Black',
+        'category_display': CATEGORY_CONFIG[category]['display_name'],
         'page_title': f'Beneficios - Categoría {category.title()}',
         'page_subtitle': f'Análisis de beneficios por categoría - {category.title()}',
         'period': period,
@@ -100,7 +101,7 @@ def calculate_profit_for_category(category, year=None, month=None, date_range=No
     )['total'] or Decimal('0')
     
     # Filtros para remanentes
-    if category == 'black':
+    if category == SERVICE_CATEGORIES['BUSINESS']:
         total_remanentes = ServicePayment.objects.filter(
             client_service__category=category,
             status__in=[ServicePayment.StatusChoices.PAID, ServicePayment.StatusChoices.REFUNDED],

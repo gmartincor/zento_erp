@@ -1,5 +1,6 @@
 from django.db.models import QuerySet, Q, Sum, Count, Avg
 from apps.accounting.models import ServicePayment, ClientService
+from apps.core.constants import SERVICE_CATEGORIES
 from .revenue_calculation_utils import RevenueCalculationMixin
 
 
@@ -83,8 +84,8 @@ class HistoryService(RevenueCalculationMixin):
             })
             
             service_stats = services.aggregate(
-                white_services=Count('id', filter=Q(category='white')),
-                black_services=Count('id', filter=Q(category='black'))
+                white_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
+                black_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS']))
             )
             summary.update(service_stats)
             
@@ -94,8 +95,8 @@ class HistoryService(RevenueCalculationMixin):
                 status=ServicePayment.StatusChoices.PAID
             ).aggregate(
                 total_revenue=RevenueCalculationMixin.get_net_revenue_aggregation(),
-                white_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category='white')),
-                black_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category='black'))
+                white_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['PERSONAL'])),
+                black_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['BUSINESS']))
             )
             
             summary.update({

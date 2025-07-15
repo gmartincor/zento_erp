@@ -150,16 +150,16 @@ class BusinessLineHierarchyView(
                         client_service__business_line__id__in=current_line_descendant_ids
                     )
                     current_line.white_revenue = current_line_payments.filter(
-                        client_service__category='white'
+                        client_service__category=SERVICE_CATEGORIES['PERSONAL']
                     ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                     current_line.black_revenue = current_line_payments.filter(
-                        client_service__category='black'
+                        client_service__category=SERVICE_CATEGORIES['BUSINESS']
                     ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                     current_line.white_services = ClientService.objects.filter(
-                        business_line__id__in=current_line_descendant_ids, category='white'
+                        business_line__id__in=current_line_descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
                     ).count()
                     current_line.black_services = ClientService.objects.filter(
-                        business_line__id__in=current_line_descendant_ids, category='black'
+                        business_line__id__in=current_line_descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
                     ).count()
                     
                     context.update({
@@ -189,19 +189,19 @@ class BusinessLineHierarchyView(
                     )
                     
                     white_revenue = payments.filter(
-                        client_service__category='white'
+                        client_service__category=SERVICE_CATEGORIES['PERSONAL']
                     ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                     
                     black_revenue = payments.filter(
-                        client_service__category='black'
+                        client_service__category=SERVICE_CATEGORIES['BUSINESS']
                     ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                     
                     white_services = ClientService.objects.filter(
-                        business_line__id__in=descendant_ids, category='white'
+                        business_line__id__in=descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
                     ).count()
                     
                     black_services = ClientService.objects.filter(
-                        business_line__id__in=descendant_ids, category='black'
+                        business_line__id__in=descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
                     ).count()
                     
                     for child in accessible_children:
@@ -210,16 +210,16 @@ class BusinessLineHierarchyView(
                             client_service__business_line__id__in=child_descendant_ids
                         )
                         child.white_revenue = child_payments.filter(
-                            client_service__category='white'
+                            client_service__category=SERVICE_CATEGORIES['PERSONAL']
                         ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                         child.black_revenue = child_payments.filter(
-                            client_service__category='black'
+                            client_service__category=SERVICE_CATEGORIES['BUSINESS']
                         ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                         child.white_services = ClientService.objects.filter(
-                            business_line__id__in=child_descendant_ids, category='white'
+                            business_line__id__in=child_descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
                         ).count()
                         child.black_services = ClientService.objects.filter(
-                            business_line__id__in=child_descendant_ids, category='black'
+                            business_line__id__in=child_descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
                         ).count()
                     
                     context.update({
@@ -255,10 +255,10 @@ class BusinessLineHierarchyView(
                 client_service__business_line__in=accessible_lines
             )
             white_revenue = payments.filter(
-                client_service__category='white'
+                client_service__category=SERVICE_CATEGORIES['PERSONAL']
             ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
             black_revenue = payments.filter(
-                client_service__category='black'
+                client_service__category=SERVICE_CATEGORIES['BUSINESS']
             ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
             
             total_lines = accessible_lines.count()
@@ -269,16 +269,16 @@ class BusinessLineHierarchyView(
                     client_service__business_line__id__in=line_descendant_ids
                 )
                 line.white_revenue = line_payments.filter(
-                    client_service__category='white'
+                    client_service__category=SERVICE_CATEGORIES['PERSONAL']
                 ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                 line.black_revenue = line_payments.filter(
-                    client_service__category='black'
+                    client_service__category=SERVICE_CATEGORIES['BUSINESS']
                 ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                 line.white_services = ClientService.objects.filter(
-                    business_line__id__in=line_descendant_ids, category='white'
+                    business_line__id__in=line_descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
                 ).count()
                 line.black_services = ClientService.objects.filter(
-                    business_line__id__in=line_descendant_ids, category='black'
+                    business_line__id__in=line_descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
                 ).count()
             
             context.update({

@@ -7,6 +7,7 @@ from apps.accounting.models import ClientService, Client
 from apps.accounting.utils import ServiceStatisticsCalculator
 from apps.accounting.services.template_service import TemplateDataService
 from apps.core.mixins import BusinessLinePermissionMixin
+from apps.core.constants import SERVICE_CATEGORIES
 
 
 class CategorySummaryView(LoginRequiredMixin, BusinessLinePermissionMixin, ListView):
@@ -24,7 +25,7 @@ class CategorySummaryView(LoginRequiredMixin, BusinessLinePermissionMixin, ListV
         ).select_related('client', 'business_line', 'business_line__parent')
         
         category_filter = self.request.GET.get('category', '').upper()
-        if category_filter in ['WHITE', 'BLACK']:
+        if category_filter in [SERVICE_CATEGORIES['PERSONAL'], SERVICE_CATEGORIES['BUSINESS']]:
             queryset = queryset.filter(category=category_filter)
         
         return queryset.order_by('category', 'business_line__name', 'client__full_name')

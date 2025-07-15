@@ -189,29 +189,27 @@ class ClientService(TimeStampedModel):
                 'price': 'El precio no puede ser negativo.'
             })
         
-        if self.category != self.CategoryChoices.BLACK and self.remanentes:
+        if self.category != self.CategoryChoices.BUSINESS and self.remanentes:
             raise ValidationError({
-                'remanentes': 'Los remanentes solo pueden configurarse para la categoría BLACK.'
+                'remanentes': 'Los remanentes solo pueden configurarse para la categoría BUSINESS.'
             })
         
-        if self.category == self.CategoryChoices.BLACK and not isinstance(self.remanentes, dict):
+        if self.category == self.CategoryChoices.BUSINESS and not isinstance(self.remanentes, dict):
             raise ValidationError({
-                'remanentes': 'Los remanentes deben ser un diccionario válido para la categoría BLACK.'
+                'remanentes': 'Los remanentes deben ser un diccionario válido para la categoría BUSINESS.'
             })
         
-        if self.category == self.CategoryChoices.BLACK:
+        if self.category == self.CategoryChoices.BUSINESS:
             if not self.business_line_id:
                 return
             
             pass
 
     def save(self, *args, **kwargs):
-        # Limpiar remanentes para servicios que no son BLACK
-        if self.category != self.CategoryChoices.BLACK:
+        if self.category != self.CategoryChoices.BUSINESS:
             self.remanentes = {}
         
-        # Asegurar que remanentes sea un dict para servicios BLACK
-        elif self.category == self.CategoryChoices.BLACK and not isinstance(self.remanentes, dict):
+        elif self.category == self.CategoryChoices.BUSINESS and not isinstance(self.remanentes, dict):
             self.remanentes = {}
         
         self.clean()
@@ -233,7 +231,7 @@ class ClientService(TimeStampedModel):
         return f"{self.client.full_name} - {self.business_line.name} ({self.category})"
 
     def get_remanente_total(self):
-        if self.category == self.CategoryChoices.BLACK and self.remanentes:
+        if self.category == self.CategoryChoices.BUSINESS and self.remanentes:
             total = 0
             for value in self.remanentes.values():
                 try:
@@ -453,9 +451,9 @@ class ServicePayment(TimeStampedModel):
                 'payment_date': 'La fecha de pago no puede ser posterior al fin del período.'
             })
         
-        if self.remanente and self.client_service and self.client_service.category != 'black':
+        if self.remanente and self.client_service and self.client_service.category != ClientService.CategoryChoices.BUSINESS:
             raise ValidationError({
-                'remanente': 'Los remanentes solo pueden aplicarse a servicios de categoría BLACK.'
+                'remanente': 'Los remanentes solo pueden aplicarse a servicios de categoría BUSINESS.'
             })
 
     def save(self, *args, **kwargs):

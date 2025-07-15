@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from apps.accounting.services.statistics_service import StatisticsService
 from apps.accounting.services.business_line_service import BusinessLineService
 from apps.accounting.services.template_tag_service import TemplateTagService
-from apps.core.constants import CATEGORY_CONFIG
+from apps.core.constants import CATEGORY_CONFIG, SERVICE_CATEGORIES
 
 register = template.Library()
 
@@ -68,8 +68,8 @@ def stats_card(title, value, subtitle=None, icon=None, trend=None):
 @register.inclusion_tag('accounting/components/category_tabs.html')
 def category_tabs(business_line, current_category, line_path):
     service = StatisticsService()
-    white_stats = service.calculate_category_performance('white', [business_line])
-    black_stats = service.calculate_category_performance('black', [business_line])
+    white_stats = service.calculate_category_performance(SERVICE_CATEGORIES['PERSONAL'], [business_line])
+    black_stats = service.calculate_category_performance(SERVICE_CATEGORIES['BUSINESS'], [business_line])
     return {
         'business_line': business_line,
         'current_category': current_category,
@@ -77,9 +77,9 @@ def category_tabs(business_line, current_category, line_path):
         'white_count': white_stats.get('total_services', 0),
         'black_count': black_stats.get('total_services', 0),
         'white_url': reverse('accounting:category-services', 
-                           kwargs={'line_path': line_path, 'category': 'white'}),
+                           kwargs={'line_path': line_path, 'category': SERVICE_CATEGORIES['PERSONAL']}),
         'black_url': reverse('accounting:category-services', 
-                           kwargs={'line_path': line_path, 'category': 'black'})
+                           kwargs={'line_path': line_path, 'category': SERVICE_CATEGORIES['BUSINESS']})
     }
 
 @register.inclusion_tag('accounting/components/breadcrumb_navigation.html')

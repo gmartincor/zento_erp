@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Q
 from decimal import Decimal
+from apps.core.constants import SERVICE_CATEGORIES, CATEGORY_CONFIG
 from datetime import date, timedelta
 from apps.business_lines.models import BusinessLine
 from ..models import ServicePayment
@@ -30,7 +31,7 @@ def _get_period_filters_and_range(period):
 
 
 @login_required
-def revenue_summary_view(request, category='white'):
+def revenue_summary_view(request, category=SERVICE_CATEGORIES['PERSONAL']):
     search = request.GET.get('search', '').strip()
     business_line_id = request.GET.get('business_line')
     payment_method = request.GET.get('payment_method')
@@ -54,7 +55,7 @@ def revenue_summary_view(request, category='white'):
 
     context = {
         'category': category,
-        'category_display': 'White' if category == 'white' else 'Black',
+        'category_display': CATEGORY_CONFIG[category]['display_name'],
         'page_title': f'Ingresos - Categoría {category.title()}',
         'page_subtitle': f'Análisis de ingresos por líneas de negocio - Categoría {category.title()}',
         'selected_payment_method': payment_method,
@@ -181,7 +182,7 @@ def get_all_descendant_lines(business_line):
         descendants.extend(get_all_descendant_lines(child))
     return descendants
 
-def calculate_revenue_stats_filtered(business_line=None, category='white', year=None, month=None, payment_method=None, date_range=None):
+def calculate_revenue_stats_filtered(business_line=None, category=SERVICE_CATEGORIES['PERSONAL'], year=None, month=None, payment_method=None, date_range=None):
     from ..services.payment_service import PaymentService
     
     if business_line:

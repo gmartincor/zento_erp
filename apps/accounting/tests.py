@@ -1,4 +1,10 @@
 from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.test import Client
+from django.urls import reverse
+from apps.business_lines.models import BusinessLine
+from apps.accounting.models import Client as AccountingClient, ClientService
+from apps.accounting.services.business_line_navigator import BusinessLineNavigator
 
 User = get_user_model()
 
@@ -121,7 +127,7 @@ class ServiceStatisticsCalculatorTestCase(TestCase):
         self.service_white = ClientService.objects.create(
             client=self.client_obj,
             business_line=self.business_line,
-            category='WHITE',
+            category=ClientService.CategoryChoices.PERSONAL,
             price=100.00,
             payment_method='CARD'
         )
@@ -129,7 +135,7 @@ class ServiceStatisticsCalculatorTestCase(TestCase):
         self.service_black = ClientService.objects.create(
             client=self.client_obj,
             business_line=self.business_line,
-            category='BLACK',
+            category=ClientService.CategoryChoices.BUSINESS,
             price=200.00,
             payment_method='CASH'
         )

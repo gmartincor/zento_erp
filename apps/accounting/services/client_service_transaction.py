@@ -93,7 +93,7 @@ class ClientServiceTransactionManager:
             service.remanentes = form_data['remanentes']
         
         # En el sistema simplificado, todos los servicios BLACK pueden usar remanentes
-        if service.category == 'BLACK':
+        if service.category == SERVICE_CATEGORIES['BUSINESS']:
             # Los remanentes se manejan ahora directamente en los períodos de pago
             pass
         

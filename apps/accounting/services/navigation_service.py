@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.models import AbstractUser
 
 from apps.business_lines.models import BusinessLine
+from apps.core.constants import SERVICE_CATEGORIES
 from .revenue_calculation_utils import RevenueCalculationMixin
 
 
@@ -116,16 +117,16 @@ class HierarchicalNavigationService(RevenueCalculationMixin):
             )
         service_stats = services.aggregate(
             total_services=Count('id'),
-            white_count=Count('id', filter=Q(category='WHITE')),
-            black_count=Count('id', filter=Q(category='BLACK')),
+            white_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
+            black_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS'])),
         )
         
         payment_stats = ServicePayment.objects.filter(
             client_service__in=services
         ).aggregate(
             total_revenue=self.get_net_revenue_aggregation(),
-            white_revenue=self.get_net_revenue_with_filter(Q(client_service__category='WHITE')),
-            black_revenue=self.get_net_revenue_with_filter(Q(client_service__category='BLACK'))
+            white_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['PERSONAL'])),
+            black_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['BUSINESS']))
         )
         
         stats = {**service_stats, **payment_stats}
@@ -135,9 +136,9 @@ class HierarchicalNavigationService(RevenueCalculationMixin):
         return stats
     
     def _format_category_name(self, category: str) -> str:
-        if category.upper() == 'WHITE':
+        if category.upper() == SERVICE_CATEGORIES['PERSONAL']:
             return 'Servicios White'
-        elif category.upper() == 'BLACK':
+        elif category.upper() == SERVICE_CATEGORIES['BUSINESS']:
             return 'Servicios Black'
         return category.title()
     

@@ -10,6 +10,7 @@ from apps.tenants.models import Tenant
 from apps.business_lines.models import BusinessLine
 from apps.accounting.models import Client, ClientService, ServicePayment
 from apps.expenses.models import ExpenseCategory, Expense
+from apps.core.constants import SERVICE_CATEGORIES
 
 
 class Command(BaseCommand):
@@ -130,7 +131,7 @@ class Command(BaseCommand):
     def _create_client_services(self):
         clients = list(Client.objects.all())
         business_lines = list(BusinessLine.objects.filter(level=2))
-        categories = ['white', 'black']
+        categories = [SERVICE_CATEGORIES['PERSONAL'], SERVICE_CATEGORIES['BUSINESS']]
         prices = [90, 120, 150, 180, 200, 250]
         admin_statuses = ['ENABLED', 'SUSPENDED']
         
@@ -147,7 +148,7 @@ class Command(BaseCommand):
                 end_date = start_date + timedelta(days=random.randint(90, 365))
                 
                 remanentes = {}
-                if category == 'black':
+                if category == SERVICE_CATEGORIES['BUSINESS']:
                     remanentes = {
                         f'remanente_{client.dni.lower()}': str(random.uniform(20, 100))
                     }
@@ -198,7 +199,7 @@ class Command(BaseCommand):
                     refunded_amount = amount * Decimal(str(random.uniform(0.5, 1.0)))
                 
                 remanente = None
-                if service.category == 'black' and random.choice([True, False]):
+                if service.category == SERVICE_CATEGORIES['BUSINESS'] and random.choice([True, False]):
                     remanente = Decimal(str(random.uniform(-50, 50)))
                 
                 ServicePayment.objects.create(

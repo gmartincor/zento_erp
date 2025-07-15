@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 
 from apps.business_lines.models import BusinessLine
 from apps.accounting.models import ClientService, ServicePayment
+from apps.core.constants import SERVICE_CATEGORIES
 from .revenue_calculation_utils import RevenueCalculationMixin
 
 User = get_user_model()
@@ -72,11 +73,11 @@ class BusinessLineService(RevenueCalculationMixin):
         children = children.annotate(
             white_service_count=Count(
                 'client_services',
-                filter=Q(client_services__category='WHITE', client_services__is_active=True)
+                filter=Q(client_services__category=SERVICE_CATEGORIES['PERSONAL'], client_services__is_active=True)
             ),
             black_service_count=Count(
                 'client_services',
-                filter=Q(client_services__category='BLACK', client_services__is_active=True)
+                filter=Q(client_services__category=SERVICE_CATEGORIES['BUSINESS'], client_services__is_active=True)
             )
         )
         
@@ -107,13 +108,13 @@ class BusinessLineService(RevenueCalculationMixin):
         
         service_stats = services_query.aggregate(
             total_services=Count('id'),
-            white_count=Count('id', filter=Q(category='WHITE')),
-            black_count=Count('id', filter=Q(category='BLACK')),
+            white_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
+            black_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS'])),
         )
         
         payment_category_stats = payments_query.aggregate(
-            white_revenue=self.get_net_revenue_with_filter(Q(client_service__category='WHITE')),
-            black_revenue=self.get_net_revenue_with_filter(Q(client_service__category='BLACK')),
+            white_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['PERSONAL'])),
+            black_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['BUSINESS'])),
         )
         
         stats.update(service_stats)
