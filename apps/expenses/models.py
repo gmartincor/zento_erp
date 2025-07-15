@@ -32,8 +32,7 @@ class ExpenseCategory(TimeStampedModel):
     
     description = models.TextField(
         blank=True,
-        verbose_name="Descripción",
-        help_text="Descripción opcional de la categoría"
+        verbose_name="Descripción"
     )
     
     category_type = models.CharField(
@@ -97,8 +96,7 @@ class Expense(TimeStampedModel):
     )
     
     description = models.TextField(
-        verbose_name="Descripción",
-        help_text="Detalle del gasto"
+        verbose_name="Descripción"
     )
     
     accounting_year = models.PositiveIntegerField(
@@ -121,8 +119,7 @@ class Expense(TimeStampedModel):
         upload_to=expense_attachment_path,
         blank=True,
         null=True,
-        verbose_name="Archivo adjunto",
-        help_text="Factura, recibo o justificante"
+        verbose_name="Archivo adjunto"
     )
 
     class Meta:

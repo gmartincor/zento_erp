@@ -362,10 +362,17 @@ class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
     form_class = ExpenseForm
     template_name = 'expenses/expense_form.html'
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['category'] = self.object.category
+        kwargs['service_category'] = self.object.service_category
+        return kwargs
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['service_category'] = self.object.service_category
         context['service_category_display'] = 'Personal' if self.object.service_category == 'personal' else 'Business'
+        context['selected_category'] = self.object.category
         return context
     
     def form_valid(self, form):
@@ -398,9 +405,15 @@ class ExpenseCategoryCreateView(LoginRequiredMixin, CreateView):
     form_class = ExpenseCategoryForm
     template_name = 'expenses/category_form.html'
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        service_category = self.request.GET.get('service_category', 'business')
+        kwargs['service_category'] = service_category
+        return kwargs
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        service_category = self.request.GET.get('service_category', 'personal')
+        service_category = self.request.GET.get('service_category', 'business')
         service_category_display = 'Personal' if service_category == 'personal' else 'Business'
         context['form_title'] = f'Nueva Categoría {service_category_display}'
         context['service_category'] = service_category
@@ -423,9 +436,25 @@ class ExpenseCategoryUpdateView(LoginRequiredMixin, UpdateView):
     slug_field = 'slug'
     slug_url_kwarg = 'category_slug'
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        service_category = self.request.GET.get('service_category')
+        if not service_category:
+            most_common = self.object.expenses.values('service_category').annotate(
+                count=Count('id')
+            ).order_by('-count').first()
+            service_category = most_common['service_category'] if most_common else 'business'
+        kwargs['service_category'] = service_category
+        return kwargs
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        service_category = self.request.GET.get('service_category', 'personal')
+        service_category = self.request.GET.get('service_category')
+        if not service_category:
+            most_common = self.object.expenses.values('service_category').annotate(
+                count=Count('id')
+            ).order_by('-count').first()
+            service_category = most_common['service_category'] if most_common else 'business'
         service_category_display = 'Personal' if service_category == 'personal' else 'Business'
         context['form_title'] = f'Editar Categoría {service_category_display}'
         context['service_category'] = service_category

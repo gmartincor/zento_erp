@@ -4,13 +4,21 @@ from .models import Expense, ExpenseCategory
 
 
 class ExpenseCategoryForm(forms.ModelForm):
+    service_category = forms.ChoiceField(
+        choices=[('personal', 'Personal'), ('business', 'Business')],
+        initial='business',
+        widget=forms.Select(attrs={
+            'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
+        }),
+        label='Categoría de Servicio'
+    )
+    
     class Meta:
         model = ExpenseCategory
         fields = ['name', 'category_type', 'description']
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                'placeholder': 'Nombre de la categoría'
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
             }),
             'category_type': forms.Select(attrs={
                 'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
@@ -18,9 +26,16 @@ class ExpenseCategoryForm(forms.ModelForm):
             'description': forms.Textarea(attrs={
                 'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
                 'rows': 3,
-                'placeholder': 'Descripción de la categoría'
+                'placeholder': 'Opcional'
             }),
         }
+
+    def __init__(self, *args, service_category=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        if service_category:
+            self.fields['service_category'].widget = forms.HiddenInput()
+            self.initial['service_category'] = service_category
 
 
 class ExpenseForm(forms.ModelForm):
@@ -30,14 +45,12 @@ class ExpenseForm(forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={
                 'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                'rows': 3,
-                'placeholder': 'Descripción del gasto'
+                'rows': 3
             }),
             'amount': forms.NumberInput(attrs={
                 'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
                 'step': '0.01',
-                'min': '0',
-                'placeholder': '0.00'
+                'min': '0'
             }),
             'date': forms.DateInput(attrs={
                 'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
@@ -51,7 +64,7 @@ class ExpenseForm(forms.ModelForm):
             }),
             'invoice_number': forms.TextInput(attrs={
                 'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                'placeholder': 'Número de factura (opcional)'
+                'placeholder': 'Opcional'
             }),
         }
 

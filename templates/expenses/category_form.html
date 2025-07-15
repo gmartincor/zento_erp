@@ -89,11 +89,46 @@
                 </div>
             </div>
 
+            <!-- Service Category Field -->
+            {% if service_category %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Categoría de Servicio
+                </label>
+                <div class="mt-1 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md">
+                    <span class="text-gray-900 dark:text-white font-medium">{{ service_category_display }}</span>
+                </div>
+                {{ form.service_category }}
+                {% if form.service_category.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.service_category.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div>
+                <label for="{{ form.service_category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {{ form.service_category.label }}
+                    <span class="text-red-500">*</span>
+                </label>
+                {{ form.service_category }}
+                {% if form.service_category.help_text %}
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.service_category.help_text }}</p>
+                {% endif %}
+                {% if form.service_category.errors %}
+                    <div class="mt-1">
+                        {% for error in form.service_category.errors %}
+                            <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <!-- Descripción -->
             <div>
                 <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {{ form.description.label }}
-                    <span class="text-gray-400">(opcional)</span>
                 </label>
                 {{ form.description }}
                 {% if form.description.help_text %}
