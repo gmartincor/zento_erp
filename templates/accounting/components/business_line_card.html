@@ -52,20 +52,20 @@
                         <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-2">
                             <div class="text-xs font-medium text-green-700 dark:text-green-400 mb-1">WHITE</div>
                             <div class="text-sm font-bold text-green-800 dark:text-green-300">
-                                {{ business_line.white_revenue|default:"0"|format_currency:"€" }}
+                                {{ business_line.personal_revenue|default:"0"|format_currency:"€" }}
                             </div>
                             <div class="text-xs text-green-600 dark:text-green-500">
-                                {{ business_line.white_services|default:"0" }} servicios
+                                {{ business_line.personal_services|default:"0" }} servicios
                             </div>
                         </div>
                         
                         <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-2">
                             <div class="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">BLACK</div>
                             <div class="text-sm font-bold text-purple-800 dark:text-purple-300">
-                                {{ business_line.black_revenue|default:"0"|format_currency:"€" }}
+                                {{ business_line.business_revenue|default:"0"|format_currency:"€" }}
                             </div>
                             <div class="text-xs text-purple-600 dark:text-purple-500">
-                                {{ business_line.black_services|default:"0" }} servicios
+                                {{ business_line.business_services|default:"0" }} servicios
                             </div>
                         </div>
                     </div>

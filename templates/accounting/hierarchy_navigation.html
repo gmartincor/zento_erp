@@ -65,7 +65,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos WHITE</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.white_revenue|format_currency:"$" }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.personal_revenue|format_currency:"$" }}</p>
                 </div>
             </div>
         </div>
@@ -79,7 +79,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos BLACK</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.black_revenue|format_currency:"$" }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.business_revenue|format_currency:"$" }}</p>
                 </div>
             </div>
         </div>
@@ -114,20 +114,20 @@
                     <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
                         <div class="text-xs font-medium text-green-700 dark:text-green-400 mb-1">WHITE</div>
                         <div class="text-sm font-bold text-green-800 dark:text-green-300">
-                            {{ line.white_revenue|default:"0"|format_currency:"$" }}
+                            {{ line.personal_revenue|default:"0"|format_currency:"$" }}
                         </div>
                         <div class="text-xs text-green-600 dark:text-green-500">
-                            {{ line.white_services|default:"0" }} servicios
+                            {{ line.personal_services|default:"0" }} servicios
                         </div>
                     </div>
                     
                     <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
                         <div class="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">BLACK</div>
                         <div class="text-sm font-bold text-purple-800 dark:text-purple-300">
-                            {{ line.black_revenue|default:"0"|format_currency:"$" }}
+                            {{ line.business_revenue|default:"0"|format_currency:"$" }}
                         </div>
                         <div class="text-xs text-purple-600 dark:text-purple-500">
-                            {{ line.black_services|default:"0" }} servicios
+                            {{ line.business_services|default:"0" }} servicios
                         </div>
                     </div>
                 </div>

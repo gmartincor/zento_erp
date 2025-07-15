@@ -190,10 +190,10 @@
                             <h4 class="text-sm font-medium text-green-700 dark:text-green-300">Servicios White</h4>
                             <div class="mt-2">
                                 <div class="text-2xl font-bold text-green-800 dark:text-green-200">
-                                    {% if current_line.white_services %}{{ current_line.white_services }}{% else %}0{% endif %}
+                                    {% if current_line.personal_services %}{{ current_line.personal_services }}{% else %}0{% endif %}
                                 </div>
                                 <div class="text-sm text-green-600 dark:text-green-400">
-                                    {% if current_line.white_revenue %}{{ current_line.white_revenue|format_currency:"€" }}{% else %}€0.00{% endif %} en ingresos
+                                    {% if current_line.personal_revenue %}{{ current_line.personal_revenue|format_currency:"€" }}{% else %}€0.00{% endif %} en ingresos
                                 </div>
                             </div>
                         </div>
@@ -211,10 +211,10 @@
                             <h4 class="text-sm font-medium text-purple-700 dark:text-purple-300">Servicios Black</h4>
                             <div class="mt-2">
                                 <div class="text-2xl font-bold text-purple-800 dark:text-purple-200">
-                                    {% if current_line.black_services %}{{ current_line.black_services }}{% else %}0{% endif %}
+                                    {% if current_line.business_services %}{{ current_line.business_services }}{% else %}0{% endif %}
                                 </div>
                                 <div class="text-sm text-purple-600 dark:text-purple-400">
-                                    {% if current_line.black_revenue %}{{ current_line.black_revenue|format_currency:"€" }}{% else %}€0.00{% endif %} en ingresos
+                                    {% if current_line.business_revenue %}{{ current_line.business_revenue|format_currency:"€" }}{% else %}€0.00{% endif %} en ingresos
                                 </div>
                             </div>
                         </div>

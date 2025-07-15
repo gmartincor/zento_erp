@@ -125,8 +125,8 @@ class HierarchicalNavigationService(RevenueCalculationMixin):
             client_service__in=services
         ).aggregate(
             total_revenue=self.get_net_revenue_aggregation(),
-            white_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['PERSONAL'])),
-            black_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['BUSINESS']))
+            personal_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['PERSONAL'])),
+            business_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['BUSINESS']))
         )
         
         stats = {**service_stats, **payment_stats}

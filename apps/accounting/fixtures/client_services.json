@@ -5,7 +5,7 @@
     "fields": {
       "client": 1,
       "business_line": 6,
-      "category": "WHITE",
+      "category": "PERSONAL",
       "price": "150.00",
       "payment_method": "CARD",
       "start_date": "2025-01-15",
@@ -22,7 +22,7 @@
     "fields": {
       "client": 2,
       "business_line": 7,
-      "category": "BLACK",
+      "category": "BUSINESS",
       "price": "200.00",
       "payment_method": "TRANSFER",
       "start_date": "2025-01-20",
@@ -41,7 +41,7 @@
     "fields": {
       "client": 3,
       "business_line": 9,
-      "category": "WHITE",
+      "category": "PERSONAL",
       "price": "120.00",
       "payment_method": "CASH",
       "start_date": "2025-02-01",
@@ -58,7 +58,7 @@
     "fields": {
       "client": 4,
       "business_line": 8,
-      "category": "BLACK",
+      "category": "BUSINESS",
       "price": "180.00",
       "payment_method": "BIZUM",
       "start_date": "2025-02-05",
@@ -77,7 +77,7 @@
     "fields": {
       "client": 5,
       "business_line": 9,
-      "category": "WHITE",
+      "category": "PERSONAL",
       "price": "90.00",
       "payment_method": "CARD",
       "start_date": "2025-02-10",
@@ -94,7 +94,7 @@
     "fields": {
       "client": 6,
       "business_line": 6,
-      "category": "BLACK",
+      "category": "BUSINESS",
       "price": "160.00",
       "payment_method": "TRANSFER",
       "start_date": "2025-02-15",
@@ -113,7 +113,7 @@
     "fields": {
       "client": 7,
       "business_line": 7,
-      "category": "WHITE",
+      "category": "PERSONAL",
       "price": "220.00",
       "payment_method": "CARD",
       "start_date": "2025-02-20",
@@ -130,7 +130,7 @@
     "fields": {
       "client": 8,
       "business_line": 8,
-      "category": "BLACK",
+      "category": "BUSINESS",
       "price": "250.00",
       "payment_method": "TRANSFER",
       "start_date": "2025-03-01",
@@ -149,7 +149,7 @@
     "fields": {
       "client": 9,
       "business_line": 9,
-      "category": "BLACK",
+      "category": "BUSINESS",
       "price": "140.00",
       "payment_method": "BIZUM",
       "start_date": "2025-03-05",
@@ -168,7 +168,7 @@
     "fields": {
       "client": 10,
       "business_line": 6,
-      "category": "WHITE",
+      "category": "PERSONAL",
       "price": "130.00",
       "payment_method": "CASH",
       "start_date": "2025-03-10",
@@ -185,7 +185,7 @@
     "fields": {
       "client": 1,
       "business_line": 9,
-      "category": "BLACK",
+      "category": "BUSINESS",
       "price": "170.00",
       "payment_method": "CARD",
       "start_date": "2025-04-01",
@@ -204,7 +204,7 @@
     "fields": {
       "client": 3,
       "business_line": 8,
-      "category": "WHITE",
+      "category": "PERSONAL",
       "price": "110.00",
       "payment_method": "TRANSFER",
       "start_date": "2025-04-10",
@@ -221,7 +221,7 @@
     "fields": {
       "client": 4,
       "business_line": 11,
-      "category": "WHITE",
+      "category": "PERSONAL",
       "price": "95.00",
       "payment_method": "CASH",
       "start_date": "2025-04-15",
@@ -238,7 +238,7 @@
     "fields": {
       "client": 5,
       "business_line": 12,
-      "category": "WHITE",
+      "category": "PERSONAL",
       "price": "85.00",
       "payment_method": "CARD",
       "start_date": "2025-04-20",

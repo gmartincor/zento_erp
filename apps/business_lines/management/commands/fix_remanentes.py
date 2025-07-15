@@ -34,14 +34,14 @@ class Command(BaseCommand):
                 problems_found.append(('invalid_remanente_config', bl))
             self.stdout.write('')
         
-        # 2. Buscar servicios BLACK que usan líneas de negocio problemáticas
+        # 2. Buscar servicios BUSINESS que usan líneas de negocio problemáticas
         problematic_services = ClientService.objects.filter(
-            category=ClientService.CategoryChoices.BLACK,
+            category=ClientService.CategoryChoices.BUSINESS,
             business_line__in=invalid_bl
         )
         
         if problematic_services.exists():
-            self.stdout.write(self.style.ERROR('PROBLEMA 2: Servicios BLACK que usan líneas de negocio problemáticas:'))
+            self.stdout.write(self.style.ERROR('PROBLEMA 2: Servicios BUSINESS que usan líneas de negocio problemáticas:'))
             for service in problematic_services:
                 self.stdout.write(f'  - Servicio ID: {service.id}, Cliente: {service.client.full_name}, '
                                 f'Línea: "{service.business_line.name}"')
@@ -145,5 +145,5 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'\n🎉 Se aplicaron {fixes_applied} correcciones exitosamente.'))
         
         if fixes_applied > 0:
-            self.stdout.write(self.style.WARNING('\nIMPORTANTE: Verifique que los servicios BLACK existentes '
+            self.stdout.write(self.style.WARNING('\nIMPORTANTE: Verifique que los servicios BUSINESS existentes '
                                                'sigan funcionando correctamente después de estos cambios.'))

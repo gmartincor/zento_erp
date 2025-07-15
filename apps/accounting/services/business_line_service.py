@@ -113,8 +113,8 @@ class BusinessLineService(RevenueCalculationMixin):
         )
         
         payment_category_stats = payments_query.aggregate(
-            white_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['PERSONAL'])),
-            black_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['BUSINESS'])),
+            personal_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['PERSONAL'])),
+            business_revenue=self.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['BUSINESS'])),
         )
         
         stats.update(service_stats)
@@ -125,14 +125,14 @@ class BusinessLineService(RevenueCalculationMixin):
         stats['avg_price'] = stats['avg_price'] or 0
         stats['white_count'] = stats['white_count'] or 0
         stats['black_count'] = stats['black_count'] or 0
-        stats['white_revenue'] = stats['white_revenue'] or 0
-        stats['black_revenue'] = stats['black_revenue'] or 0
+        stats['personal_revenue'] = stats['personal_revenue'] or 0
+        stats['business_revenue'] = stats['business_revenue'] or 0
         
         if stats['total_revenue'] > 0:
-            stats['white_percentage'] = (stats['white_revenue'] / stats['total_revenue']) * 100
-            stats['black_percentage'] = (stats['black_revenue'] / stats['total_revenue']) * 100
+            stats['personal_percentage'] = (stats['personal_revenue'] / stats['total_revenue']) * 100
+            stats['business_percentage'] = (stats['business_revenue'] / stats['total_revenue']) * 100
         else:
-            stats['white_percentage'] = 0
-            stats['black_percentage'] = 0
+            stats['personal_percentage'] = 0
+            stats['business_percentage'] = 0
         
         return stats

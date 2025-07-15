@@ -25,16 +25,16 @@ class StatisticsService(RevenueCalculationMixin):
         
         service_stats = services_query.aggregate(
             total_services=Count('id'),
-            white_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
-            black_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS'])),
+            personal_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
+            business_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS'])),
             unique_clients=Count('client', distinct=True)
         )
         
         category_revenue = {
-            'white_revenue': paid_payments.filter(
+            'personal_revenue': paid_payments.filter(
                 client_service__category=SERVICE_CATEGORIES['PERSONAL']
             ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0'),
-            'black_revenue': paid_payments.filter(
+            'business_revenue': paid_payments.filter(
                 client_service__category=SERVICE_CATEGORIES['BUSINESS']
             ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0')
         }
@@ -70,10 +70,10 @@ class StatisticsService(RevenueCalculationMixin):
         )
         
         category_revenue = {
-            'white_revenue': payments_query.filter(
+            'personal_revenue': payments_query.filter(
                 client_service__category=SERVICE_CATEGORIES['PERSONAL']
             ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0'),
-            'black_revenue': payments_query.filter(
+            'business_revenue': payments_query.filter(
                 client_service__category=SERVICE_CATEGORIES['BUSINESS']
             ).aggregate(total=self.get_net_revenue_aggregation())['total'] or Decimal('0')
         }
@@ -267,10 +267,10 @@ class StatisticsService(RevenueCalculationMixin):
             'total_revenue': total_revenue,
             'total_services': total_services,
             'unique_clients': stats['unique_clients'] or 0,
-            'white_services': stats['white_services'] or 0,
-            'black_services': stats['black_services'] or 0,
-            'white_revenue': stats['white_revenue'] or Decimal('0'),
-            'black_revenue': stats['black_revenue'] or Decimal('0'),
+            'personal_services': stats['personal_services'] or 0,
+            'business_services': stats['business_services'] or 0,
+            'personal_revenue': stats['personal_revenue'] or Decimal('0'),
+            'business_revenue': stats['business_revenue'] or Decimal('0'),
             'avg_price': stats['avg_price'] or Decimal('0'),
             'total_remanentes': total_remanentes,
             'avg_revenue_per_service': total_revenue / max(total_services, 1)
@@ -280,8 +280,8 @@ class StatisticsService(RevenueCalculationMixin):
         return {
             'total_revenue': stats.get('total_revenue') or Decimal('0'),
             'total_services': stats.get('total_services') or stats.get('service_count', 0),
-            'white_revenue': stats.get('white_revenue') or Decimal('0'),
-            'black_revenue': stats.get('black_revenue') or Decimal('0'),
+            'personal_revenue': stats.get('personal_revenue') or Decimal('0'),
+            'business_revenue': stats.get('business_revenue') or Decimal('0'),
             'unique_clients': stats.get('unique_clients') or 0,
             'avg_price': stats.get('avg_price') or Decimal('0'),
             'total_remanentes': stats.get('total_remanentes') or Decimal('0')

@@ -84,8 +84,8 @@ class HistoryService(RevenueCalculationMixin):
             })
             
             service_stats = services.aggregate(
-                white_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
-                black_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS']))
+                personal_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
+                business_services=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS']))
             )
             summary.update(service_stats)
             
@@ -95,16 +95,16 @@ class HistoryService(RevenueCalculationMixin):
                 status=ServicePayment.StatusChoices.PAID
             ).aggregate(
                 total_revenue=RevenueCalculationMixin.get_net_revenue_aggregation(),
-                white_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['PERSONAL'])),
-                black_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['BUSINESS']))
+                personal_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['PERSONAL'])),
+                business_revenue=RevenueCalculationMixin.get_net_revenue_with_filter(Q(client_service__category=SERVICE_CATEGORIES['BUSINESS']))
             )
             
             summary.update({
                 'total_revenue': payment_stats['total_revenue'] or Decimal('0'),
-                'white_services': service_stats['white_services'] or 0,
-                'black_services': service_stats['black_services'] or 0,
-                'white_revenue': payment_stats['white_revenue'] or Decimal('0'),
-                'black_revenue': payment_stats['black_revenue'] or Decimal('0'),
+                'personal_services': service_stats['personal_services'] or 0,
+                'business_services': service_stats['business_services'] or 0,
+                'personal_revenue': payment_stats['personal_revenue'] or Decimal('0'),
+                'business_revenue': payment_stats['business_revenue'] or Decimal('0'),
             })
         
         if service_id:

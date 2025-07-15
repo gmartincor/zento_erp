@@ -79,15 +79,15 @@
             <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600 dark:text-gray-400">Servicios White</span>
                 <div class="flex items-center space-x-2">
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ summary_stats.white_services|default:0 }}</span>
-                    <span class="text-xs text-gray-500">({{ summary_stats.white_revenue|default:0|format_currency:"€" }})</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ summary_stats.personal_services|default:0 }}</span>
+                    <span class="text-xs text-gray-500">({{ summary_stats.personal_revenue|default:0|format_currency:"€" }})</span>
                 </div>
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600 dark:text-gray-400">Servicios Black</span>
                 <div class="flex items-center space-x-2">
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ summary_stats.black_services|default:0 }}</span>
-                    <span class="text-xs text-gray-500">({{ summary_stats.black_revenue|default:0|format_currency:"€" }})</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ summary_stats.business_services|default:0 }}</span>
+                    <span class="text-xs text-gray-500">({{ summary_stats.business_revenue|default:0|format_currency:"€" }})</span>
                 </div>
             </div>
         </div>

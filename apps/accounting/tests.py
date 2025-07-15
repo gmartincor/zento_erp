@@ -124,7 +124,7 @@ class ServiceStatisticsCalculatorTestCase(TestCase):
             gender='M'
         )
         
-        self.service_white = ClientService.objects.create(
+        self.service_personal = ClientService.objects.create(
             client=self.client_obj,
             business_line=self.business_line,
             category=ClientService.CategoryChoices.PERSONAL,
@@ -132,7 +132,7 @@ class ServiceStatisticsCalculatorTestCase(TestCase):
             payment_method='CARD'
         )
         
-        self.service_black = ClientService.objects.create(
+        self.service_business = ClientService.objects.create(
             client=self.client_obj,
             business_line=self.business_line,
             category=ClientService.CategoryChoices.BUSINESS,
@@ -148,10 +148,10 @@ class ServiceStatisticsCalculatorTestCase(TestCase):
         
         self.assertEqual(stats['total_revenue'], 300.00)
         self.assertEqual(stats['total_services'], 2)
-        self.assertEqual(stats['white_services'], 1)
-        self.assertEqual(stats['black_services'], 1)
-        self.assertEqual(stats['white_revenue'], 100.00)
-        self.assertEqual(stats['black_revenue'], 200.00)
+        self.assertEqual(stats['personal_services'], 1)
+        self.assertEqual(stats['business_services'], 1)
+        self.assertEqual(stats['personal_revenue'], 100.00)
+        self.assertEqual(stats['business_revenue'], 200.00)
 
 
 def validate_infrastructure():
