@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Q, Sum, F
 from decimal import Decimal
-from apps.core.constants import SERVICE_CATEGORIES, CATEGORY_CONFIG
+from apps.core.constants import SERVICE_CATEGORIES, CATEGORY_CONFIG, EXPENSE_SERVICE_CATEGORIES
 from datetime import date, timedelta
 from apps.expenses.models import Expense
 from ..models import ServicePayment, ClientService
@@ -72,7 +72,6 @@ def calculate_profit_for_category(category, year=None, month=None, date_range=No
         amount__isnull=False
     )
     
-    # Aplicar filtros de fecha
     if date_range:
         start_date, end_date = date_range
         payments = payments.filter(payment_date__range=[start_date, end_date])
@@ -85,8 +84,14 @@ def calculate_profit_for_category(category, year=None, month=None, date_range=No
     revenue_stats = PaymentService.calculate_revenue_stats(payments)
     total_revenue = revenue_stats['total_amount']
     
-    # Filtros para gastos
-    expenses_filter = Q()
+    expense_category_map = {
+        SERVICE_CATEGORIES['PERSONAL']: EXPENSE_SERVICE_CATEGORIES['PERSONAL'],
+        SERVICE_CATEGORIES['BUSINESS']: EXPENSE_SERVICE_CATEGORIES['BUSINESS']
+    }
+    
+    expense_service_category = expense_category_map.get(category, EXPENSE_SERVICE_CATEGORIES['SHARED'])
+    
+    expenses_filter = Q(service_category=expense_service_category)
     if date_range:
         start_date, end_date = date_range
         expenses_filter &= Q(date__range=[start_date, end_date])

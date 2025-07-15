@@ -68,11 +68,22 @@ class ExpenseCategory(TimeStampedModel):
 
 class Expense(TimeStampedModel):
     
+    class ServiceCategoryChoices(models.TextChoices):
+        PERSONAL = 'personal', 'Personal'
+        BUSINESS = 'business', 'Business'
+    
     category = models.ForeignKey(
         ExpenseCategory,
         on_delete=models.PROTECT,
         related_name='expenses',
         verbose_name="Categoría"
+    )
+    
+    service_category = models.CharField(
+        max_length=10,
+        choices=ServiceCategoryChoices.choices,
+        default=ServiceCategoryChoices.BUSINESS,
+        verbose_name="Categoría de Servicio"
     )
     
     amount = models.DecimalField(
@@ -124,6 +135,7 @@ class Expense(TimeStampedModel):
             models.Index(fields=['category', 'date']),
             models.Index(fields=['date']),
             models.Index(fields=['accounting_year', 'category']),
+            models.Index(fields=['service_category', 'date']),
         ]
 
     def save(self, *args, **kwargs):

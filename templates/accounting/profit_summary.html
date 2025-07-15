@@ -92,7 +92,7 @@
             </div>
             
             <div class="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-                <span class="font-medium text-gray-900 dark:text-white">Menos: Gastos del período</span>
+                <span class="font-medium text-gray-900 dark:text-white">Menos: Gastos de categoría {{ category_display }}</span>
                 <span class="text-red-600 dark:text-red-400 font-semibold">-{{ total_expenses|format_currency:"€" }}</span>
             </div>
             
@@ -125,7 +125,7 @@
             <div class="ml-3">
                 <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Información sobre el cálculo</h3>
                 <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                    <p>Este cálculo muestra los ingresos totales de la categoría {{ category_display }} menos todos los gastos del período seleccionado{% if category == 'business' %} y los remanentes aplicados{% endif %}. </p>
+                    <p>Este cálculo muestra los ingresos totales de la categoría {{ category_display }} menos los gastos de la misma categoría del período seleccionado{% if category == 'business' %} y los remanentes aplicados{% endif %}.</p>
                 </div>
             </div>
         </div>

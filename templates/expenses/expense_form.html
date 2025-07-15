@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load tenant_tags %}
 
-{% block title %}{% if form.instance.pk %}Editar{% else %}Crear{% endif %} Gasto - {{ category_display }} - Nutrition Pro CRM{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar{% else %}Crear{% endif %} Gasto - Nutrition Pro CRM{% endblock %}
 
 {% block breadcrumb %}
 {{ block.super }}
@@ -10,7 +10,7 @@
         <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
         </svg>
-        <a href="{% tenant_url 'expenses:categories' %}" class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Gastos</a>
+        <a href="{% tenant_url 'expenses:categories' service_category|default:'business' %}" class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Gastos</a>
     </div>
 </li>
 <li>
@@ -18,7 +18,7 @@
         <svg class="flex-shrink-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
         </svg>
-        <a href="{% tenant_url 'expenses:by-category' category_slug %}" class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">{{ category_display }}</a>
+        <a href="{% tenant_url 'expenses:categories' service_category|default:'business' %}" class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">{{ service_category_display|default:'Gastos' }}</a>
     </div>
 </li>
 <li>
@@ -37,9 +37,9 @@
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
             {% if form.instance.pk %}Editar Gasto{% else %}Nuevo Gasto{% endif %}
         </h1>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">{{ category_display }}</p>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">{{ service_category_display|default:'Nuevo gasto' }}</p>
     </div>
-    <a href="{% tenant_url 'expenses:by-category' category_slug %}" 
+    <a href="{% tenant_url 'expenses:categories' service_category|default:'business' %}" 
        class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg transition-colors font-medium">
         Cancelar
     </a>
@@ -108,41 +108,53 @@
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fecha en que se realizó el gasto</p>
             </div>
 
-            <!-- Business Line Field -->
+            <!-- Category Field -->
             <div>
-                <label for="{{ form.business_line.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {{ form.business_line.label }}
+                <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.category.label }}
                     <span class="text-red-500">*</span>
                 </label>
-                {{ form.business_line }}
-                {% if form.business_line.errors %}
+                {{ form.category }}
+                {% if form.category.errors %}
                     <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {{ form.business_line.errors.0 }}
+                        {{ form.category.errors.0 }}
                     </div>
                 {% endif %}
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Línea de negocio a la que se atribuye este gasto</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Categoría a la que pertenece este gasto</p>
             </div>
 
-            <!-- Notes Field -->
+            <!-- Service Category Field -->
             <div>
-                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {{ form.notes.label }}
+                <label for="{{ form.service_category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.service_category.label }}
+                    <span class="text-red-500">*</span>
                 </label>
-                {{ form.notes }}
-                {% if form.notes.errors %}
+                {{ form.service_category }}
+                {% if form.service_category.errors %}
                     <div class="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {{ form.notes.errors.0 }}
+                        {{ form.service_category.errors.0 }}
                     </div>
                 {% endif %}
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Información adicional opcional sobre el gasto</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Selecciona si es un gasto personal o de negocio</p>
             </div>
 
-            <!-- Category Field (Hidden) -->
-            {{ form.category }}
+            <!-- Invoice Number Field -->
+            <div>
+                <label for="{{ form.invoice_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.invoice_number.label }}
+                </label>
+                {{ form.invoice_number }}
+                {% if form.invoice_number.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.invoice_number.errors.0 }}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Número de factura o referencia (opcional)</p>
+            </div>
 
             <!-- Form Actions -->
             <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <a href="{% tenant_url 'expenses:by-category' category_type %}" 
+                <a href="{% tenant_url 'expenses:categories' service_category|default:'business' %}" 
                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                     Cancelar
                 </a>

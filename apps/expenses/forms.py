@@ -33,7 +33,7 @@ class ExpenseForm(forms.ModelForm):
     
     class Meta:
         model = Expense
-        fields = ['description', 'amount', 'date', 'category', 'invoice_number']
+        fields = ['description', 'amount', 'date', 'category', 'service_category', 'invoice_number']
         widgets = {
             'description': forms.TextInput(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500',
@@ -49,6 +49,9 @@ class ExpenseForm(forms.ModelForm):
                 'type': 'date'
             }),
             'category': forms.Select(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+            }),
+            'service_category': forms.Select(attrs={
                 'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500'
             }),
             'invoice_number': forms.TextInput(attrs={
@@ -73,5 +76,6 @@ class ExpenseForm(forms.ModelForm):
                 is_active=True
             ).order_by('category_type', 'name')
         
+        self.fields['service_category'].help_text = 'Selecciona a qué categoría de servicio corresponde este gasto'
         self.fields['invoice_number'].required = False
         self.fields['invoice_number'].help_text = 'Número de factura o referencia (opcional)'

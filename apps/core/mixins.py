@@ -335,3 +335,21 @@ class TenantFormMixin:
             attrs.update(extra_attrs)
         field.widget.attrs.update(attrs)
         return field
+
+
+class ServiceCategoryFilterMixin:
+    service_category = None
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.service_category:
+            return queryset.filter(service_category=self.service_category)
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.service_category:
+            from apps.core.constants import EXPENSE_SERVICE_CATEGORY_DISPLAY
+            context['service_category'] = self.service_category
+            context['service_category_display'] = EXPENSE_SERVICE_CATEGORY_DISPLAY.get(self.service_category.upper(), self.service_category)
+        return context

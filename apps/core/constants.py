@@ -78,6 +78,18 @@ SERVICE_CATEGORY_DISPLAY = {
     'BUSINESS': 'Servicios Business',
 }
 
+EXPENSE_SERVICE_CATEGORIES = {
+    'PERSONAL': 'personal',
+    'BUSINESS': 'business',
+    'SHARED': 'shared',
+}
+
+EXPENSE_SERVICE_CATEGORY_DISPLAY = {
+    'PERSONAL': 'Personal',
+    'BUSINESS': 'Business',
+    'SHARED': 'Compartido',
+}
+
 PAYMENT_METHOD_DISPLAY = {
     'CARD': 'Tarjeta',
     'CASH': 'Efectivo',
@@ -134,10 +146,12 @@ CATEGORY_DEFAULTS = {
 }
 
 TENANT_SUCCESS_MESSAGES = {
-    'TENANT_CREATED': 'Nutricionista "{name}" registrado exitosamente.',
-    'TENANT_UPDATED': 'Datos del nutricionista actualizados exitosamente.',
-    'TENANT_ACTIVATED': 'Cuenta de "{name}" activada exitosamente.',
+    'TENANT_CREATED': 'Cuenta de nutricionista "{name}" creada exitosamente.',
+    'TENANT_UPDATED': 'Cuenta de nutricionista "{name}" actualizada exitosamente.',
+    'TENANT_ACTIVATED': 'Cuenta de nutricionista "{name}" activada exitosamente.',
     'TENANT_DEACTIVATED': 'Cuenta de "{name}" desactivada exitosamente.',
+    'TENANT_SUSPENDED': 'Cuenta de nutricionista "{name}" suspendida.',
+    'TENANT_DELETED': 'Cuenta de nutricionista "{name}" eliminada exitosamente.',
 }
 
 TENANT_ERROR_MESSAGES = {
@@ -146,12 +160,4 @@ TENANT_ERROR_MESSAGES = {
     'TENANT_INACTIVE': 'La cuenta está desactivada.',
     'TENANT_SUSPENDED': 'La cuenta está suspendida.',
     'SCHEMA_CREATION_FAILED': 'Error al crear el esquema de base de datos.',
-}
-
-TENANT_SUCCESS_MESSAGES = {
-    'TENANT_CREATED': 'Cuenta de nutricionista "{name}" creada exitosamente.',
-    'TENANT_UPDATED': 'Cuenta de nutricionista "{name}" actualizada exitosamente.',
-    'TENANT_ACTIVATED': 'Cuenta de nutricionista "{name}" activada exitosamente.',
-    'TENANT_SUSPENDED': 'Cuenta de nutricionista "{name}" suspendida.',
-    'TENANT_DELETED': 'Cuenta de nutricionista "{name}" eliminada exitosamente.',
 }
