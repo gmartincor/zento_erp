@@ -109,6 +109,31 @@
             </div>
 
             <!-- Category Field -->
+            {% if selected_category %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Categoría
+                </label>
+                <div class="mt-1 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md">
+                    <div class="flex items-center">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                   {% if selected_category.category_type == 'FIXED' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                   {% elif selected_category.category_type == 'VARIABLE' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                   {% elif selected_category.category_type == 'TAX' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                   {% else %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% endif %}">
+                            {{ selected_category.get_category_type_display }}
+                        </span>
+                        <span class="ml-2 text-gray-900 dark:text-white font-medium">{{ selected_category.name }}</span>
+                    </div>
+                </div>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.category.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+            {% else %}
             <div>
                 <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {{ form.category.label }}
@@ -122,8 +147,25 @@
                 {% endif %}
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Categoría a la que pertenece este gasto</p>
             </div>
+            {% endif %}
 
             <!-- Service Category Field -->
+            {% if selected_category %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Categoría de Servicio
+                </label>
+                <div class="mt-1 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md">
+                    <span class="text-gray-900 dark:text-white font-medium">{{ service_category_display }}</span>
+                </div>
+                {{ form.service_category }}
+                {% if form.service_category.errors %}
+                    <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {{ form.service_category.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+            {% else %}
             <div>
                 <label for="{{ form.service_category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {{ form.service_category.label }}
@@ -137,6 +179,7 @@
                 {% endif %}
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Selecciona si es un gasto personal o de negocio</p>
             </div>
+            {% endif %}
 
             <!-- Invoice Number Field -->
             <div>

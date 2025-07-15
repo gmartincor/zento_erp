@@ -87,7 +87,15 @@
             
             <!-- Botones de acción -->
             <div class="flex space-x-2">
-                {% if category_type %}
+                {% if category %}
+                <a href="{% tenant_url 'expenses:create' service_category %}?category={{ category.slug }}" 
+                   class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors font-medium text-sm">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Nuevo Gasto
+                </a>
+                {% elif category_type %}
                 <a href="{% tenant_url 'expenses:create-by-type' service_category category_type %}" 
                    class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors font-medium text-sm">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,7 +231,7 @@
         <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No hay gastos</h3>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comienza agregando un nuevo gasto a esta categoría.</p>
         <div class="mt-6">
-            <a href="{% tenant_url 'expenses:create' category_slug %}" 
+            <a href="{% tenant_url 'expenses:create' service_category %}{% if category %}?category={{ category.slug }}{% endif %}" 
                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
                 <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>

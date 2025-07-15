@@ -306,6 +306,14 @@ class ExpenseCreateView(LoginRequiredMixin, CreateView):
         context['service_category'] = service_category
         context['service_category_display'] = 'Personal' if service_category == 'personal' else 'Business'
         
+        category_slug = self.request.GET.get('category')
+        if category_slug:
+            try:
+                category = ExpenseCategory.objects.get(slug=category_slug)
+                context['selected_category'] = category
+            except ExpenseCategory.DoesNotExist:
+                pass
+        
         if category_type:
             category_type_display = dict(ExpenseCategory.CategoryTypeChoices.choices).get(category_type, category_type)
             context['category_type'] = category_type
@@ -318,6 +326,20 @@ class ExpenseCreateView(LoginRequiredMixin, CreateView):
         service_category = self.kwargs.get('service_category', 'personal')
         initial['service_category'] = service_category
         return initial
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        service_category = self.kwargs.get('service_category', 'personal')
+        kwargs['service_category'] = service_category
+        
+        category_slug = self.request.GET.get('category')
+        if category_slug:
+            try:
+                category = ExpenseCategory.objects.get(slug=category_slug)
+                kwargs['category'] = category
+            except ExpenseCategory.DoesNotExist:
+                pass
+        return kwargs
     
     def form_valid(self, form):
         messages.success(self.request, SUCCESS_MESSAGES['EXPENSE_CREATED'])

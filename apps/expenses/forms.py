@@ -1,81 +1,82 @@
 from django import forms
-from .models import ExpenseCategory, Expense
+from django.utils import timezone
+from .models import Expense, ExpenseCategory
 
 
 class ExpenseCategoryForm(forms.ModelForm):
-    
     class Meta:
         model = ExpenseCategory
         fields = ['name', 'category_type', 'description']
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500',
-                'placeholder': 'Ej: Internet, Nómina, Seguros Sociales'
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                'placeholder': 'Nombre de la categoría'
             }),
             'category_type': forms.Select(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
             }),
             'description': forms.Textarea(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500',
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
                 'rows': 3,
-                'placeholder': 'Descripción opcional de la categoría'
+                'placeholder': 'Descripción de la categoría'
             }),
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['name'].help_text = 'Nombre descriptivo de la categoría (ej: Internet, Nómina, Seguros Sociales)'
-        self.fields['category_type'].help_text = 'Tipo de gasto: Fijo (mensual), Variable (ocasional), Impuesto, Puntual'
-        self.fields['description'].required = False
 
 
 class ExpenseForm(forms.ModelForm):
-    
     class Meta:
         model = Expense
         fields = ['description', 'amount', 'date', 'category', 'service_category', 'invoice_number']
         widgets = {
-            'description': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500',
+            'description': forms.Textarea(attrs={
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                'rows': 3,
                 'placeholder': 'Descripción del gasto'
             }),
             'amount': forms.NumberInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500',
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
                 'step': '0.01',
-                'min': '0'
+                'min': '0',
+                'placeholder': '0.00'
             }),
             'date': forms.DateInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500',
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
                 'type': 'date'
             }),
             'category': forms.Select(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
             }),
             'service_category': forms.Select(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
             }),
             'invoice_number': forms.TextInput(attrs={
-                'class': 'mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 focus:ring-primary-500',
+                'class': 'block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
                 'placeholder': 'Número de factura (opcional)'
-            })
+            }),
         }
-    
-    def __init__(self, *args, **kwargs):
-        category = kwargs.pop('category', None)
+
+    def __init__(self, *args, category=None, service_category=None, **kwargs):
         super().__init__(*args, **kwargs)
         
-        if category:
-            self.fields['category'].queryset = ExpenseCategory.objects.filter(
-                id=category.id,
-                is_active=True
-            )
-            self.fields['category'].initial = category
-            self.fields['category'].widget.attrs['readonly'] = True
-        else:
-            self.fields['category'].queryset = ExpenseCategory.objects.filter(
-                is_active=True
-            ).order_by('category_type', 'name')
+        if not self.instance.pk and not self.initial.get('date'):
+            self.initial['date'] = timezone.now().date()
         
-        self.fields['service_category'].help_text = 'Selecciona a qué categoría de servicio corresponde este gasto'
-        self.fields['invoice_number'].required = False
-        self.fields['invoice_number'].help_text = 'Número de factura o referencia (opcional)'
+        self.fields['category'].queryset = ExpenseCategory.objects.filter(
+            is_active=True
+        ).order_by('category_type', 'name')
+        
+        if category:
+            self.fields['category'].widget = forms.HiddenInput()
+            self.initial['category'] = category
+        
+        if service_category:
+            self.fields['service_category'].widget = forms.HiddenInput()
+            self.initial['service_category'] = service_category
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.accounting_year = instance.date.year
+            instance.accounting_month = instance.date.month
+            instance.save()
+        return instance
