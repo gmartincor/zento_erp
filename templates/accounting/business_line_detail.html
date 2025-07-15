@@ -246,14 +246,14 @@
                     </svg>
                     <span class="text-sm font-medium">Ver todas las líneas</span>
                 </a>
-                <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='white' %}"
+                <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='personal' %}"
                    class="flex items-center justify-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors w-full">
                     <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                     <span class="text-sm font-medium">Total reportes White - {% if business_line %}{{ business_line.name }}{% elif current_line %}{{ current_line.name }}{% endif %}</span>
                 </a>
-                <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='black' %}"
+                <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='business' %}"
                    class="flex items-center justify-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-colors w-full">
                     <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />

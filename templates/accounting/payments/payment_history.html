@@ -35,8 +35,8 @@
                 <div>
                     <select name="category" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                         <option value="">Todas las categorías</option>
-                        <option value="white" {% if filters.category == 'white' %}selected{% endif %}>White</option>
-                        <option value="black" {% if filters.category == 'black' %}selected{% endif %}>Black</option>
+                        <option value="personal" {% if filters.category == 'personal' %}selected{% endif %}>Personal</option>
+                        <option value="business" {% if filters.category == 'business' %}selected{% endif %}>Business</option>
                     </select>
                 </div>
             </div>

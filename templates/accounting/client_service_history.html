@@ -146,8 +146,8 @@
                 
                 <select name="category" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Todas las categorías</option>
-                    <option value="white" {% if filter_params.category == "white" %}selected{% endif %}>White</option>
-                    <option value="black" {% if filter_params.category == "black" %}selected{% endif %}>Black</option>
+                    <option value="personal" {% if filter_params.category == "personal" %}selected{% endif %}>White</option>
+                    <option value="business" {% if filter_params.category == "business" %}selected{% endif %}>Black</option>
                 </select>
             </div>
             

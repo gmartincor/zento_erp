@@ -1,32 +1,32 @@
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1 mb-6">
     <nav class="flex space-x-1" aria-label="Categorías de servicios">
 {% load tenant_tags %}
-        <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='white' %}"
-           class="flex-1 group inline-flex items-center justify-center px-4 py-3 border-b-2 font-medium text-sm transition-all duration-200 {% if current_category == 'white' %}border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20{% else %}border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600{% endif %} rounded-lg">
-            <svg class="w-5 h-5 mr-2 {% if current_category == 'white' %}text-green-500 dark:text-green-400{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" 
+        <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='personal' %}"
+           class="flex-1 group inline-flex items-center justify-center px-4 py-3 border-b-2 font-medium text-sm transition-all duration-200 {% if current_category == 'personal' %}border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20{% else %}border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600{% endif %} rounded-lg">
+            <svg class="w-5 h-5 mr-2 {% if current_category == 'personal' %}text-green-500 dark:text-green-400{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" 
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            <span>Servicios White</span>
+            <span>Servicios Personal</span>
             {% if white_count %}
-            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if current_category == 'white' %}bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200{% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
+            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if current_category == 'personal' %}bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200{% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
                 {{ white_count }}
             </span>
             {% endif %}
         </a>
-        <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='black' %}"
-           class="flex-1 group inline-flex items-center justify-center px-4 py-3 border-b-2 font-medium text-sm transition-all duration-200 {% if current_category == 'black' %}border-purple-500 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20{% else %}border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600{% endif %} rounded-lg">
-            <svg class="w-5 h-5 mr-2 {% if current_category == 'black' %}text-purple-500 dark:text-purple-400{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" 
+        <a href="{% tenant_url 'accounting:category-services' line_path=line_path category='business' %}"
+           class="flex-1 group inline-flex items-center justify-center px-4 py-3 border-b-2 font-medium text-sm transition-all duration-200 {% if current_category == 'business' %}border-purple-500 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20{% else %}border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600{% endif %} rounded-lg">
+            <svg class="w-5 h-5 mr-2 {% if current_category == 'business' %}text-purple-500 dark:text-purple-400{% else %}text-gray-400 group-hover:text-gray-500{% endif %}" 
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            <span>Servicios Black</span>
+            <span>Servicios Business</span>
             {% if black_count %}
-            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if current_category == 'black' %}bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200{% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
+            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if current_category == 'business' %}bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200{% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
                 {{ black_count }}
             </span>
             {% endif %}
-            {% if current_category == 'black' and business_line.has_remanente %}
+            {% if current_category == 'business' and business_line.has_remanente %}
             <span class="ml-1 inline-flex items-center">
                 <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm2 2a1 1 0 000 2h.01a1 1 0 100-2H5zm3 0a1 1 0 000 2h.01a1 1 0 100-2H8zm3 0a1 1 0 000 2h.01a1 1 0 100-2H11z" clip-rule="evenodd"></path>

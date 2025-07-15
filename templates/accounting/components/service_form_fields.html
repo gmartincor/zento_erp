@@ -174,7 +174,7 @@
     {% endif %}
 </div>
 
-{% if form.category.value == 'BLACK' or category == 'BLACK' %}
+{% if form.category.value == 'BUSINESS' or category == 'BUSINESS' %}
 <div class="mt-6" id="remanentes-section">
     <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
         <div class="flex items-start">
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (categoryField && remanentesSection) {
         function toggleRemanentesSection() {
-            if (categoryField.value === 'BLACK') {
+            if (categoryField.value === 'BUSINESS') {
                 remanentesSection.style.display = 'block';
             } else {
                 remanentesSection.style.display = 'none';
