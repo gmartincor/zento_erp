@@ -42,7 +42,7 @@ class BusinessLineDetailView(
             # Verificar si es un nodo hoja (sin hijos)
             if not business_line.children.exists():
                 line_path = kwargs.get('line_path', '')
-                redirect_url = f'/accounting/business-lines/{line_path}/white/'
+                redirect_url = f'/accounting/business-lines/{line_path}/personal/'
                 return redirect(redirect_url)
                 
         except (Http404, BusinessLine.DoesNotExist):

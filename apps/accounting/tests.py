@@ -50,12 +50,12 @@ class AccountingViewsTestCase(TestCase):
     
     def test_service_category_url_pattern(self):
         url = reverse('accounting:category-services', 
-                     kwargs={'line_path': 'test-root/test-child', 'category': 'white'})
-        self.assertEqual(url, '/accounting/test-root/test-child/white/')
+                     kwargs={'line_path': 'test-root/test-child', 'category': 'personal'})
+        self.assertEqual(url, '/accounting/test-root/test-child/personal/')
         
         url = reverse('accounting:category-services', 
-                     kwargs={'line_path': 'test-root/test-child', 'category': 'black'})
-        self.assertEqual(url, '/accounting/test-root/test-child/black/')
+                     kwargs={'line_path': 'test-root/test-child', 'category': 'business'})
+        self.assertEqual(url, '/accounting/test-root/test-child/business/')
 
 
 class BusinessLineNavigatorTestCase(TestCase):
@@ -201,8 +201,8 @@ def validate_phase_2():
         assert line_url == '/accounting/test/'
         
         category_url = reverse('accounting:category-services', 
-                              kwargs={'line_path': 'test/child', 'category': 'white'})
-        assert category_url == '/accounting/test/child/white/'
+                              kwargs={'line_path': 'test/child', 'category': 'personal'})
+        assert category_url == '/accounting/test/child/personal/'
         
         print("✅ All views imported successfully")
         print("✅ URL patterns validated")

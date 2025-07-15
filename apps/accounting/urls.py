@@ -40,17 +40,17 @@ urlpatterns = [
     path('revenue/categories/', CategorySummaryView.as_view(), name='revenue-categories'),
     path('revenue/clients/', ClientRevenueView.as_view(), name='revenue-clients'),
     re_path(
-        r'^business-lines/(?P<line_path>[\w-]+(?:/[\w-]+)*)/(?P<category>white|black)/create/$',
+        r'^business-lines/(?P<line_path>[\w-]+(?:/[\w-]+)*)/(?P<category>personal|business)/create/$',
         ServiceCreateView.as_view(),
         name='service-create'
     ),
     re_path(
-        r'^business-lines/(?P<line_path>[\w-]+(?:/[\w-]+)*)/(?P<category>white|black)/(?P<service_id>\d+)/edit/$',
+        r'^business-lines/(?P<line_path>[\w-]+(?:/[\w-]+)*)/(?P<category>personal|business)/(?P<service_id>\d+)/edit/$',
         ServiceEditView.as_view(),
         name='service-edit'
     ),
     re_path(
-        r'^business-lines/(?P<line_path>[\w-]+(?:/[\w-]+)*)/(?P<category>white|black)/$',
+        r'^business-lines/(?P<line_path>[\w-]+(?:/[\w-]+)*)/(?P<category>personal|business)/$',
         ServiceCategoryListView.as_view(),
         name='category-services'
     ),
