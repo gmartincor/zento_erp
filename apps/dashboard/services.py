@@ -111,11 +111,24 @@ class DashboardDataService:
                 'num_servicios': servicios.count(),
             })
         
-        return sorted(business_lines, key=lambda x: x['total_ingresos'], reverse=True)
+        business_lines = sorted(business_lines, key=lambda x: x['total_ingresos'], reverse=True)
+        total_ingresos = sum(bl['total_ingresos'] for bl in business_lines)
+        
+        for bl in business_lines:
+            bl['porcentaje'] = (bl['total_ingresos'] / total_ingresos * 100) if total_ingresos > 0 else 0
+        
+        return business_lines
     
     @staticmethod
     def get_expense_categories_data():
-        return ExpenseCategory.objects.annotate(
+        categories = list(ExpenseCategory.objects.annotate(
             total=Sum('expenses__amount'),
             count=Count('expenses')
-        ).filter(total__isnull=False).order_by('-total')
+        ).filter(total__isnull=False).order_by('-total'))
+        
+        total_gastos = sum(cat.total for cat in categories)
+        
+        for cat in categories:
+            cat.porcentaje = (cat.total / total_gastos * 100) if total_gastos > 0 else 0
+        
+        return categories

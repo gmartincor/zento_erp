@@ -41,7 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
             {% for cat in gastos_por_categoria %}
             {
                 categoria: "{{ cat.name|escapejs }}",
-                total: "{{ cat.total|default:0|floatformat:2 }}"
+                total: "{{ cat.total|default:0|floatformat:2 }}",
+                porcentaje: "{{ cat.porcentaje|default:0|floatformat:2 }}"
             }{% if not forloop.last %},{% endif %}
             {% empty %}
             {% endfor %}
@@ -50,7 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
             {% for linea in lineas_negocio %}
             {
                 nombre: "{{ linea.name|escapejs }}",
-                ingresos: "{{ linea.total_ingresos|default:0|floatformat:2 }}"
+                ingresos: "{{ linea.total_ingresos|default:0|floatformat:2 }}",
+                porcentaje: "{{ linea.porcentaje|default:0|floatformat:2 }}"
             }{% if not forloop.last %},{% endif %}
             {% empty %}
             {% endfor %}
