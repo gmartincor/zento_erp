@@ -157,3 +157,5 @@ test_chart.html
 
 # Static libraries downloaded
 static/js/chart.min.js
+static/js/dashboard/
+static/js/unused/
