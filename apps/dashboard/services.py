@@ -35,7 +35,7 @@ class DashboardDataService:
         resultado_total = total_ingresos - total_gastos
         resultado_mes = ingresos_mes - gastos_mes
         margen_beneficio = (resultado_total / total_ingresos * 100) if total_ingresos > 0 else 0
-        ingresos_diarios = ingresos_mes / 30 if ingresos_mes > 0 else 0
+        margen_beneficio_mes = (resultado_mes / ingresos_mes * 100) if ingresos_mes > 0 else 0
         
         return {
             'total_ingresos': total_ingresos,
@@ -45,7 +45,7 @@ class DashboardDataService:
             'gastos_mes': gastos_mes,
             'resultado_mes': resultado_mes,
             'margen_beneficio': margen_beneficio,
-            'ingresos_diarios': ingresos_diarios,
+            'margen_beneficio_mes': margen_beneficio_mes,
         }
     
     @classmethod

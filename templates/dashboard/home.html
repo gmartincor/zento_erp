@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
             <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ lineas_negocio|length }}</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">Líneas de Negocio Activas</div>
@@ -196,15 +196,13 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
-            <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div class="text-2xl font-bold {% if margen_beneficio >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
                 {{ margen_beneficio|floatformat:1 }}%
             </div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Margen de Beneficio</div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center">
-            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">€{{ ingresos_diarios|floatformat:0 }}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Ingresos Diarios Promedio</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Margen de Beneficio Total</div>
+            <div class="text-sm {% if margen_beneficio_mes >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %} mt-1">
+                {{ margen_beneficio_mes|floatformat:1 }}% este mes
+            </div>
         </div>
     </div>
 </div>
