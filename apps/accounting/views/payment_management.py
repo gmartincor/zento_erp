@@ -35,6 +35,14 @@ class PaymentManagementView(LoginRequiredMixin, BusinessLinePermissionMixin, Lis
         status = self.request.GET.get('status')
         if status:
             queryset = queryset.filter(status=status)
+        
+        category = self.request.GET.get('category')
+        if category:
+            queryset = queryset.filter(client_service__category=category)
+        
+        business_line = self.request.GET.get('business_line')
+        if business_line:
+            queryset = queryset.filter(client_service__business_line_id=business_line)
             
         return queryset
     
@@ -54,6 +62,7 @@ class PaymentManagementView(LoginRequiredMixin, BusinessLinePermissionMixin, Lis
             'total_count': total_payments['count'] or 0,
             'business_lines': accessible_lines,
             'status_choices': ServicePayment.StatusChoices.choices,
+            'category_choices': ClientService.CategoryChoices.choices,
             'page_title': 'Gestión de Pagos',
         })
         
