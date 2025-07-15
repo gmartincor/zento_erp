@@ -229,7 +229,7 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
         )
         
         remanente_total = 0
-        if normalized_category == 'black':
+        if normalized_category == 'business':
             for service in services:
                 remanente_total += service.get_remanente_total()
 
@@ -243,13 +243,13 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
     def get_category_display_name(self, category):
         normalized = category.lower() if category else None
         return {
-            'white': 'Servicios White',
-            'black': 'Servicios Black'
+            'personal': 'Servicios Personal',
+            'business': 'Servicios Business'
         }.get(normalized, category)
     
     def validate_category(self, category):
         normalized_category = category.lower() if category else None
-        if normalized_category not in ['white', 'black']:
+        if normalized_category not in ['personal', 'business']:
             raise Http404(f"Categoría '{category}' no válida.")
     
     def get_service_category_context(self, business_line, category):
@@ -264,8 +264,8 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
             'current_category': self.normalize_category_for_url(category),
             'category_display': self.get_category_display_name(category),
             'category_stats': stats,
-            'has_remanentes': normalized_category == 'black' and business_line.has_remanente,
-            'remanente_field': business_line.remanente_field if normalized_category == 'black' else None,
+            'has_remanentes': normalized_category == 'business' and business_line.has_remanente,
+            'remanente_field': business_line.remanente_field if normalized_category == 'business' else None,
         }
     
     def get_category_counts(self, business_line):

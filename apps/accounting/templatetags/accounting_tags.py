@@ -68,17 +68,17 @@ def stats_card(title, value, subtitle=None, icon=None, trend=None):
 @register.inclusion_tag('accounting/components/category_tabs.html')
 def category_tabs(business_line, current_category, line_path):
     service = StatisticsService()
-    white_stats = service.calculate_category_performance(SERVICE_CATEGORIES['PERSONAL'], [business_line])
-    black_stats = service.calculate_category_performance(SERVICE_CATEGORIES['BUSINESS'], [business_line])
+    personal_stats = service.calculate_category_performance(SERVICE_CATEGORIES['PERSONAL'], [business_line])
+    business_stats = service.calculate_category_performance(SERVICE_CATEGORIES['BUSINESS'], [business_line])
     return {
         'business_line': business_line,
         'current_category': current_category,
         'line_path': line_path,
-        'white_count': white_stats.get('total_services', 0),
-        'black_count': black_stats.get('total_services', 0),
-        'white_url': reverse('accounting:category-services', 
+        'personal_count': personal_stats.get('total_services', 0),
+        'business_count': business_stats.get('total_services', 0),
+        'personal_url': reverse('accounting:category-services', 
                            kwargs={'line_path': line_path, 'category': SERVICE_CATEGORIES['PERSONAL']}),
-        'black_url': reverse('accounting:category-services', 
+        'business_url': reverse('accounting:category-services', 
                            kwargs={'line_path': line_path, 'category': SERVICE_CATEGORIES['BUSINESS']})
     }
 

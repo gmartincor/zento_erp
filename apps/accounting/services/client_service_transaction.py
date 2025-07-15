@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from apps.accounting.models import Client, ClientService
+from apps.core.constants import SERVICE_CATEGORIES
 
 
 class ClientServiceTransactionManager:
@@ -92,7 +93,7 @@ class ClientServiceTransactionManager:
         if 'remanentes' in form_data:
             service.remanentes = form_data['remanentes']
         
-        # En el sistema simplificado, todos los servicios BLACK pueden usar remanentes
+        # En el sistema simplificado, todos los servicios BUSINESS pueden usar remanentes
         if service.category == SERVICE_CATEGORIES['BUSINESS']:
             # Los remanentes se manejan ahora directamente en los períodos de pago
             pass

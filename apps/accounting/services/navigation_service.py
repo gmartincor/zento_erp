@@ -137,9 +137,9 @@ class HierarchicalNavigationService(RevenueCalculationMixin):
     
     def _format_category_name(self, category: str) -> str:
         if category.upper() == SERVICE_CATEGORIES['PERSONAL']:
-            return 'Servicios White'
+            return 'Servicios Personal'
         elif category.upper() == SERVICE_CATEGORIES['BUSINESS']:
-            return 'Servicios Black'
+            return 'Servicios Business'
         return category.title()
     
     def _get_siblings(self, business_line: BusinessLine) -> List[BusinessLine]:

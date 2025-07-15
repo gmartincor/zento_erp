@@ -191,8 +191,8 @@ class ServiceFieldsMixin:
         if not business_line or not category:
             return cleaned_data
         
-        # Validación específica para servicios BLACK con el sistema simplificado
-        if category == 'BLACK':
+        # Validación específica para servicios BUSINESS con el sistema simplificado
+        if category == 'BUSINESS':
             pass
         
         return cleaned_data

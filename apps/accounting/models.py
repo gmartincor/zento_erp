@@ -155,7 +155,7 @@ class ClientService(TimeStampedModel):
         default=dict,
         blank=True,
         verbose_name="Remanentes",
-        help_text="Información de remanentes para categoría BLACK"
+        help_text="Información de remanentes para categoría BUSINESS"
     )
     
     is_active = models.BooleanField(

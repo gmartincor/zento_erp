@@ -71,11 +71,11 @@ class BusinessLineService(RevenueCalculationMixin):
             children = children.filter(id__in=user_permissions.values_list('id', flat=True))
         
         children = children.annotate(
-            white_service_count=Count(
+            personal_service_count=Count(
                 'client_services',
                 filter=Q(client_services__category=SERVICE_CATEGORIES['PERSONAL'], client_services__is_active=True)
             ),
-            black_service_count=Count(
+            business_service_count=Count(
                 'client_services',
                 filter=Q(client_services__category=SERVICE_CATEGORIES['BUSINESS'], client_services__is_active=True)
             )
@@ -108,8 +108,8 @@ class BusinessLineService(RevenueCalculationMixin):
         
         service_stats = services_query.aggregate(
             total_services=Count('id'),
-            white_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
-            black_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS'])),
+            personal_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['PERSONAL'])),
+            business_count=Count('id', filter=Q(category=SERVICE_CATEGORIES['BUSINESS'])),
         )
         
         payment_category_stats = payments_query.aggregate(
@@ -123,8 +123,8 @@ class BusinessLineService(RevenueCalculationMixin):
         stats['total_revenue'] = stats['total_revenue'] or 0
         stats['total_services'] = stats['total_services'] or 0
         stats['avg_price'] = stats['avg_price'] or 0
-        stats['white_count'] = stats['white_count'] or 0
-        stats['black_count'] = stats['black_count'] or 0
+        stats['personal_count'] = stats['personal_count'] or 0
+        stats['business_count'] = stats['business_count'] or 0
         stats['personal_revenue'] = stats['personal_revenue'] or 0
         stats['business_revenue'] = stats['business_revenue'] or 0
         

@@ -301,14 +301,14 @@ class ClientServiceManager(models.Manager):
         )
         
         category_stats = {
-            'WHITE': ServicePayment.objects.filter(
-                client_service__in=services.filter(category='WHITE')
+            'PERSONAL': ServicePayment.objects.filter(
+                client_service__in=services.filter(category='PERSONAL')
             ).aggregate(
                 count=Count('client_service__id', distinct=True),
                 revenue=get_net_revenue_aggregation()
             ),
-            'BLACK': ServicePayment.objects.filter(
-                client_service__in=services.filter(category='BLACK')
+            'BUSINESS': ServicePayment.objects.filter(
+                client_service__in=services.filter(category='BUSINESS')
             ).aggregate(
                 count=Count('client_service__id', distinct=True),
                 revenue=get_net_revenue_aggregation()
@@ -336,8 +336,8 @@ class ClientServiceManager(models.Manager):
         services = queryset
         service_stats = services.aggregate(
             total_services=Count('id'),
-            white_services=Count('id', filter=Q(category='white')),
-            black_services=Count('id', filter=Q(category='black'))
+            personal_services=Count('id', filter=Q(category='personal')),
+            business_services=Count('id', filter=Q(category='business'))
         )
         
         from apps.accounting.models import ServicePayment
@@ -345,8 +345,8 @@ class ClientServiceManager(models.Manager):
             client_service__in=services
         ).aggregate(
             total_revenue=get_net_revenue_aggregation(),
-            white_revenue=get_net_revenue_with_filter(Q(client_service__category='white')),
-            black_revenue=get_net_revenue_with_filter(Q(client_service__category='black'))
+            personal_revenue=get_net_revenue_with_filter(Q(client_service__category='personal')),
+            business_revenue=get_net_revenue_with_filter(Q(client_service__category='business'))
         )
         
         stats = {**service_stats, **payment_stats}
@@ -354,10 +354,10 @@ class ClientServiceManager(models.Manager):
             'client': client,
             'total_revenue': stats['total_revenue'] or Decimal('0'),
             'total_services': stats['total_services'] or 0,
-            'white_services': stats['white_services'] or 0,
-            'black_services': stats['black_services'] or 0,
-            'white_revenue': stats['white_revenue'] or Decimal('0'),
-            'black_revenue': stats['black_revenue'] or Decimal('0'),
+            'personal_services': stats['personal_services'] or 0,
+            'business_services': stats['business_services'] or 0,
+            'personal_revenue': stats['personal_revenue'] or Decimal('0'),
+            'business_revenue': stats['business_revenue'] or Decimal('0'),
         }
     
     def get_top_clients_by_revenue(
@@ -381,8 +381,8 @@ class ClientServiceManager(models.Manager):
             
             service_stats = services.aggregate(
                 total_services=Count('id'),
-                white_services=Count('id', filter=Q(category='white')),
-                black_services=Count('id', filter=Q(category='black'))
+                personal_services=Count('id', filter=Q(category='personal')),
+                business_services=Count('id', filter=Q(category='business'))
             )
             
             revenue_stats = ServicePayment.objects.filter(
@@ -395,8 +395,8 @@ class ClientServiceManager(models.Manager):
                 'client': client,
                 'total_revenue': revenue_stats['total_revenue'] or Decimal('0'),
                 'total_services': service_stats['total_services'] or 0,
-                'white_services': service_stats['white_services'] or 0,
-                'black_services': service_stats['black_services'] or 0,
+                'personal_services': service_stats['personal_services'] or 0,
+                'business_services': service_stats['business_services'] or 0,
             })
         
         client_data.sort(key=lambda x: x['total_revenue'], reverse=True)
@@ -405,7 +405,7 @@ class ClientServiceManager(models.Manager):
     def get_services_with_remanentes(self, business_lines: QuerySet) -> QuerySet:
         return self.get_queryset().filter(
             business_line__in=business_lines,
-            category='black',
+            category='business',
             is_active=True
         ).exclude(
             remanentes__isnull=True

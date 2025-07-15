@@ -33,17 +33,17 @@ class BusinessLineQuerySet(models.QuerySet):
                 'client_services',
                 filter=Q(client_services__is_active=True)
             ),
-            white_services=Count(
+            personal_services=Count(
                 'client_services',
                 filter=Q(
-                    client_services__category='WHITE',
+                    client_services__category='PERSONAL',
                     client_services__is_active=True
                 )
             ),
-            black_services=Count(
+            business_services=Count(
                 'client_services',
                 filter=Q(
-                    client_services__category='BLACK',
+                    client_services__category='BUSINESS',
                     client_services__is_active=True
                 )
             ),
@@ -151,16 +151,16 @@ class BusinessLineManager(models.Manager):
         service_stats = services.aggregate(
             total_services=Count('id'),
             unique_clients=Count('client', distinct=True),
-            white_services=Count('id', filter=Q(category='WHITE')),
-            black_services=Count('id', filter=Q(category='BLACK')),
+            personal_services=Count('id', filter=Q(category='PERSONAL')),
+            business_services=Count('id', filter=Q(category='BUSINESS')),
         )
         
         payment_stats = ServicePayment.objects.filter(
             client_service__in=services
         ).aggregate(
             total_revenue=get_net_revenue_aggregation(),
-            white_revenue=get_net_revenue_with_filter(Q(client_service__category='WHITE')),
-            black_revenue=get_net_revenue_with_filter(Q(client_service__category='BLACK'))
+            personal_revenue=get_net_revenue_with_filter(Q(client_service__category='PERSONAL')),
+            business_revenue=get_net_revenue_with_filter(Q(client_service__category='BUSINESS'))
         )
         
         stats = {**service_stats, **payment_stats}
@@ -170,9 +170,9 @@ class BusinessLineManager(models.Manager):
             'total_services': stats['total_services'] or 0,
             'total_revenue': stats['total_revenue'] or 0,
             'unique_clients': stats['unique_clients'] or 0,
-            'white_services': stats['white_services'] or 0,
-            'black_services': stats['black_services'] or 0,
-            'white_revenue': stats['white_revenue'] or 0,
-            'black_revenue': stats['black_revenue'] or 0,
+            'personal_services': stats['personal_services'] or 0,
+            'business_services': stats['business_services'] or 0,
+            'personal_revenue': stats['personal_revenue'] or 0,
+            'business_revenue': stats['business_revenue'] or 0,
             'include_descendants': include_descendants
         }

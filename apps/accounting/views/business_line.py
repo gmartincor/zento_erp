@@ -34,7 +34,7 @@ class BusinessLineDetailView(
     def get(self, request, *args, **kwargs):
         """
         Redirección automática para nodos hoja.
-        Si la línea de negocio no tiene hijos, redirige directamente a /white/
+        Si la línea de negocio no tiene hijos, redirige directamente a /personal/
         """
         try:
             business_line = self.get_object()
@@ -149,16 +149,16 @@ class BusinessLineHierarchyView(
                     current_line_payments = ServicePayment.objects.filter(
                         client_service__business_line__id__in=current_line_descendant_ids
                     )
-                    current_line.white_revenue = current_line_payments.filter(
+                    current_line.personal_revenue = current_line_payments.filter(
                         client_service__category=SERVICE_CATEGORIES['PERSONAL']
                     ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                    current_line.black_revenue = current_line_payments.filter(
+                    current_line.business_revenue = current_line_payments.filter(
                         client_service__category=SERVICE_CATEGORIES['BUSINESS']
                     ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                    current_line.white_services = ClientService.objects.filter(
+                    current_line.personal_services = ClientService.objects.filter(
                         business_line__id__in=current_line_descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
                     ).count()
-                    current_line.black_services = ClientService.objects.filter(
+                    current_line.business_services = ClientService.objects.filter(
                         business_line__id__in=current_line_descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
                     ).count()
                     
@@ -174,10 +174,10 @@ class BusinessLineHierarchyView(
                         'view_type': 'business_lines',
                         'is_leaf_node': True,
                         'level_stats': {
-                            'white_revenue': current_line.white_revenue,
-                            'black_revenue': current_line.black_revenue,
-                            'white_services': current_line.white_services,
-                            'black_services': current_line.black_services,
+                            'personal_revenue': current_line.personal_revenue,
+                            'business_revenue': current_line.business_revenue,
+                            'personal_services': current_line.personal_services,
+                            'business_services': current_line.business_services,
                             'children_count': 0,
                         }
                     })
@@ -188,19 +188,19 @@ class BusinessLineHierarchyView(
                         client_service__business_line__id__in=descendant_ids
                     )
                     
-                    white_revenue = payments.filter(
+                    personal_revenue = payments.filter(
                         client_service__category=SERVICE_CATEGORIES['PERSONAL']
                     ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                     
-                    black_revenue = payments.filter(
+                    business_revenue = payments.filter(
                         client_service__category=SERVICE_CATEGORIES['BUSINESS']
                     ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
                     
-                    white_services = ClientService.objects.filter(
+                    personal_services = ClientService.objects.filter(
                         business_line__id__in=descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
                     ).count()
                     
-                    black_services = ClientService.objects.filter(
+                    business_services = ClientService.objects.filter(
                         business_line__id__in=descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
                     ).count()
                     
@@ -209,16 +209,16 @@ class BusinessLineHierarchyView(
                         child_payments = ServicePayment.objects.filter(
                             client_service__business_line__id__in=child_descendant_ids
                         )
-                        child.white_revenue = child_payments.filter(
+                        child.personal_revenue = child_payments.filter(
                             client_service__category=SERVICE_CATEGORIES['PERSONAL']
                         ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                        child.black_revenue = child_payments.filter(
+                        child.business_revenue = child_payments.filter(
                             client_service__category=SERVICE_CATEGORIES['BUSINESS']
                         ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                        child.white_services = ClientService.objects.filter(
+                        child.personal_services = ClientService.objects.filter(
                             business_line__id__in=child_descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
                         ).count()
-                        child.black_services = ClientService.objects.filter(
+                        child.business_services = ClientService.objects.filter(
                             business_line__id__in=child_descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
                         ).count()
                     
@@ -233,10 +233,10 @@ class BusinessLineHierarchyView(
                         'show_hierarchy': True,
                         'view_type': 'business_lines',
                         'level_stats': {
-                            'white_revenue': white_revenue,
-                            'black_revenue': black_revenue,
-                            'white_services': white_services,
-                            'black_services': black_services,
+                            'personal_revenue': personal_revenue,
+                            'business_revenue': business_revenue,
+                            'personal_services': personal_services,
+                            'business_services': business_services,
                             'children_count': accessible_children.count(),
                         }
                     })
@@ -254,10 +254,10 @@ class BusinessLineHierarchyView(
             payments = ServicePayment.objects.filter(
                 client_service__business_line__in=accessible_lines
             )
-            white_revenue = payments.filter(
+            personal_revenue = payments.filter(
                 client_service__category=SERVICE_CATEGORIES['PERSONAL']
             ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-            black_revenue = payments.filter(
+            business_revenue = payments.filter(
                 client_service__category=SERVICE_CATEGORIES['BUSINESS']
             ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
             
@@ -268,16 +268,16 @@ class BusinessLineHierarchyView(
                 line_payments = ServicePayment.objects.filter(
                     client_service__business_line__id__in=line_descendant_ids
                 )
-                line.white_revenue = line_payments.filter(
+                line.personal_revenue = line_payments.filter(
                     client_service__category=SERVICE_CATEGORIES['PERSONAL']
                 ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                line.black_revenue = line_payments.filter(
+                line.business_revenue = line_payments.filter(
                     client_service__category=SERVICE_CATEGORIES['BUSINESS']
                 ).aggregate(total=RevenueCalculationMixin.get_net_revenue_aggregation())['total'] or 0
-                line.white_services = ClientService.objects.filter(
+                line.personal_services = ClientService.objects.filter(
                     business_line__id__in=line_descendant_ids, category=SERVICE_CATEGORIES['PERSONAL']
                 ).count()
-                line.black_services = ClientService.objects.filter(
+                line.business_services = ClientService.objects.filter(
                     business_line__id__in=line_descendant_ids, category=SERVICE_CATEGORIES['BUSINESS']
                 ).count()
             
@@ -293,8 +293,8 @@ class BusinessLineHierarchyView(
                 'status_filter': status_filter,
                 'level_stats': {
                     'total_lines': total_lines,
-                    'white_revenue': white_revenue,
-                    'black_revenue': black_revenue,
+                    'personal_revenue': personal_revenue,
+                    'business_revenue': business_revenue,
                 }
             })
         return context
