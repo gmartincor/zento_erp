@@ -40,7 +40,7 @@ def create_professional_header(invoice, styles):
         company_info.append(f"Email: {invoice.company.email}")
     
     invoice_info = [
-        f"<b>FACTURA {invoice.reference}</b>",
+        f"<b>FACTURA {invoice.reference or 'BORRADOR'}</b>",
         f"Fecha: {invoice.issue_date.strftime('%d/%m/%Y')}"
     ]
     

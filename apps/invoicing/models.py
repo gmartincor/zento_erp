@@ -114,18 +114,21 @@ class Invoice(TimeStampedModel):
             company.save()
             return f"{company.invoice_prefix}{company.current_number:03d}_{year}"
 
+    def assign_reference_if_needed(self):
+        if not self.reference and self.status != 'DRAFT' and self.company:
+            self.reference = self.generate_reference()
+
     def get_legal_note(self):
         if any(item.vat_rate == 0 for item in self.items.all()):
             return "Exenta de IVA según el artículo correspondiente de la Ley del IVA."
         return ""
 
     def save(self, *args, **kwargs):
-        if not self.reference and self.company:
-            self.reference = self.generate_reference()
+        self.assign_reference_if_needed()
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.reference} - {self.client_name}"
+        return f"{self.reference or 'BORRADOR'} - {self.client_name}"
 
     class Meta:
         ordering = ['-issue_date']

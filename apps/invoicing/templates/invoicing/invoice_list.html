@@ -145,7 +145,7 @@
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900 dark:text-white">
-                            {{ invoice.reference }}
+                            {{ invoice.reference|default:"BORRADOR" }}
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">

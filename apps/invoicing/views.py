@@ -197,10 +197,10 @@ class InvoiceCreateView(CompanyMixin, CreateView):
                 formset.instance = self.object
                 formset.save()
                 
-                logger.info(f"Invoice created: {self.object.reference} for {self.object.client_name}")
+                logger.info(f"Invoice created: {self.object.reference or 'DRAFT'} for {self.object.client_name}")
                 messages.success(
                     self.request, 
-                    f'Factura {self.object.reference} creada correctamente.'
+                    f'Factura {self.object.reference or "borrador"} creada correctamente.'
                 )
                 return redirect(self.get_success_url())
         
@@ -237,15 +237,20 @@ class InvoiceUpdateView(UpdateView):
         formset = context['formset']
         
         with transaction.atomic():
+            old_status = self.object.status if self.object else None
             self.object = form.save()
             
             if formset.is_valid():
                 formset.save()
                 
-                logger.info(f"Invoice updated: {self.object.reference} for {self.object.client_name}")
+                if old_status == 'DRAFT' and self.object.status != 'DRAFT':
+                    self.object.assign_reference_if_needed()
+                    self.object.save(update_fields=['reference'])
+                
+                logger.info(f"Invoice updated: {self.object.reference or 'DRAFT'} for {self.object.client_name}")
                 messages.success(
                     self.request, 
-                    f'Factura {self.object.reference} actualizada correctamente.'
+                    f'Factura {self.object.reference or "borrador"} actualizada correctamente.'
                 )
                 return redirect(self.get_success_url())
             else:
@@ -260,12 +265,12 @@ def generate_pdf_view(request, pk):
         pdf_content = generate_invoice_pdf(invoice)
         
         response = HttpResponse(pdf_content, content_type='application/pdf')
-        filename = f'factura_{invoice.reference}.pdf'
+        filename = f'factura_{invoice.reference or "borrador"}.pdf'
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         
-        logger.info(f"PDF generated for invoice: {invoice.reference}")
+        logger.info(f"PDF generated for invoice: {invoice.reference or 'DRAFT'}")
         return response
     except Exception as e:
-        logger.error(f"Error generating PDF for invoice {invoice.reference}: {str(e)}")
+        logger.error(f"Error generating PDF for invoice {invoice.reference or 'DRAFT'}: {str(e)}")
         messages.error(request, f'Error al generar el PDF: {str(e)}')
         return redirect('invoicing:invoice_detail', pk=pk)
