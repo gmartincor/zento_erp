@@ -91,8 +91,8 @@ class Client(TimeStampedModel, SoftDeleteModel):
 class ClientService(TimeStampedModel):
     
     class CategoryChoices(models.TextChoices):
-        WHITE = 'white', 'White'
-        BLACK = 'black', 'Black'
+        PERSONAL = 'personal', 'Personal'
+        BUSINESS = 'business', 'Business'
     
     class AdminStatusChoices(models.TextChoices):
         ENABLED = 'ENABLED', 'Habilitado'
