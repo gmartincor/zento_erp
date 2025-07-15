@@ -64,7 +64,7 @@
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos WHITE</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos PERSONAL</p>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.personal_revenue|format_currency:"$" }}</p>
                 </div>
             </div>
@@ -78,7 +78,7 @@
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos BLACK</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ingresos BUSINESS</p>
                     <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ level_stats.business_revenue|format_currency:"$" }}</p>
                 </div>
             </div>
@@ -112,7 +112,7 @@
 
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                        <div class="text-xs font-medium text-green-700 dark:text-green-400 mb-1">WHITE</div>
+                        <div class="text-xs font-medium text-green-700 dark:text-green-400 mb-1">PERSONAL</div>
                         <div class="text-sm font-bold text-green-800 dark:text-green-300">
                             {{ line.personal_revenue|default:"0"|format_currency:"$" }}
                         </div>
@@ -122,7 +122,7 @@
                     </div>
                     
                     <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-                        <div class="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">BLACK</div>
+                        <div class="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">BUSINESS</div>
                         <div class="text-sm font-bold text-purple-800 dark:text-purple-300">
                             {{ line.business_revenue|default:"0"|format_currency:"$" }}
                         </div>
