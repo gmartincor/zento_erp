@@ -1,10 +1,14 @@
 {% extends 'base.html' %}
 {% load tenant_tags %}
+{% load static %}
 
 {% block title %}Dashboard - {% if tenant %}{{ tenant.name }}{% else %}Nutrition Pro CRM{% endif %}{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/dashboard-utils.js' %}"></script>
+<script src="{% static 'js/chart-config.js' %}"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
 
 {% block page_header %}
@@ -17,7 +21,7 @@
 {% endblock %}
 
 {% block content %}
-<div x-data="dashboardController()" x-init="init()">
+<div>
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -132,221 +136,39 @@
 </div>
 
 <script>
-function dashboardController() {
-    return {
-        charts: {},
-        
-        init() {
-            this.createChartsWithStaticData();
-        },
-        
-        createChartsWithStaticData() {
-            const temporalData = [
-                {% for data in temporal_data %}
-                {
-                    month: "{{ data.month }}",
-                    ingresos: {{ data.ingresos|default:0 }},
-                    gastos: {{ data.gastos|default:0 }},
-                    beneficio: {{ data.beneficio|default:0 }}
-                }{% if not forloop.last %},{% endif %}
-                {% endfor %}
-            ];
-            const data = {
-                temporal_data: temporalData,
-                gastos_categorias: [
-                    {% for cat in gastos_por_categoria %}
-                    {
-                        name: "{{ cat.name }}",
-                        total: {{ cat.total|default:0 }},
-                        count: {{ cat.count|default:0 }}
-                    }{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                ],
-                lineas_negocio: [
-                    {% for linea in lineas_negocio %}
-                    {
-                        name: "{{ linea.name }}",
-                        ingresos: {{ linea.total_ingresos|default:0 }}
-                    }{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                ]
-            };
-            this.createCharts(data);
-        },
-        
-        createCharts(data) {
-            this.createTemporalChart(data.temporal_data);
-            this.createExpensesChart(data.gastos_categorias);
-            this.createMarginChart(data.temporal_data);
-            this.createBusinessLinesChart(data.lineas_negocio);
-        },
-        
-        createTemporalChart(temporalData) {
-            const ctx = document.getElementById('temporalChart').getContext('2d');
-            
-            this.charts.temporal = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: temporalData.map(d => d.month),
-                    datasets: [
-                        {
-                            label: 'Ingresos',
-                            data: temporalData.map(d => d.ingresos),
-                            borderColor: 'rgb(34, 197, 94)',
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Gastos',
-                            data: temporalData.map(d => d.gastos),
-                            borderColor: 'rgb(239, 68, 68)',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Beneficio',
-                            data: temporalData.map(d => d.beneficio),
-                            borderColor: 'rgb(59, 130, 246)',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '€' + value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        },
-        
-        createExpensesChart(categoriasData) {
-            const ctx = document.getElementById('expensesChart').getContext('2d');
-            
-            this.charts.expenses = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: categoriasData.map(c => c.name),
-                    datasets: [{
-                        data: categoriasData.map(c => c.total),
-                        backgroundColor: [
-                            '#ef4444', '#f97316', '#eab308', '#22c55e',
-                            '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.label + ': €' + context.parsed.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        },
-        
-        createMarginChart(temporalData) {
-            const ctx = document.getElementById('marginChart').getContext('2d');
-            
-            const marginData = temporalData.map(d => {
-                return d.ingresos > 0 ? ((d.beneficio / d.ingresos) * 100) : 0;
-            });
-            
-            this.charts.margin = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: temporalData.map(d => d.month),
-                    datasets: [{
-                        label: 'Margen %',
-                        data: marginData,
-                        backgroundColor: marginData.map(m => m >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
-                        borderColor: marginData.map(m => m >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'),
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        },
-        
-        createBusinessLinesChart(lineasData) {
-            const ctx = document.getElementById('businessLinesChart').getContext('2d');
-            
-            this.charts.businessLines = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: lineasData.map(l => l.name),
-                    datasets: [{
-                        label: 'Ingresos',
-                        data: lineasData.map(l => l.ingresos),
-                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                        borderColor: 'rgb(59, 130, 246)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '€' + value.toLocaleString();
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    const dashboardCharts = new DashboardCharts();
+    
+    const data = {
+        temporal: [
+            {% for data in temporal_data %}
+            {
+                month: "{{ data.month }}",
+                ingresos: {{ data.ingresos|default:0 }},
+                gastos: {{ data.gastos|default:0 }},
+                beneficio: {{ data.beneficio|default:0 }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        expenses: [
+            {% for cat in gastos_por_categoria %}
+            {
+                name: "{{ cat.name }}",
+                total: {{ cat.total|default:0 }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        businessLines: [
+            {% for linea in lineas_negocio %}
+            {
+                name: "{{ linea.name }}",
+                ingresos: {{ linea.total_ingresos|default:0 }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
     };
-}
+    
+    dashboardCharts.init(data);
+});
 </script>
 {% endblock %}
