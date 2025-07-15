@@ -46,7 +46,7 @@ ACCOUNTING_ERROR_MESSAGES = {
     'INVALID_BUSINESS_LINE_PATH': 'La ruta de línea de negocio "{path}" no es válida.',
     'BUSINESS_LINE_NOT_FOUND': 'Línea de negocio "{name}" no encontrada.',
     'PERMISSION_DENIED_BUSINESS_LINE': 'No tienes permisos para acceder a la línea de negocio "{name}".',
-    'INVALID_SERVICE_CATEGORY': 'Categoría de servicio "{category}" no válida. Debe ser WHITE o BLACK.',
+    'INVALID_SERVICE_CATEGORY': 'Categoría de servicio "{category}" no válida. Debe ser PERSONAL o BUSINESS.',
     'REMANENTE_NOT_ALLOWED': 'Los remanentes no están permitidos para la línea de negocio "{name}".',
     'INVALID_REMANENTE_FIELD': 'Campo de remanente "{field}" no válido para la línea "{name}".',
     'CLIENT_HAS_ACTIVE_SERVICES': (
@@ -59,8 +59,8 @@ ACCOUNTING_ERROR_MESSAGES = {
 ACCOUNTING_URL_PATTERNS = {
     'INDEX': 'accounting:index',
     'LINE_DETAIL': 'accounting:business-lines-path',
-    'WHITE_SERVICES': 'accounting:white-services',
-    'BLACK_SERVICES': 'accounting:black-services',
+    'PERSONAL_SERVICES': 'accounting:personal-services',
+    'BUSINESS_SERVICES': 'accounting:business-services',
     'SERVICE_CREATE': 'accounting:service-create',
     'SERVICE_EDIT': 'accounting:service-edit',
     'SERVICE_DELETE': 'accounting:service-delete',
@@ -69,13 +69,13 @@ ACCOUNTING_URL_PATTERNS = {
 }
 
 SERVICE_CATEGORIES = {
-    'WHITE': 'WHITE',
-    'BLACK': 'BLACK',
+    'PERSONAL': 'PERSONAL',
+    'BUSINESS': 'BUSINESS',
 }
 
 SERVICE_CATEGORY_DISPLAY = {
-    'WHITE': 'Servicios White',
-    'BLACK': 'Servicios Black',
+    'PERSONAL': 'Servicios Personal',
+    'BUSINESS': 'Servicios Business',
 }
 
 PAYMENT_METHOD_DISPLAY = {
@@ -110,16 +110,16 @@ NAVIGATION_ITEMS = {
 }
 
 CATEGORY_CONFIG = {
-    'white': {
-        'name': 'Servicio White',
+    'personal': {
+        'name': 'Servicio Personal',
         'color': 'green',
         'icon': 'check-circle',
         'badge_class': 'bg-blue-100 text-blue-800',
         'bg_class': 'bg-emerald-100 dark:bg-emerald-900',
         'text_class': 'text-emerald-600 dark:text-emerald-300'
     },
-    'black': {
-        'name': 'Servicio Black',
+    'business': {
+        'name': 'Servicio Business',
         'color': 'purple',
         'icon': 'exclamation-circle',
         'badge_class': 'bg-gray-100 text-gray-800',
@@ -129,8 +129,8 @@ CATEGORY_CONFIG = {
 }
 
 CATEGORY_DEFAULTS = {
-    'DEFAULT_CATEGORY': 'white',
-    'VALID_CATEGORIES': ['white', 'black']
+    'DEFAULT_CATEGORY': 'personal',
+    'VALID_CATEGORIES': ['personal', 'business']
 }
 
 TENANT_SUCCESS_MESSAGES = {
