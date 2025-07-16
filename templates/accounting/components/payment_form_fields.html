@@ -1,11 +1,11 @@
 <!-- Campos de información de pago -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-{% load tenant_tags %}
+{% load tenant_tags accounting_tags %}
     <div>
         <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {{ form.amount.label }}
         </label>
-        {{ form.amount }}
+        {% currency_field form.amount %}
         {% if form.amount.help_text %}
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.amount.help_text }}</p>
         {% endif %}

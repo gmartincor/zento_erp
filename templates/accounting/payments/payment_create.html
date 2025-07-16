@@ -115,7 +115,7 @@
                             <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 {{ form.amount.label }}
                             </label>
-                            {{ form.amount }}
+                            {% currency_field form.amount %}
                             {% if form.amount.errors %}
                                 <div class="mt-1 text-sm text-red-600 dark:text-red-400">
                                     {{ form.amount.errors|first }}

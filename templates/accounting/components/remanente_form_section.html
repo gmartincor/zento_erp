@@ -1,3 +1,4 @@
+{% load accounting_tags %}
 {% for field in form %}
     {% if field.name == "remanente" %}
 <div class="border-t border-gray-200 dark:border-gray-600 pt-6">
@@ -15,7 +16,7 @@
             <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ field.help_text }}</span>
             {% endif %}
         </label>
-        {{ field }}
+        {% currency_field field %}
         {% if field.errors %}
         <div class="text-red-600 text-sm mt-1">
             {{ field.errors }}

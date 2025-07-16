@@ -1,6 +1,8 @@
 from django import template
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from django.utils.safestring import mark_safe
 
 from apps.accounting.services.statistics_service import StatisticsService
 from apps.accounting.services.business_line_service import BusinessLineService
@@ -236,3 +238,18 @@ def payment_status_badge(payment):
         status_data['class'],
         status_data['label']
     )
+
+@register.simple_tag
+def currency_field(field, symbol="€"):
+    field_html = str(field)
+    
+    currency_html = f'''
+    <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="text-gray-500 dark:text-gray-400 sm:text-sm">{symbol}</span>
+        </div>
+        {field_html}
+    </div>
+    '''
+    
+    return mark_safe(currency_html)
