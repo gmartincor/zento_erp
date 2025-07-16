@@ -143,6 +143,13 @@ class BusinessLineHierarchyView(
                 accessible_children = business_line_service.get_accessible_lines(self.request.user).filter(
                     parent=current_line
                 )
+                
+                status_filter = self.request.GET.get('status', 'active')
+                if status_filter == 'active':
+                    accessible_children = accessible_children.filter(is_active=True)
+                elif status_filter == 'inactive':
+                    accessible_children = accessible_children.filter(is_active=False)
+                
                 if not accessible_children.exists():
                     current_line_descendant_ids = current_line.get_descendant_ids()
                     BusinessLineStatsCalculator.enrich_business_line_with_stats(current_line)
