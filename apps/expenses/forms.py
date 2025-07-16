@@ -1,6 +1,7 @@
 from django import forms
 from django.utils import timezone
 from .models import Expense, ExpenseCategory
+from apps.core.form_utils import apply_currency_field_styles
 
 
 class ExpenseCategoryForm(forms.ModelForm):
@@ -77,6 +78,8 @@ class ExpenseForm(forms.ModelForm):
         self.fields['category'].queryset = ExpenseCategory.objects.filter(
             is_active=True
         ).order_by('category_type', 'name')
+        
+        apply_currency_field_styles(self.fields['amount'])
         
         if category:
             self.fields['category'].widget = forms.HiddenInput()

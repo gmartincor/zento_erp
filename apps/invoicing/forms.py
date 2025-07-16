@@ -24,7 +24,7 @@ class CompanyForm(forms.ModelForm):
             'bank_name': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'iban': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'mercantile_registry': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
-            'share_capital': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS}),
+            'share_capital': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white'}),
             'invoice_prefix': forms.TextInput(attrs={'class': FORM_CONTROL_CLASS}),
             'logo': forms.ClearableFileInput(attrs={'class': FORM_CONTROL_CLASS}),
         }
@@ -73,7 +73,7 @@ class InvoiceItemForm(forms.ModelForm):
                 'placeholder': 'Descripción del servicio o producto'
             }),
             'quantity': forms.NumberInput(attrs={'class': FORM_CONTROL_CLASS, 'min': '1', 'value': '1'}),
-            'unit_price': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS, 'min': '0.01'}),
+            'unit_price': forms.NumberInput(attrs={'step': '0.01', 'class': 'w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white', 'min': '0.01'}),
             'vat_rate': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS, 'min': '0', 'max': '100'}),
             'irpf_rate': forms.NumberInput(attrs={'step': '0.01', 'class': FORM_CONTROL_CLASS, 'min': '0', 'max': '100'}),
         }

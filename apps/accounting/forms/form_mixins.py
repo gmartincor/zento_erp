@@ -3,6 +3,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from apps.accounting.models import Client, ClientService
+from apps.core.form_utils import apply_currency_field_styles, is_currency_field
 
 
 class ServiceFormMixin:
@@ -22,11 +23,14 @@ class ServiceFormMixin:
             elif isinstance(field.widget, forms.Select):
                 field.widget.attrs.update({'class': base_class})
             elif isinstance(field.widget, forms.NumberInput):
-                field.widget.attrs.update({
-                    'class': base_class,
-                    'step': '0.01',
-                    'min': '0'
-                })
+                if is_currency_field(field_name):
+                    apply_currency_field_styles(field, base_class)
+                else:
+                    field.widget.attrs.update({
+                        'class': base_class,
+                        'step': '0.01',
+                        'min': '0'
+                    })
             elif isinstance(field.widget, forms.DateInput):
                 field.widget.attrs.update({
                     'class': base_class,
