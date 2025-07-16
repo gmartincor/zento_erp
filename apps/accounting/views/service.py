@@ -132,6 +132,17 @@ class ServiceCategoryListView(BaseServiceView, ListView):
             business_line, category.lower(), period_type
         )
         
+        available_periods = [
+            ('current_month', 'Mes actual'),
+            ('last_month', 'Mes anterior'), 
+            ('current_year', 'Año actual'),
+            ('last_year', 'Año anterior'),
+            ('last_3_months', 'Últimos 3 meses'),
+            ('last_6_months', 'Últimos 6 meses'),
+            ('last_12_months', 'Últimos 12 meses'),
+            ('all_time', 'Histórico total'),
+        ]
+        
         context.update(self.get_base_context())
         context.update(category_context)
         context.update({
@@ -143,6 +154,8 @@ class ServiceCategoryListView(BaseServiceView, ListView):
             'active_filters_count': len(EnhancedFilterService.get_active_filters(dict(self.request.GET))),
             'filter_conflicts': EnhancedFilterService.detect_conflicts(dict(self.request.GET)),
             'revenue_summary': revenue_summary,
+            'available_periods': available_periods,
+            'selected_period': period_type,
         })
         
         context.update({

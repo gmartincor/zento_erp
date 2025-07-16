@@ -114,16 +114,6 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Información adicional -->
-        {% if revenue_summary.payment_count > 0 %}
-        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                <span>{{ revenue_summary.payment_count }} pago{{ revenue_summary.payment_count|pluralize }} registrado{{ revenue_summary.payment_count|pluralize }}</span>
-                <span>Promedio por pago: {{ revenue_summary.avg_payment }}</span>
-            </div>
-        </div>
-        {% endif %}
     </div>
 </div>
 
