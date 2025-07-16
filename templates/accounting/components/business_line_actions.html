@@ -23,24 +23,26 @@
         {% endif %}
     {% endif %}
 
-    {% if business_line %}
-    <a href="{% tenant_url 'accounting:business_line_edit' line_path=business_line.get_url_path %}"
-       class="inline-flex items-center px-{% if size == 'sm' %}3{% else %}4{% endif %} py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-{% if size == 'sm' %}sm{% else %}sm{% endif %} leading-4 font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-       title="Editar línea de negocio">
-        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-        {% if show_labels %}Editar{% endif %}
-    </a>
-    {% elif current_line %}
-    <a href="{% if line_path %}{% tenant_url 'accounting:business_line_edit' line_path=line_path %}{% else %}{% tenant_url 'accounting:business_line_edit' line_path=current_line.get_url_path %}{% endif %}"
-       class="inline-flex items-center px-{% if size == 'sm' %}3{% else %}4{% endif %} py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-{% if size == 'sm' %}sm{% else %}sm{% endif %} leading-4 font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-       title="Editar línea de negocio">
-        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-        {% if show_labels %}Editar{% endif %}
-    </a>
+    {% if action_type != 'card' %}
+        {% if business_line %}
+        <a href="{% tenant_url 'accounting:business_line_edit' line_path=business_line.get_url_path %}"
+           class="inline-flex items-center px-{% if size == 'sm' %}3{% else %}4{% endif %} py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-{% if size == 'sm' %}sm{% else %}sm{% endif %} leading-4 font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+           title="Editar línea de negocio">
+            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            {% if show_labels %}Editar{% endif %}
+        </a>
+        {% elif current_line %}
+        <a href="{% if line_path %}{% tenant_url 'accounting:business_line_edit' line_path=line_path %}{% else %}{% tenant_url 'accounting:business_line_edit' line_path=current_line.get_url_path %}{% endif %}"
+           class="inline-flex items-center px-{% if size == 'sm' %}3{% else %}4{% endif %} py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-{% if size == 'sm' %}sm{% else %}sm{% endif %} leading-4 font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+           title="Editar línea de negocio">
+            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            {% if show_labels %}Editar{% endif %}
+        </a>
+        {% endif %}
     {% endif %}
 
     {% if action_type == 'card' %}
