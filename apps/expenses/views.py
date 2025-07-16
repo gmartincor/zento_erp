@@ -14,6 +14,7 @@ from apps.expenses.models import Expense, ExpenseCategory
 from apps.expenses.forms import ExpenseForm, ExpenseCategoryForm
 from apps.core.mixins import TemporalFilterMixin
 from apps.core.constants import SUCCESS_MESSAGES, ERROR_MESSAGES
+from apps.core.services import parse_temporal_filters, get_temporal_context
 
 
 class ExpenseCategoryView(LoginRequiredMixin, TemplateView):
@@ -34,12 +35,11 @@ class ExpenseCategoryView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         service_category = kwargs.get('service_category', 'business')
         
-        filters = self.get_temporal_filters()
+        filters = parse_temporal_filters(self.request)
         expense_filter = filters['expense_filter']
         year = filters['year']
         month = filters['month']
         
-        # Verificar si la columna service_category existe antes de filtrar
         if self._has_service_category_column():
             expense_filter['service_category'] = service_category
         
@@ -64,8 +64,6 @@ class ExpenseCategoryView(LoginRequiredMixin, TemplateView):
         
         total_general = sum(total['total'] for total in category_totals.values())
         
-        # Obtener categorías con totales para mostrar cards
-        from django.db.models import Q
         base_filter = Q(expenses__accounting_year=year)
         if month:
             base_filter &= Q(expenses__accounting_month=month)
@@ -82,8 +80,6 @@ class ExpenseCategoryView(LoginRequiredMixin, TemplateView):
             expense_count=Count('expenses', filter=base_filter)
         ).order_by('category_type', 'name')
         
-        temporal_context = self.get_temporal_context()
-        
         context.update({
             'service_category': service_category,
             'service_category_display': 'Personal' if service_category == 'personal' else 'Business',
@@ -91,13 +87,12 @@ class ExpenseCategoryView(LoginRequiredMixin, TemplateView):
             'total_general': total_general,
             'categories': categories,
             'has_service_category': self._has_service_category_column(),
-            **temporal_context
+            **get_temporal_context(year, month)
         })
         
         return context
     
     def _has_service_category_column(self):
-        """Verificar si la columna service_category existe en la tabla expenses"""
         try:
             with connection.cursor() as cursor:
                 cursor.execute("""
@@ -109,51 +104,6 @@ class ExpenseCategoryView(LoginRequiredMixin, TemplateView):
                 return cursor.fetchone() is not None
         except Exception:
             return False
-    
-    def get_temporal_filters(self):
-        current_year = timezone.now().year
-        current_month = timezone.now().month
-        
-        try:
-            year = int(self.request.GET.get('year', current_year))
-        except (ValueError, TypeError):
-            year = current_year
-        
-        month_param = self.request.GET.get('month')
-        month = None
-        if month_param:
-            try:
-                month = int(month_param)
-                if month < 1 or month > 12:
-                    month = None
-            except (ValueError, TypeError):
-                month = None
-        
-        expense_filter = {'accounting_year': year}
-        if month:
-            expense_filter['accounting_month'] = month
-        
-        return {
-            'year': year,
-            'month': month,
-            'expense_filter': expense_filter
-        }
-    
-    def get_temporal_context(self):
-        filters = self.get_temporal_filters()
-        year = filters['year']
-        month = filters['month']
-        current_year = timezone.now().year
-        
-        from apps.core.constants import MONTHS_DICT, MONTHS_CHOICES, DEFAULT_START_YEAR, FINANCIAL_YEAR_RANGE_EXTENSION
-        
-        return {
-            'current_year': year,
-            'current_month': month,
-            'current_month_name': MONTHS_DICT.get(month) if month else None,
-            'available_years': list(range(DEFAULT_START_YEAR, current_year + FINANCIAL_YEAR_RANGE_EXTENSION + 1)),
-            'available_months': MONTHS_CHOICES
-        }
 
 
 class ExpenseListView(LoginRequiredMixin, TemporalFilterMixin, ListView):
@@ -169,24 +119,20 @@ class ExpenseListView(LoginRequiredMixin, TemporalFilterMixin, ListView):
         category_type = self.kwargs.get('category_type')
         category_slug = self.kwargs.get('category_slug')
         
-        # Si tenemos category_slug, filtrar por esa categoría específica
         if category_slug:
             category = get_object_or_404(ExpenseCategory, slug=category_slug)
             queryset = queryset.filter(category=category)
             self.category = category
         elif category_type:
-            # Si tenemos category_type, filtrar por tipo de categoría
             queryset = queryset.filter(category__category_type=category_type)
         
-        # Aplicar filtro de service_category si está disponible
         if service_category and self._has_service_category_column():
             try:
                 queryset = queryset.filter(service_category=service_category)
             except FieldError:
                 pass
         
-        # Aplicar filtros temporales
-        filters = self.get_temporal_filters()
+        filters = parse_temporal_filters(self.request)
         expense_filter = filters['expense_filter']
         queryset = queryset.filter(**expense_filter)
         
@@ -213,22 +159,23 @@ class ExpenseListView(LoginRequiredMixin, TemporalFilterMixin, ListView):
         category_type = self.kwargs.get('category_type')
         category_slug = self.kwargs.get('category_slug')
         
-        context['service_category'] = service_category
-        context['service_category_display'] = 'Personal' if service_category == 'personal' else 'Business'
-        context['has_service_category'] = self._has_service_category_column()
+        filters = parse_temporal_filters(self.request)
+        year = filters['year']
+        month = filters['month']
         
-        # Si tenemos una categoría específica (por slug)
+        context.update({
+            'service_category': service_category,
+            'service_category_display': 'Personal' if service_category == 'personal' else 'Business',
+            'category_type': category_type,
+            'category_slug': category_slug,
+            'has_service_category': self._has_service_category_column(),
+            **get_temporal_context(year, month)
+        })
+        
         if hasattr(self, 'category'):
             context['category'] = self.category
-            context['category_display'] = self.category.name
-            # Determinar service_category desde la categoría si no se proporciona
-            if not service_category:
-                # Lógica para determinar service_category basado en los gastos de la categoría
-                context['service_category'] = 'business'  # default
-                context['service_category_display'] = 'Business'
         elif category_type:
             category_type_display = dict(ExpenseCategory.CategoryTypeChoices.choices).get(category_type, category_type)
-            context['category_type'] = category_type
             context['category_type_display'] = category_type_display
         
         expenses = context['expenses']
@@ -241,55 +188,7 @@ class ExpenseListView(LoginRequiredMixin, TemporalFilterMixin, ListView):
             context['expense_count'] = 0
             context['average_amount'] = 0
         
-        temporal_context = self.get_temporal_context()
-        context.update(temporal_context)
-        
         return context
-    
-    def get_temporal_context(self):
-        filters = self.get_temporal_filters()
-        year = filters['year']
-        month = filters['month']
-        current_year = timezone.now().year
-        
-        from apps.core.constants import MONTHS_DICT, MONTHS_CHOICES, DEFAULT_START_YEAR, FINANCIAL_YEAR_RANGE_EXTENSION
-        
-        return {
-            'current_year': year,
-            'current_month': month,
-            'current_month_name': MONTHS_DICT.get(month) if month else None,
-            'available_years': list(range(DEFAULT_START_YEAR, current_year + FINANCIAL_YEAR_RANGE_EXTENSION + 1)),
-            'available_months': MONTHS_CHOICES
-        }
-    
-    def get_temporal_filters(self):
-        current_year = timezone.now().year
-        current_month = timezone.now().month
-        
-        try:
-            year = int(self.request.GET.get('year', current_year))
-        except (ValueError, TypeError):
-            year = current_year
-        
-        month_param = self.request.GET.get('month')
-        month = None
-        if month_param:
-            try:
-                month = int(month_param)
-                if month < 1 or month > 12:
-                    month = None
-            except (ValueError, TypeError):
-                month = None
-        
-        expense_filter = {'accounting_year': year}
-        if month:
-            expense_filter['accounting_month'] = month
-        
-        return {
-            'year': year,
-            'month': month,
-            'expense_filter': expense_filter
-        }
 
 
 class ExpenseCreateView(LoginRequiredMixin, CreateView):

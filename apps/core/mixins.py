@@ -3,56 +3,15 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django.db.models import Q
-from apps.core.constants import MONTHS_DICT, MONTHS_CHOICES, DEFAULT_START_YEAR, FINANCIAL_YEAR_RANGE_EXTENSION
+from apps.core.services import parse_temporal_filters, get_temporal_context
 
 class TemporalFilterMixin:
     def get_temporal_filters(self):
-        current_year = timezone.now().year
-        current_month = timezone.now().month
-        
-        try:
-            year = int(self.request.GET.get('year', current_year))
-            if year < DEFAULT_START_YEAR or year > current_year + FINANCIAL_YEAR_RANGE_EXTENSION:
-                year = current_year
-        except (ValueError, TypeError):
-            year = current_year
-        
-        month_param = self.request.GET.get('month')
-        month = None
-        if month_param:
-            try:
-                month = int(month_param)
-                if month < 1 or month > 12:
-                    month = None
-            except (ValueError, TypeError):
-                month = None
-        
-        expense_filter = {'accounting_year': year}
-        if month:
-            expense_filter['accounting_month'] = month
-        
-        return {
-            'year': year,
-            'month': month,
-            'expense_filter': expense_filter
-        }
+        return parse_temporal_filters(self.request)
     
     def get_temporal_context(self):
         filters = self.get_temporal_filters()
-        year = filters['year']
-        month = filters['month']
-        
-        current_year = timezone.now().year
-        
-        context = {
-            'current_year': year,
-            'current_month': month,
-            'current_month_name': MONTHS_DICT.get(month) if month else None,
-            'available_years': list(range(DEFAULT_START_YEAR, current_year + FINANCIAL_YEAR_RANGE_EXTENSION + 1)),
-            'available_months': MONTHS_CHOICES
-        }
-        
-        return context
+        return get_temporal_context(filters['year'], filters['month'])
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
