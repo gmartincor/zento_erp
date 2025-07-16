@@ -97,7 +97,7 @@
     </div>
     {% endif %}
 
-    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+    <div class="px-6 py-4">
         {% include 'accounting/components/business_line_actions.html' with action_type='card' size='sm' show_labels=True %}
         
         {% if show_categories|default:not_business_line.children.exists %}
