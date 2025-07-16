@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load humanize %}
-{% load tenant_tags %}
+{% load                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total General</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ category_summary.total_amount|format_currency:"€" }}</p>
+                </div>ant_tags %}
 {% load presentation_tags %}
 {% load tenant_tags %}
 
@@ -39,7 +42,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Promedio por Categoría</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ category_summary.average_per_category|format_currency:"$" }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ category_summary.average_per_category|format_currency:"€" }}</p>
                 </div>
             </div>
         </div>
@@ -53,7 +56,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Ingresos</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ category_summary.total_amount|format_currency:"$" }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ category_summary.total_amount|format_currency:"€" }}</p>
                 </div>
             </div>
         </div>
@@ -97,7 +100,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-white font-semibold">
-                                {{ category.total_amount|format_currency:"$" }}
+                                {{ category.total_amount|format_currency:"€" }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -107,7 +110,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ category.average_amount|format_currency:"$" }}
+                                {{ category.average_amount|format_currency:"€" }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -145,7 +148,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="text-center">
                     <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {{ category_detail.summary.total_amount|format_currency:"$" }}
+                        {{ category_detail.summary.total_amount|format_currency:"€" }}
                     </p>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Total Ingresos</p>
                 </div>
@@ -157,7 +160,7 @@
                 </div>
                 <div class="text-center">
                     <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        {{ category_detail.summary.avg_amount|format_currency:"$" }}
+                        {{ category_detail.summary.avg_amount|format_currency:"€" }}
                     </p>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Promedio</p>
                 </div>
@@ -171,7 +174,7 @@
                     <span class="text-sm font-medium text-gray-900 dark:text-white">{{ line.business_line }}</span>
                     <div class="text-right">
                         <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                            {{ line.total_amount|format_currency:"$" }}
+                            {{ line.total_amount|format_currency:"€" }}
                         </div>
                         <div class="text-xs text-gray-600 dark:text-gray-400">
                             {{ line.count|format_count:"servicio" }}
@@ -205,7 +208,7 @@
                     </div>
                     <div class="text-right">
                         <p class="text-lg font-bold text-gray-900 dark:text-white">
-                            {{ category.total_amount|format_currency:"$" }}
+                            {{ category.total_amount|format_currency:"€" }}
                         </p>
                     </div>
                 </div>
