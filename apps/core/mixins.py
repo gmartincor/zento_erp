@@ -264,8 +264,6 @@ class ServiceCategoryMixin(CategoryNormalizationMixin):
             'current_category': self.normalize_category_for_url(category),
             'category_display': self.get_category_display_name(category),
             'category_stats': stats,
-            'has_remanentes': normalized_category == 'business' and business_line.has_remanente,
-            'remanente_field': business_line.remanente_field if normalized_category == 'business' else None,
         }
     
     def get_category_counts(self, business_line):

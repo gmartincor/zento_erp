@@ -3,8 +3,8 @@
 
 {% if services %}
     {% if view_mode == 'list' %}
-        {% include 'accounting/components/service_list_view.html' with services=services has_remanentes=has_remanentes line_path=line_path current_category=current_category %}
+        {% include 'accounting/components/service_list_view.html' with services=services line_path=line_path current_category=current_category %}
     {% else %}
-        {% include 'accounting/components/service_grid_view.html' with services=services has_remanentes=has_remanentes line_path=line_path current_category=current_category %}
+        {% include 'accounting/components/service_grid_view.html' with services=services line_path=line_path current_category=current_category %}
     {% endif %}
 {% endif %}

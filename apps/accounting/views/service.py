@@ -75,11 +75,15 @@ class ServiceCategoryListView(BaseServiceView, ListView):
     
     def get_queryset(self):
         from ..services.enhanced_filter_service import EnhancedFilterService
+        from apps.core.constants import SERVICE_CATEGORIES
         
         business_line, _, category = self.get_business_line_data()
-        normalized_category = category.lower() if category else None
         
-        # Obtener todos los filtros de la request
+        category_value = None
+        if category:
+            category_key = category.upper()
+            category_value = SERVICE_CATEGORIES.get(category_key)
+        
         filters = {
             'status': self.request.GET.get('status'),
             'operational_status': self.request.GET.get('operational_status'),
@@ -92,16 +96,16 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         filters = {k: v for k, v in filters.items() if v}
         
         queryset = ClientService.objects.get_services_by_category_including_descendants(
-            business_line, normalized_category
+            business_line, category_value
         )
-        
-        # Aplicar filtros usando el servicio mejorado
+
         queryset = EnhancedFilterService.apply_filters(queryset, filters)
         
         return queryset.select_related('client', 'business_line').prefetch_related('payments')
     
     def get_context_data(self, **kwargs):
         from ..services.enhanced_filter_service import EnhancedFilterService
+        from ..services.presentation_service import PresentationService
         
         context = super().get_context_data(**kwargs)
         business_line, line_path, category = self.get_business_line_data()
@@ -111,7 +115,6 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         if view_mode not in ['grid', 'list']:
             view_mode = 'list'
         
-        # Obtener filtros aplicados
         filters = {
             'status': self.request.GET.get('status'),
             'operational_status': self.request.GET.get('operational_status'),
@@ -121,7 +124,16 @@ class ServiceCategoryListView(BaseServiceView, ListView):
         }
         filters = {k: v for k, v in filters.items() if v}
         
+        category_context = self.get_service_category_context(business_line, category)
+        
+        presentation_service = PresentationService()
+        period_type = self.request.GET.get('period', 'all_time')
+        revenue_summary = presentation_service.prepare_category_revenue_summary(
+            business_line, category.lower(), period_type
+        )
+        
         context.update(self.get_base_context())
+        context.update(category_context)
         context.update({
             'business_line': business_line,
             'category': normalized_category,
@@ -130,6 +142,7 @@ class ServiceCategoryListView(BaseServiceView, ListView):
             'filter_summary': EnhancedFilterService.get_active_filters(dict(self.request.GET)),
             'active_filters_count': len(EnhancedFilterService.get_active_filters(dict(self.request.GET))),
             'filter_conflicts': EnhancedFilterService.detect_conflicts(dict(self.request.GET)),
+            'revenue_summary': revenue_summary,
         })
         
         context.update({

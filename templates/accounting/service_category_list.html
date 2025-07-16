@@ -15,11 +15,6 @@
             <div class="flex items-center space-x-3 mb-2">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ category_display }}</h1>
                 {% category_badge current_category %}
-                {% if has_remanentes %}
-                <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">
-                    Con Remanentes
-                </span>
-                {% endif %}
             </div>
             <p class="text-gray-600 dark:text-gray-400">
                 <span class="font-medium">{{ business_line.name }}</span>
@@ -110,17 +105,6 @@
                 </div>
             </div>
             
-            {% if has_remanentes %}
-            <div class="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                    {{ category_stats.total_remanentes|format_currency }}
-                </div>
-                <div class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                    Total Remanentes
-                </div>
-            </div>
-            {% endif %}
-            
             <div class="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                 <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {{ revenue_summary.avg_revenue_per_service }}
@@ -146,7 +130,7 @@
 {% include 'accounting/components/service_view_selector.html' with services=services current_category=current_category view_mode=view_mode %}
 
 {% if services %}
-    {% include 'accounting/components/service_display_manager.html' with services=services has_remanentes=has_remanentes line_path=line_path current_category=current_category view_mode=view_mode %}
+    {% include 'accounting/components/service_display_manager.html' with services=services line_path=line_path current_category=current_category view_mode=view_mode %}
     
     {% if is_paginated %}
     <div class="mt-8 flex justify-center">
