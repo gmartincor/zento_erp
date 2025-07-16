@@ -46,6 +46,9 @@ db.sqlite3-journal
 /static_collected/
 staticfiles/
 
+# Tailwind CSS compiled files
+static/css/style.css
+
 # Ignore all migrations except __init__.py
 */migrations/*
 !*/migrations/__init__.py
