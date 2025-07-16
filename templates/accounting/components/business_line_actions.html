@@ -45,7 +45,7 @@
 
     {% if action_type == 'card' %}
         {% if business_line %}
-        <a href="{% if business_line.children.exists %}{% tenant_url 'accounting:business-lines-path' line_path=business_line.get_url_path %}{% else %}{% tenant_url 'accounting:category-services' line_path=business_line.get_url_path category='personal' %}{% endif %}"
+        <a href="{% tenant_url 'accounting:business-lines-path' line_path=business_line.get_url_path %}"
            class="inline-flex items-center px-{% if size == 'sm' %}3{% else %}4{% endif %} py-2 border border-transparent shadow-sm text-{% if size == 'sm' %}sm{% else %}sm{% endif %} leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
             <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 616 0z" />
