@@ -6,6 +6,7 @@ from datetime import timedelta
 from apps.accounting.models import ClientService, ServicePayment
 from apps.expenses.models import Expense, ExpenseCategory
 from apps.business_lines.models import BusinessLine
+from apps.accounting.services.business_line_service import BusinessLineService
 
 
 class DashboardDataService:
@@ -118,10 +119,16 @@ class DashboardDataService:
         return months[-12:]
     
     @classmethod
-    def get_business_lines_data(cls, start_date=None, end_date=None):
+    def get_business_lines_data(cls, user=None, start_date=None, end_date=None):
+        if user:
+            business_line_service = BusinessLineService()
+            accessible_lines = business_line_service.get_accessible_lines(user).filter(is_active=True)
+        else:
+            accessible_lines = BusinessLine.objects.filter(is_active=True)
+        
         business_lines = []
         
-        for bl in BusinessLine.objects.filter(parent__isnull=False):
+        for bl in accessible_lines:
             servicios = ClientService.objects.filter(
                 business_line=bl,
                 category=ClientService.CategoryChoices.BUSINESS

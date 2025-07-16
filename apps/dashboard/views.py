@@ -11,7 +11,7 @@ def dashboard_home(request):
     
     financial_summary = service.get_financial_summary()
     temporal_data = service.get_temporal_data()
-    business_lines = service.get_business_lines_data()
+    business_lines = service.get_business_lines_data(user=request.user)
     expense_categories = service.get_expense_categories_data()
     
     context = {
@@ -28,7 +28,7 @@ def get_filtered_business_lines(request):
     start_date = parse_date(request.GET.get('start_date')) if request.GET.get('start_date') else None
     end_date = parse_date(request.GET.get('end_date')) if request.GET.get('end_date') else None
     
-    business_lines = DashboardDataService.get_business_lines_data(start_date, end_date)
+    business_lines = DashboardDataService.get_business_lines_data(user=request.user, start_date=start_date, end_date=end_date)
     
     return JsonResponse({
         'business_lines_data': [
