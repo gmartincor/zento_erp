@@ -205,10 +205,12 @@ class BusinessLineHierarchyView(
             status_filter = self.request.GET.get('status', 'active')
             if status_filter == 'active':
                 root_lines = root_lines.filter(is_active=True)
+                total_lines = accessible_lines.filter(is_active=True).count()
             elif status_filter == 'inactive':
                 root_lines = root_lines.filter(is_active=False)
-            
-            total_lines = accessible_lines.count()
+                total_lines = accessible_lines.filter(is_active=False).count()
+            else:
+                total_lines = accessible_lines.count()
             
             BusinessLineStatsCalculator.enrich_business_lines_with_stats(root_lines)
             
