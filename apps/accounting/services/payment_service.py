@@ -127,7 +127,7 @@ class PaymentService:
     @staticmethod
     def _validate_payment_data(amount: Decimal, payment_date: date, payment_method: str) -> None:
         if amount <= 0:
-            raise ValidationError("El monto debe ser mayor a cero")
+            raise ValidationError("El importe debe ser mayor a cero")
         
         if payment_date > timezone.now().date():
             raise ValidationError("La fecha de pago no puede ser futura")

@@ -62,7 +62,7 @@ class PaymentValidator:
         errors = []
         
         if amount <= 0:
-            errors.append("El monto debe ser mayor a cero")
+            errors.append("El importe debe ser mayor a cero")
         
         if period_start >= period_end:
             errors.append("La fecha de fin debe ser posterior a la fecha de inicio")

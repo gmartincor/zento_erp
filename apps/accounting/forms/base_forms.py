@@ -4,6 +4,7 @@ from django.utils import timezone
 from decimal import Decimal
 
 from ..models import ServicePayment, ClientService
+from apps.core.form_utils import apply_currency_field_styles
 
 
 class BaseServiceForm(forms.Form):
@@ -45,8 +46,10 @@ class PaymentFieldsMixin:
                 'step': '0.01',
                 'placeholder': '0.00'
             }),
-            label="Monto"
+            label="Importe"
         )
+        
+        apply_currency_field_styles(self.fields['amount'], base_input_class)
         
         self.fields['payment_date'] = forms.DateField(
             initial=timezone.now().date(),
@@ -86,7 +89,7 @@ class PaymentFieldsMixin:
         
         if amount and amount <= 0:
             raise ValidationError({
-                'amount': 'El monto debe ser mayor a cero'
+                'amount': 'El importe debe ser mayor a cero'
             })
         
         return cleaned_data

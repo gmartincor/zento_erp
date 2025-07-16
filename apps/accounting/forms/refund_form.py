@@ -8,7 +8,7 @@ class RefundForm(forms.Form):
         max_digits=10,
         decimal_places=2,
         required=False,
-        label="Monto a reembolsar",
+        label="Importe a reembolsar",
         help_text="Deja vacío para reembolso total"
     )
     reason = forms.CharField(
@@ -44,9 +44,9 @@ class RefundForm(forms.Form):
         
         max_refund = self.payment.amount - (self.payment.refunded_amount or 0)
         if refund_amount > max_refund:
-            raise ValidationError(f'El monto máximo a reembolsar es {max_refund}')
+            raise ValidationError(f'El importe máximo a reembolsar es {max_refund}')
         
         if refund_amount <= 0:
-            raise ValidationError('El monto debe ser mayor a 0')
+            raise ValidationError('El importe debe ser mayor a 0')
         
         return refund_amount

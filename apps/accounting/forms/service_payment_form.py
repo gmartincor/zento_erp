@@ -104,7 +104,7 @@ class PaymentForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin):
                 amount = suggested_amount if suggested_amount and suggested_amount > 0 else 0
             
             if amount <= 0:
-                raise ValidationError(f'No se pudo determinar un monto válido para el período {period.period_start} - {period.period_end}')
+                raise ValidationError(f'No se pudo determinar un importe válido para el período {period.period_start} - {period.period_end}')
             
             updated_period = PaymentService.process_payment(
                 period=period,

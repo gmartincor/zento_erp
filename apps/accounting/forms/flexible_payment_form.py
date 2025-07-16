@@ -29,7 +29,7 @@ class FlexiblePaymentForm(forms.Form):
             'step': '0.01',
             'min': '0'
         }),
-        label='Monto'
+        label='Importe'
     )
     
     payment_method = forms.ChoiceField(

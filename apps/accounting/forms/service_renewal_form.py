@@ -116,32 +116,11 @@ class ServiceRenewalForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMix
             end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
         except (ValueError, TypeError):
             return
-        
-        last_period = ServicePeriodManager.get_last_period(self.client_service)
-        period_start = last_period.period_end + timedelta(days=1) if last_period else self.client_service.start_date
-        
-        from ..models import ServicePayment
-        temp_period = ServicePayment(
-            client_service=self.client_service,
-            period_start=period_start,
-            period_end=end_date
-        )
-        
-        suggested_amount = PaymentService.calculate_suggested_amount(
-            temp_period, self.client_service
-        )
-        
+
         if 'amount' in self.fields:
             base_price = self.client_service.price
             if base_price and base_price > 0:
                 self.fields['amount'].initial = base_price
-                if suggested_amount and suggested_amount != base_price:
-                    self.fields['amount'].help_text = f"Precio base: {base_price}€. Sugerido: {suggested_amount}€ (basado en pagos anteriores)"
-                else:
-                    self.fields['amount'].help_text = f"Precio base: {base_price}€"
-            elif suggested_amount:
-                self.fields['amount'].initial = suggested_amount
-                self.fields['amount'].help_text = f"Sugerido: {suggested_amount}€ (basado en pagos anteriores)"
             
     def is_valid(self):
         is_valid = super().is_valid()
