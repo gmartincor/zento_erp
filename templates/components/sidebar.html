@@ -71,14 +71,14 @@
                 </button>
                 
                 <ul x-show="open" x-transition class="mt-2 ml-8 space-y-1">
-                    <li x-data="{ personalOpen: false }">
-                        <button @click="personalOpen = !personalOpen" class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                    <li x-data="{ subopen: {% is_active_section 'expenses' as is_expenses %}{% if is_expenses %}true{% else %}false{% endif %} }">
+                        <button @click="subopen = !subopen" class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
                             <span>Categoría Personal</span>
-                            <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': personalOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': subopen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <ul x-show="personalOpen" x-transition class="mt-1 ml-4 space-y-1">
+                        <ul x-show="subopen" x-transition class="mt-1 ml-4 space-y-1">
                             <li><a href="{% tenant_url 'expenses:categories' 'personal' %}" class="block px-4 py-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Todas las Categorías</a></li>
                             <li><a href="{% tenant_url 'expenses:by-type' 'personal' 'FIXED' %}" class="block px-4 py-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Fijos</a></li>
                             <li><a href="{% tenant_url 'expenses:by-type' 'personal' 'VARIABLE' %}" class="block px-4 py-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Variables</a></li>
@@ -86,14 +86,14 @@
                             <li><a href="{% tenant_url 'expenses:by-type' 'personal' 'OCCASIONAL' %}" class="block px-4 py-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Puntuales</a></li>
                         </ul>
                     </li>
-                    <li x-data="{ businessOpen: false }">
-                        <button @click="businessOpen = !businessOpen" class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                    <li x-data="{ subopen: {% is_active_section 'expenses' as is_expenses %}{% if is_expenses %}true{% else %}false{% endif %} }">
+                        <button @click="subopen = !subopen" class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
                             <span>Categoría Business</span>
-                            <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': businessOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': subopen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <ul x-show="businessOpen" x-transition class="mt-1 ml-4 space-y-1">
+                        <ul x-show="subopen" x-transition class="mt-1 ml-4 space-y-1">
                             <li><a href="{% tenant_url 'expenses:categories' 'business' %}" class="block px-4 py-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Todas las Categorías</a></li>
                             <li><a href="{% tenant_url 'expenses:by-type' 'business' 'FIXED' %}" class="block px-4 py-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Fijos</a></li>
                             <li><a href="{% tenant_url 'expenses:by-type' 'business' 'VARIABLE' %}" class="block px-4 py-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Variables</a></li>
@@ -127,7 +127,7 @@
             </li>
 
             <!-- Resultados -->
-            <li x-data="{ open: false }">
+            <li x-data="{ open: {% is_active_section 'accounting' as is_accounting %}{% if is_accounting %}true{% else %}false{% endif %} }">
                 <button @click="open = !open" 
                         class="w-full flex items-center justify-between px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group">
                     <div class="flex items-center space-x-3">
@@ -140,10 +140,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
-                
                 <ul x-show="open" x-transition class="mt-2 ml-8 space-y-1">
                     <li><a href="{% tenant_url 'accounting:remanentes-summary' %}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">Remanentes</a></li>
-                    <li x-data="{ subopen: false }">
+                    <li x-data="{ subopen: {% is_active_section 'accounting' as is_accounting %}{% if is_accounting %}true{% else %}false{% endif %} }">
                         <button @click="subopen = !subopen" class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
                             <span>Ingresos</span>
                             <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': subopen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +154,7 @@
                             <li><a href="{% tenant_url 'accounting:revenue-summary' category='business' %}" class="block px-3 py-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Categoría Business</a></li>
                         </ul>
                     </li>
-                    <li x-data="{ subopen: false }">
+                    <li x-data="{ subopen: {% is_active_section 'accounting' as is_accounting %}{% if is_accounting %}true{% else %}false{% endif %} }">
                         <button @click="subopen = !subopen" class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
                             <span>Beneficios</span>
                             <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': subopen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
