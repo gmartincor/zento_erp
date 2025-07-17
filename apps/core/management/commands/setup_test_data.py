@@ -2,12 +2,14 @@ from django.core.management.base import BaseCommand
 from django.core.management import call_command
 from django.db import transaction
 from django.contrib.auth import get_user_model
+from django.conf import settings
+import os
 
 User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = 'Load all fixtures for the Zento ERP and set up test users'
+    help = 'Load all fixtures for the Zento ERP and set up test users (SOLO PARA DESARROLLO)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -15,14 +17,53 @@ class Command(BaseCommand):
             action='store_true',
             help='Reset database before loading fixtures',
         )
+        parser.add_argument(
+            '--force-production',
+            action='store_true',
+            help='Fuerza la carga en producción (NO RECOMENDADO)',
+        )
 
     def handle(self, *args, **options):
+        # Verificación de entorno - NO EJECUTAR EN PRODUCCIÓN
+        environment = os.getenv('ENVIRONMENT', 'development')
+        load_test_data = os.getenv('LOAD_TEST_DATA', 'True').lower() == 'true'
+        force_production = options.get('force_production', False)
+
+        if environment == 'production' and not force_production:
+            self.stdout.write(
+                self.style.ERROR('❌ ESTE COMANDO NO DEBE EJECUTARSE EN PRODUCCIÓN')
+            )
+            self.stdout.write(
+                self.style.ERROR('Los datos de prueba NO deben cargarse en producción.')
+            )
+            self.stdout.write(
+                self.style.WARNING('Si realmente necesitas hacerlo, usa --force-production')
+            )
+            return
+
+        if not settings.DEBUG and not force_production:
+            self.stdout.write(
+                self.style.ERROR('❌ Este comando solo debe ejecutarse con DEBUG=True')
+            )
+            return
+
+        if not load_test_data and not force_production:
+            self.stdout.write(
+                self.style.WARNING('⚠️  LOAD_TEST_DATA=False - No se cargarán datos de prueba')
+            )
+            return
+
+        if force_production:
+            self.stdout.write(
+                self.style.ERROR('⚠️  FORZANDO CARGA EN PRODUCCIÓN - ESTO NO ES RECOMENDADO')
+            )
+
         if options.get('reset', False):
             self.stdout.write('Resetting database...')
             call_command('flush', '--noinput')
             call_command('migrate')
 
-        self.stdout.write(self.style.SUCCESS('Loading fixtures for Zento ERP...'))
+        self.stdout.write(self.style.SUCCESS('Loading fixtures for Zento ERP (DATOS DE PRUEBA)...'))
         
         fixtures = [
             ('apps/business_lines/fixtures/business_lines_complete.json', 'Business Lines'),

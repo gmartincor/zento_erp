@@ -11,6 +11,10 @@ from .tenant_settings import configure_tenant_settings
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# Environment configuration
+ENVIRONMENT = config('ENVIRONMENT', default='development')
+LOAD_TEST_DATA = config('LOAD_TEST_DATA', default=True, cast=bool)
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-=s24s@s)2l@1-bg4+5%x(l24&q0!h4eioqjx^c==-!nv!bi^h+')
 
