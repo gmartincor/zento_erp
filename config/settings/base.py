@@ -28,6 +28,9 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost,.localhost'
 if DEBUG:
     ALLOWED_HOSTS.append('*')
 
+# Configuración de dominio principal (para desarrollo y producción)
+TENANT_DOMAIN = config('TENANT_DOMAIN', default='zentoerp.com')
+
 tenant_config = configure_tenant_settings()
 
 SHARED_APPS = tenant_config['SHARED_APPS']
