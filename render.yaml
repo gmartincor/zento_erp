@@ -1,5 +1,24 @@
-# =============================================================================
-# render.yaml - Configuración de servicios para Render
+# ==========================================================================        value: /app/media
+      
+      # Multi-tenant configuration
+      - key: TENANT_MODEL
+        value: "tenants.Client"
+      - key: TENANT_DOMAIN_MODEL
+        value: "tenants.Domain"
+      
+      # Logging
+      - key: LOG_FILE
+        value: /tmp/django.log
+      
+      # Email (configurar según proveedor)
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: DEFAULT_FROM_EMAIL
+        value: noreply@zentoerp.comml - Configuración de servicios para Render
 # =============================================================================
 # Este archivo define la infraestructura completa para zentoerp.com
 # Incluye: Web Service, PostgreSQL, Redis, y configuración de dominios
@@ -16,6 +35,13 @@ services:
     plan: starter # Cambiar a 'standard' o 'pro' según necesidades
     region: oregon # Cambiar según ubicación de usuarios
     branch: production
+    
+    # Comandos Docker
+    buildCommand: ./scripts/render-deploy.sh
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 3 --worker-class sync --max-requests 1000 --max-requests-jitter 100 --timeout 30 --keep-alive 2 --log-level info --access-logfile - --error-logfile - config.wsgi:application
+    preDeployCommand: python manage.py migrate && python manage.py collectstatic --noinput && python manage.py createcachetable
+    healthCheckPath: /health/
+    autoDeploy: true
     
     # Configuración de dominio y subdominios
     domains:
@@ -35,38 +61,35 @@ services:
       
       # Dominio principal
       - key: ALLOWED_HOSTS
-        value: "zentoerp.com,*.zentoerp.com"
+        value: "zentoerp.com,*.zentoerp.com,zentoerp-web.onrender.com"
       
-      # Base de datos (conectada automáticamente)
+      # Security
+      - key: SECRET_KEY
+        value: "gkm@5q1^8(y9$^bzcub&b=w#+$x(#x%=wnz$xfj^3gf6oq+3zx"
+      
+      # Database - usar tus credenciales directamente
+      - key: DATABASE_URL
+        value: "postgresql://zentoerp_user:b7OCqNrdoVtdSObjiYVcU1BeubLTEWcO@dpg-d1sg1b3ipnbc73e279t0-a/zentoerp_production"
       - key: DB_NAME
-        fromDatabase:
-          name: zentoerp-postgres
-          property: database
+        value: "zentoerp_production"
       - key: DB_USER
-        fromDatabase:
-          name: zentoerp-postgres
-          property: user
+        value: "zentoerp_user"
       - key: DB_PASSWORD
-        fromDatabase:
-          name: zentoerp-postgres
-          property: password
+        value: "b7OCqNrdoVtdSObjiYVcU1BeubLTEWcO"
       - key: DB_HOST
-        fromDatabase:
-          name: zentoerp-postgres
-          property: host
+        value: "dpg-d1sg1b3ipnbc73e279t0-a"
       - key: DB_PORT
-        fromDatabase:
-          name: zentoerp-postgres
-          property: port
+        value: "5432"
       
-      # Redis (conectado automáticamente)
-      - key: REDIS_URL
-        fromService:
-          name: zentoerp-redis
-          type: redis
-          property: connectionString
+      # Cache configuration (sin Redis)
+      - key: CACHE_BACKEND
+        value: "database"
       
       # Configuración de archivos estáticos
+      - key: STATIC_URL
+        value: "/static/"
+      - key: MEDIA_URL
+        value: "/media/"
       - key: STATIC_ROOT
         value: /app/static_collected
       - key: MEDIA_ROOT
@@ -89,51 +112,34 @@ services:
     # Secretos sensibles (configurar en Render Dashboard)
     # SECRET_KEY, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
     
-    # Build and Start Commands
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-      chmod +x scripts/render-deploy.sh
-      ./scripts/render-deploy.sh
-    
-    startCommand: |
-      gunicorn config.wsgi:application --config gunicorn.conf.py
+    # Build and Start Commands - Docker
+    buildCommand: ./scripts/render-deploy.sh
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 3 --worker-class sync --max-requests 1000 --max-requests-jitter 100 --timeout 30 --keep-alive 2 --log-level info --access-logfile - --error-logfile - config.wsgi:application
+    preDeployCommand: python manage.py migrate && python manage.py collectstatic --noinput && python manage.py createcachetable
     
     # Health Check
     healthCheckPath: /health/
-    
-    # Configuración de recursos
-    disk:
-      name: zentoerp-disk
-      mountPath: /app/media
-      sizeGB: 10
     
     # Configuración de auto-deploy
     autoDeploy: true
 
   # ---------------------------------------------------------------------------
-  # PostgreSQL Database
+  # PostgreSQL Database (ya creado)
   # ---------------------------------------------------------------------------
-  - type: postgres
-    name: zentoerp-postgres
-    plan: starter # Cambiar a 'standard' o 'pro' según necesidades
-    region: oregon
-    databaseName: zentoerp_production
-    databaseUser: zentoerp_user
-    
-    # Configuración de backup automático
-    backupRetentionDays: 7
-    
-    # Configuración de PostgreSQL optimizada para Django multi-tenant
-    postgresPlan: starter
+  # - type: postgres
+  #   name: zentoerp-postgres
+  #   plan: starter
+  #   region: oregon
+  #   databaseName: zentoerp_production
+  #   databaseUser: zentoerp_user
+  #   backupRetentionDays: 7
+  #   postgresPlan: starter
     
   # ---------------------------------------------------------------------------
-  # Redis Cache
+  # Redis Cache (COMENTADO - usando database cache)
   # ---------------------------------------------------------------------------
-  - type: redis
-    name: zentoerp-redis
-    plan: starter
-    region: oregon
-    
-    # Configuración optimizada para Django sessions y cache
-    maxmemoryPolicy: allkeys-lru
+  # - type: redis
+  #   name: zentoerp-redis
+  #   plan: starter
+  #   region: oregon
+  #   maxmemoryPolicy: allkeys-lru
