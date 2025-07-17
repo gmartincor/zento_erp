@@ -1,0 +1,39 @@
+{
+  "name": "zento-erp",
+  "version": "1.0.0",
+  "description": "Sistema ERP para gestión integral de recursos empresariales con múltiples líneas de negocio.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev-css": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/style.css --watch",
+    "build-css": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/style.css --minify",
+    "docker-build-css": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/style.css --minify",
+    "css-purge": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/style.css --minify --purge",
+    "build-prod": "npm run docker-build-css",
+    "install-prod": "npm ci --only=production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gmartincor/zento_erp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gmartincor/zento_erp/issues"
+  },
+  "homepage": "https://github.com/gmartincor/zento_erp#readme",
+  "dependencies": {
+    "chart.js": "^4.5.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17"
+  }
+}

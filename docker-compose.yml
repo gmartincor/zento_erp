@@ -1,0 +1,250 @@
+# =============================================================================
+# docker-compose.yml - Configuración UNIFICADA con profiles
+# =============================================================================
+# Uso:
+#   docker-compose --profile dev up              # Desarrollo básico
+#   docker-compose --profile full-dev up         # Desarrollo completo
+#   docker-compose --profile prod up             # Producción
+#   docker-compose --profile dev-tools up        # Herramientas de desarrollo
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database (Solo desarrollo)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-zentoerp}_postgres_dev
+    environment:
+      POSTGRES_DB: ${DB_NAME:-crm_nutricion_pro}
+      POSTGRES_USER: ${DB_USER:-guillermomartincorrea}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "${DB_PORT_EXTERNAL:-5433}:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - zentoerp_network
+    profiles:
+      - dev
+      - full-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-guillermomartincorrea} -d ${DB_NAME:-crm_nutricion_pro}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Redis Cache (Solo desarrollo completo y producción)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-zentoerp}_redis_dev
+    ports:
+      - "${REDIS_PORT_EXTERNAL:-6380}:6379"
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - zentoerp_network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    profiles:
+      - full-dev
+      - prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Aplicación Django (Desarrollo)
+  # ---------------------------------------------------------------------------
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    container_name: ${COMPOSE_PROJECT_NAME:-zentoerp}_app_dev
+    environment:
+      # Django settings
+      DJANGO_SETTINGS_MODULE: config.settings.base
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-development-key}
+      DEBUG: ${DEBUG:-True}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOAD_TEST_DATA: ${LOAD_TEST_DATA:-True}
+      
+      # Database
+      DB_NAME: ${DB_NAME:-crm_nutricion_pro}
+      DB_USER: ${DB_USER:-guillermomartincorrea}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      
+      # Redis (opcional)
+      REDIS_URL: redis://redis:6379/0
+      
+      # Hosts
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,*.localhost,app-dev}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DJANGO_LOG_LEVEL: ${DJANGO_LOG_LEVEL:-INFO}
+    ports:
+      - "${APP_PORT_EXTERNAL:-8000}:8000"
+    volumes:
+      # Código fuente para desarrollo en tiempo real
+      - .:/app:cached
+      # Volumen para archivos media
+      - media_data_dev:/app/media
+      # Volumen para logs
+      - ./logs:/app/logs:cached
+      # Node modules cache
+      - node_modules_cache:/app/node_modules
+    networks:
+      - zentoerp_network
+    profiles:
+      - dev
+      - full-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: /app/scripts/docker-entrypoint.sh development
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+  # ---------------------------------------------------------------------------
+  # Aplicación Django (Producción)
+  # ---------------------------------------------------------------------------
+  app-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    container_name: ${COMPOSE_PROJECT_NAME:-zentoerp}_app_prod
+    environment:
+      # Django settings
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: "False"
+      ENVIRONMENT: production
+      LOAD_TEST_DATA: "False"
+      
+      # Database (variables de Render)
+      DATABASE_URL: ${DATABASE_URL}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      
+      # Redis
+      REDIS_URL: ${REDIS_URL}
+      
+      # Hosts
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
+      DJANGO_LOG_LEVEL: ${DJANGO_LOG_LEVEL:-WARNING}
+      
+      # Render específico
+      PORT: ${PORT:-8000}
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    volumes:
+      - media_data_prod:/app/media
+      - ./logs:/app/logs:cached
+    networks:
+      - zentoerp_network
+    profiles:
+      - prod
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: /app/scripts/docker-entrypoint.sh production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8000}/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # ---------------------------------------------------------------------------
+  # TailwindCSS Watcher (Solo desarrollo)
+  # ---------------------------------------------------------------------------
+  tailwind:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-builder
+    container_name: ${COMPOSE_PROJECT_NAME:-zentoerp}_tailwind_dev
+    volumes:
+      - .:/frontend:cached
+      - node_modules_cache:/frontend/node_modules
+    working_dir: /frontend
+    command: npm run dev-css
+    networks:
+      - zentoerp_network
+    profiles:
+      - dev-tools
+    restart: unless-stopped
+    depends_on:
+      - app-dev
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  postgres_data_dev:
+    name: ${COMPOSE_PROJECT_NAME:-zentoerp}_postgres_data_dev
+    driver: local
+  redis_data_dev:
+    name: ${COMPOSE_PROJECT_NAME:-zentoerp}_redis_data_dev
+    driver: local
+  media_data_dev:
+    name: ${COMPOSE_PROJECT_NAME:-zentoerp}_media_data_dev
+    driver: local
+  media_data_prod:
+    name: ${COMPOSE_PROJECT_NAME:-zentoerp}_media_data_prod
+    driver: local
+  node_modules_cache:
+    name: ${COMPOSE_PROJECT_NAME:-zentoerp}_node_modules_cache
+    driver: local
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  zentoerp_network:
+    name: ${COMPOSE_PROJECT_NAME:-zentoerp}_network
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

@@ -21,15 +21,12 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-=s24s@s)2l@1-bg4+5%x(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '.localhost',
-]
+# Security: Solo permitir hosts específicos en producción
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost,.localhost', cast=Csv())
 
-# Desarrollo: permitir cualquier host
+# En desarrollo, permitir cualquier host si DEBUG=True
 if DEBUG:
-    ALLOWED_HOSTS = ['*']
+    ALLOWED_HOSTS.append('*')
 
 tenant_config = configure_tenant_settings()
 
@@ -76,11 +73,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': config('DB_NAME', default='crm_nutricion'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'NAME': config('DB_NAME', default='zentoerp_dev'),
+        'USER': config('DB_USER', default='zentoerp_user'),
+        'PASSWORD': config('DB_PASSWORD', default='zentoerp_dev_password'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+        }
     }
 }
 
