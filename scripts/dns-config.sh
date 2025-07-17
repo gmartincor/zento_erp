@@ -1,4 +1,4 @@
-#!/bin/bash
+ñ#!/bin/bash
 
 # =============================================================================
 # dns-config.sh - Configuración DNS para zentoerp.com
