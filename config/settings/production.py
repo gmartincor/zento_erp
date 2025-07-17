@@ -101,7 +101,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': config('LOG_FILE', default='/var/log/django/crm_nutricion.log'),
+            'filename': config('LOG_FILE', default='/tmp/django.log'),
             'formatter': 'verbose',
         },
         'console': {
