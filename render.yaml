@@ -1,0 +1,139 @@
+# =============================================================================
+# render.yaml - Configuración de servicios para Render
+# =============================================================================
+# Este archivo define la infraestructura completa para zentoerp.com
+# Incluye: Web Service, PostgreSQL, Redis, y configuración de dominios
+
+services:
+  # ---------------------------------------------------------------------------
+  # Web Service Principal - Django Multi-tenant
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: zentoerp-web
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter # Cambiar a 'standard' o 'pro' según necesidades
+    region: oregon # Cambiar según ubicación de usuarios
+    branch: production
+    
+    # Configuración de dominio y subdominios
+    domains:
+      - zentoerp.com
+      - "*.zentoerp.com"  # Wildcard para subdominios multi-tenant
+    
+    # Variables de entorno para producción
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "False"
+      - key: LOAD_TEST_DATA
+        value: "False"
+      
+      # Dominio principal
+      - key: ALLOWED_HOSTS
+        value: "zentoerp.com,*.zentoerp.com"
+      
+      # Base de datos (conectada automáticamente)
+      - key: DB_NAME
+        fromDatabase:
+          name: zentoerp-postgres
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: zentoerp-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: zentoerp-postgres
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: zentoerp-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: zentoerp-postgres
+          property: port
+      
+      # Redis (conectado automáticamente)
+      - key: REDIS_URL
+        fromService:
+          name: zentoerp-redis
+          type: redis
+          property: connectionString
+      
+      # Configuración de archivos estáticos
+      - key: STATIC_ROOT
+        value: /app/static_collected
+      - key: MEDIA_ROOT
+        value: /app/media
+      
+      # Configuración de logs
+      - key: LOG_FILE
+        value: /tmp/django.log
+      
+      # Email (configurar según proveedor)
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: DEFAULT_FROM_EMAIL
+        value: noreply@zentoerp.com
+    
+    # Secretos sensibles (configurar en Render Dashboard)
+    # SECRET_KEY, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+    
+    # Build and Start Commands
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate_schemas --shared
+    
+    startCommand: |
+      gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    
+    # Health Check
+    healthCheckPath: /health/
+    
+    # Configuración de recursos
+    disk:
+      name: zentoerp-disk
+      mountPath: /app/media
+      sizeGB: 10
+    
+    # Configuración de auto-deploy
+    autoDeploy: true
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  - type: postgres
+    name: zentoerp-postgres
+    plan: starter # Cambiar a 'standard' o 'pro' según necesidades
+    region: oregon
+    databaseName: zentoerp_production
+    databaseUser: zentoerp_user
+    
+    # Configuración de backup automático
+    backupRetentionDays: 7
+    
+    # Configuración de PostgreSQL optimizada para Django multi-tenant
+    postgresPlan: starter
+    
+  # ---------------------------------------------------------------------------
+  # Redis Cache
+  # ---------------------------------------------------------------------------
+  - type: redis
+    name: zentoerp-redis
+    plan: starter
+    region: oregon
+    
+    # Configuración optimizada para Django sessions y cache
+    maxmemoryPolicy: allkeys-lru

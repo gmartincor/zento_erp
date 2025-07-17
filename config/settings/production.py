@@ -24,7 +24,7 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 X_FRAME_OPTIONS = 'DENY'
 
-# DATABASE - Use environment variables for database configuration
+# DATABASE - Configuración optimizada para producción multi-tenant
 DATABASES = {
     'default': {
         'ENGINE': 'django_tenants.postgresql_backend',
@@ -35,7 +35,12 @@ DATABASES = {
         'PORT': config('DB_PORT', default='5432'),
         'OPTIONS': {
             'sslmode': 'require',
+            'connect_timeout': 60,
+            'options': '-c default_transaction_isolation=read_committed'
         },
+        'CONN_MAX_AGE': 600,  # 10 minutos - reutilizar conexiones
+        'CONN_HEALTH_CHECKS': True,
+        'ATOMIC_REQUESTS': True,  # Transacciones automáticas
     }
 }
 
@@ -48,14 +53,23 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@miapp.com')
 
-# Cache settings - Redis for better performance
+# CACHE - Configuración optimizada para multi-tenant
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 50,
+                'retry_on_timeout': True,
+            },
+            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+            'IGNORE_EXCEPTIONS': True,
+        },
+        'TIMEOUT': 300,  # 5 minutos
+        'KEY_PREFIX': 'zentoerp',
+        'VERSION': 1,
     }
 }
 
@@ -120,5 +134,40 @@ LOGGING = {
 # Secret key - must be set in environment
 SECRET_KEY = config('SECRET_KEY')
 
-# Django-tenants specific configuration for production
+# MULTI-TENANT DOMAIN CONFIGURATION
+# =============================================================================
+# Configuración específica para zentoerp.com con subdominios
+
+# Dominio principal para la aplicación
+TENANT_DOMAIN = config('TENANT_DOMAIN', default='zentoerp.com')
+
+# Configuración específica para django-tenants
+TENANT_MODEL = 'tenants.Tenant'
+TENANT_DOMAIN_MODEL = 'tenants.Domain'
+
+# Configuración de subdominios
 TENANT_SUBFOLDER_PREFIX = ''  # Solo subdominios, no subcarpetas
+TENANT_LIMIT_SET_CALLS = True  # Optimización para producción
+
+# Configuración de dominios permitidos para multi-tenant
+ALLOWED_HOSTS = [
+    TENANT_DOMAIN,
+    f'*.{TENANT_DOMAIN}',
+    '.zentoerp.com',
+    'zentoerp.com',
+]
+
+# Agregar hosts adicionales desde variables de entorno
+additional_hosts = config('ADDITIONAL_ALLOWED_HOSTS', default='', cast=Csv())
+if additional_hosts:
+    ALLOWED_HOSTS.extend(additional_hosts)
+
+# Configuración de CORS para subdominios (si se usa)
+CORS_ALLOWED_ORIGINS = [
+    f"https://{TENANT_DOMAIN}",
+    f"https://*.{TENANT_DOMAIN}",
+]
+
+# Configuración de cookies para subdominios
+CSRF_COOKIE_DOMAIN = f'.{TENANT_DOMAIN}'
+SESSION_COOKIE_DOMAIN = f'.{TENANT_DOMAIN}'

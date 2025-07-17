@@ -73,9 +73,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': config('DB_NAME', default='zentoerp_dev'),
-        'USER': config('DB_USER', default='zentoerp_user'),
-        'PASSWORD': config('DB_PASSWORD', default='zentoerp_dev_password'),
+        'NAME': config('DB_NAME', default='crm_nutricion_pro'),
+        'USER': config('DB_USER', default='guillermomartincorrea'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
         'OPTIONS': {
