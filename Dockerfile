@@ -19,8 +19,8 @@ RUN apk update && apk upgrade && \
 # Copiar archivos de configuración Node.js
 COPY package.json package-lock.json* ./
 
-# Instalar dependencias Node.js
-RUN npm install --production
+# Instalar dependencias Node.js (incluyendo devDependencies para el build)
+RUN npm install
 
 # Actualizar browserslist database (después de instalar dependencies)
 RUN npx update-browserslist-db@latest
