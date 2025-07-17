@@ -16,14 +16,14 @@ WORKDIR /frontend
 RUN apk update && apk upgrade && \
     npm install -g npm@latest
 
-# Actualizar browserslist database
-RUN npx update-browserslist-db@latest
-
 # Copiar archivos de configuración Node.js
 COPY package.json package-lock.json* ./
 
 # Instalar dependencias Node.js
 RUN npm ci --only=production
+
+# Actualizar browserslist database (después de instalar dependencies)
+RUN npx update-browserslist-db@latest
 
 # Copiar archivos fuente necesarios para el build
 COPY static/ ./static/
