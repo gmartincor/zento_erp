@@ -5,12 +5,16 @@
 # -----------------------------------------------------------------------------
 # STAGE 1: Node.js Builder - Compila TailwindCSS y assets frontend
 # -----------------------------------------------------------------------------
-FROM node:18-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 
 LABEL stage=frontend-builder
 LABEL description="Compila TailwindCSS y assets frontend"
 
 WORKDIR /frontend
+
+# Actualizar el sistema y npm
+RUN apk update && apk upgrade && \
+    npm install -g npm@latest
 
 # Actualizar browserslist database
 RUN npx update-browserslist-db@latest
@@ -38,7 +42,7 @@ RUN ls -la static/css/style.css && \
 # -----------------------------------------------------------------------------
 # STAGE 2: Python Base - Configuración base de Python
 # -----------------------------------------------------------------------------
-FROM python:3.11-slim AS python-base
+FROM python:3.12-slim AS python-base
 
 LABEL stage=python-base
 LABEL description="Configuración base de Python con dependencias del sistema"
@@ -49,8 +53,8 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y \
+# Instalar dependencias del sistema con actualizaciones de seguridad
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     # PostgreSQL client libraries
     libpq-dev \
     # Para compilar psycopg2
@@ -65,11 +69,15 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     # Herramientas de sistema
     curl \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --upgrade pip setuptools==78.1.1
+    && pip install --upgrade pip setuptools wheel
 
 # Crear usuario no-root para seguridad
-RUN useradd --create-home --shell /bin/bash zentoerp
+RUN useradd --create-home --shell /bin/bash --uid 1000 zentoerp
+
+# Configurar permisos seguros
+RUN chmod 755 /home/zentoerp
 
 # -----------------------------------------------------------------------------
 # STAGE 3: Dependencies - Instala dependencias Python
@@ -159,7 +167,7 @@ LABEL description="ZentoERP - Sistema ERP multi-tenant para nutricionistas"
 WORKDIR /app
 
 # Copiar dependencias instaladas
-COPY --from=dependencies /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
+COPY --from=dependencies /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
 COPY --from=dependencies /usr/local/bin/ /usr/local/bin/
 
 # Copiar aplicación desde production-builder
