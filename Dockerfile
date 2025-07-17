@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 # STAGE 1: Node.js Builder - Compila TailwindCSS y assets frontend
 # -----------------------------------------------------------------------------
-FROM node:20-alpine AS frontend-builder
+FROM node:20.18.0-alpine AS frontend-builder
 
 LABEL stage=frontend-builder
 LABEL description="Compila TailwindCSS y assets frontend"
@@ -42,7 +42,7 @@ RUN ls -la static/css/style.css && \
 # -----------------------------------------------------------------------------
 # STAGE 2: Python Base - Configuración base de Python
 # -----------------------------------------------------------------------------
-FROM python:3.12-slim AS python-base
+FROM python:3.12.7-slim AS python-base
 
 LABEL stage=python-base
 LABEL description="Configuración base de Python con dependencias del sistema"
@@ -71,7 +71,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --upgrade pip setuptools wheel
+    && pip install --upgrade pip==24.0 setuptools wheel
 
 # Crear usuario no-root para seguridad
 RUN useradd --create-home --shell /bin/bash --uid 1000 zentoerp

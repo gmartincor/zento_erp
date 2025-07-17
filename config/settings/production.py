@@ -2,29 +2,37 @@ import os
 from decouple import config, Csv
 from .base import *
 
-# SECURITY SETTINGS
+# SECURITY SETTINGS - Configuración robusta para larga duración
 DEBUG = False
 
 # Get allowed hosts from environment or use default
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
-# Redirect all non-HTTPS requests to HTTPS
+# Security headers más robustos
 SECURE_SSL_REDIRECT = True
-
-# Set secure headers
-SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_SECONDS = 63072000  # 2 años (más tiempo que el estándar)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_REFERRER_POLICY = 'same-origin'  # Mejor seguridad
+
+# Cookies más seguras
 SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'  # Protección adicional contra CSRF
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
-SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'  # Protección adicional
+
+# Configuración XFrame más restrictiva
 X_FRAME_OPTIONS = 'DENY'
 
-# DATABASE - Configuración optimizada para producción multi-tenant
+# Configuración adicional para longevidad
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+
+# DATABASE - Configuración optimizada para producción multi-tenant de larga duración
 DATABASES = {
     'default': {
         'ENGINE': 'django_tenants.postgresql_backend',
@@ -36,11 +44,12 @@ DATABASES = {
         'OPTIONS': {
             'sslmode': 'require',
             'connect_timeout': 60,
-            'options': '-c default_transaction_isolation=read_committed'
+            'options': '-c default_transaction_isolation=read_committed -c statement_timeout=30000'
         },
-        'CONN_MAX_AGE': 600,  # 10 minutos - reutilizar conexiones
+        'CONN_MAX_AGE': 300,  # 5 minutos (más conservador para estabilidad)
         'CONN_HEALTH_CHECKS': True,
-        'ATOMIC_REQUESTS': True,  # Transacciones automáticas
+        'ATOMIC_REQUESTS': True,
+        'TIME_ZONE': 'UTC',  # Especificar zona horaria
     }
 }
 

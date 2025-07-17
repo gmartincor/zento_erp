@@ -1,24 +1,31 @@
 # =============================================================================
-# requirements.txt - Dependencias de ZentoERP
+# requirements.txt - Dependencias de ZentoERP - VERSIONES ESTABLES PARA LONGEVIDAD
 # =============================================================================
 
-# Django Core
+# Build tools (versiones LTS estables)
+pip==24.0
+setuptools==69.5.1
+wheel==0.43.0
+
+# Django LTS (soporte hasta abril 2026)
 Django==4.2.16
 psycopg2-binary==2.9.9
 python-decouple==3.8
 
-# Multi-tenancy
-django-tenants==3.6.1
+# Multi-tenancy (versión estable)
+django-tenants==3.8.0
 
-# Utilidades
+# Utilidades (versiones LTS)
 reportlab==4.0.7
 Pillow==10.1.0
 
-# Producción (instalar solo en producción)
+# Producción (versiones estables)
 gunicorn==21.2.0
 whitenoise[brotli]==6.5.0
-# django-redis==5.3.0  # Comentado - no necesario sin Redis
-# redis==4.6.0         # Comentado - no necesario sin Redis
+
+# Comentadas para evitar complejidad innecesaria
+# django-redis==5.3.0  # No usar a menos que sea crítico
+# redis==4.6.0         # No usar a menos que sea crítico
 
 # Desarrollo (instalar solo en desarrollo)
 # Descomenta las siguientes líneas si estás desarrollando:
