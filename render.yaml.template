@@ -1,0 +1,99 @@
+# =============================================================================
+# render.yaml.template - Configuración de servicios para Render (TEMPLATE)
+# =============================================================================
+# INSTRUCCIONES:
+# 1. Copia este archivo a render.yaml
+# 2. Reemplaza todas las variables [VARIABLE] con valores reales
+# 3. NO versionas render.yaml en Git (está en .gitignore)
+
+services:
+  # ---------------------------------------------------------------------------
+  # Web Service Principal - Django Multi-tenant
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: zentoerp-web
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    branch: production
+    
+    # Comandos Docker
+    buildCommand: ./scripts/render-deploy.sh
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 3 --worker-class sync --max-requests 1000 --max-requests-jitter 100 --timeout 30 --keep-alive 2 --log-level info --access-logfile - --error-logfile - config.wsgi:application
+    preDeployCommand: python manage.py migrate && python manage.py collectstatic --noinput && python manage.py createcachetable
+    healthCheckPath: /health/
+    autoDeploy: true
+    
+    # Configuración de dominio y subdominios
+    domains:
+      - zentoerp.com
+      - "*.zentoerp.com"
+    
+    # Variables de entorno para producción
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "False"
+      - key: LOAD_TEST_DATA
+        value: "False"
+      
+      # Dominio principal
+      - key: ALLOWED_HOSTS
+        value: "zentoerp.com,*.zentoerp.com,zentoerp-web.onrender.com"
+      
+      # Security - GENERAR NUEVA CLAVE SEGURA
+      - key: SECRET_KEY
+        value: "[GENERAR_SECRET_KEY_NUEVA]"
+      
+      # Database - USAR CREDENCIALES REALES
+      - key: DATABASE_URL
+        value: "postgresql://[DB_USER]:[DB_PASSWORD]@[DB_HOST]/[DB_NAME]"
+      - key: DB_NAME
+        value: "[DB_NAME]"
+      - key: DB_USER
+        value: "[DB_USER]"
+      - key: DB_PASSWORD
+        value: "[DB_PASSWORD]"
+      - key: DB_HOST
+        value: "[DB_HOST]"
+      - key: DB_PORT
+        value: "5432"
+      
+      # Cache configuration (sin Redis)
+      - key: CACHE_BACKEND
+        value: "database"
+      
+      # Configuración de archivos estáticos
+      - key: STATIC_URL
+        value: "/static/"
+      - key: MEDIA_URL
+        value: "/media/"
+      - key: STATIC_ROOT
+        value: /app/static_collected
+      - key: MEDIA_ROOT
+        value: /app/media
+      
+      # Multi-tenant configuration
+      - key: TENANT_MODEL
+        value: "tenants.Client"
+      - key: TENANT_DOMAIN_MODEL
+        value: "tenants.Domain"
+      
+      # Logging
+      - key: LOG_FILE
+        value: /tmp/django.log
+      
+      # Email (configurar según proveedor)
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: DEFAULT_FROM_EMAIL
+        value: noreply@zentoerp.com

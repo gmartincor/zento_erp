@@ -48,6 +48,10 @@ venv.bak/
 .env.test
 .env.production
 
+# Render configuration with secrets
+render.yaml
+render.yml
+
 # Security: Nunca commitear archivos de producción
 .env.production.*
 *.production.env
