@@ -86,8 +86,8 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       
-      # Redis (opcional)
-      REDIS_URL: redis://redis:6379/0
+      # Redis (opcional - comentado para modo económico)
+      # REDIS_URL: redis://redis:6379/0
       
       # Hosts
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,*.localhost,app-dev}

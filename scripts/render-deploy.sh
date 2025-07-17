@@ -55,6 +55,9 @@ apply_migrations() {
     log "🔄 Aplicando migraciones del esquema compartido..."
     python manage.py migrate_schemas --shared
     
+    log "🔄 Creando tabla de cache..."
+    python manage.py createcachetable
+    
     log "🔄 Aplicando migraciones de tenants..."
     python manage.py migrate_schemas --tenant
 }

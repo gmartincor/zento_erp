@@ -17,8 +17,8 @@ Pillow==10.1.0
 # Producción (instalar solo en producción)
 gunicorn==21.2.0
 whitenoise[brotli]==6.5.0
-django-redis==5.3.0
-redis==4.6.0
+# django-redis==5.3.0  # Comentado - no necesario sin Redis
+# redis==4.6.0         # Comentado - no necesario sin Redis
 
 # Desarrollo (instalar solo en desarrollo)
 # Descomenta las siguientes líneas si estás desarrollando:
