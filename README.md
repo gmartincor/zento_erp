@@ -1,6 +1,6 @@
-# CRM Nutrición Pro
+# Zento ERP
 
-Sistema CRM para gestión de clientes y servicios de nutrición con múltiples líneas de negocio.
+Sistema ERP para gestión integral de recursos empresariales con múltiples líneas de negocio.
 
 ## Características
 
@@ -20,8 +20,8 @@ Sistema CRM para gestión de clientes y servicios de nutrición con múltiples l
 
 1. **Clonar el repositorio**
    ```bash
-   git clone https://github.com/gmartincor/crm_nutrition_pro.git
-   cd crm_nutrition_pro
+   git clone https://github.com/gmartincor/zento_erp.git
+   cd zento_erp
    ```
 
 2. **Crear entorno virtual**
@@ -75,7 +75,7 @@ Sistema CRM para gestión de clientes y servicios de nutrición con múltiples l
 ## Estructura del Proyecto
 
 ```
-crm-nutricion-pro/
+zento-erp/
 ├── apps/
 │   ├── core/           # Modelos base abstractos
 │   ├── authentication/ # Sistema de usuarios personalizado

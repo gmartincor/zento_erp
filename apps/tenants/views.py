@@ -12,7 +12,7 @@ def unified_login_view(request):
     
     if current_tenant.schema_name == 'public':
         return render(request, 'tenants/public_info.html', {
-            'page_title': 'Nutrition Pro CRM - Sistema de Gestión',
+            'page_title': 'Zento ERP - Sistema de Gestión',
         })
     
     if request.user.is_authenticated:

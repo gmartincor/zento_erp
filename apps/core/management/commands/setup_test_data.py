@@ -7,7 +7,7 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = 'Load all fixtures for the nutrition CRM and set up test users'
+    help = 'Load all fixtures for the Zento ERP and set up test users'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -22,7 +22,7 @@ class Command(BaseCommand):
             call_command('flush', '--noinput')
             call_command('migrate')
 
-        self.stdout.write(self.style.SUCCESS('Loading fixtures for Nutrition CRM...'))
+        self.stdout.write(self.style.SUCCESS('Loading fixtures for Zento ERP...'))
         
         fixtures = [
             ('apps/business_lines/fixtures/business_lines_complete.json', 'Business Lines'),
