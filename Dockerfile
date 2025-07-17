@@ -90,11 +90,11 @@ LABEL description="Instala todas las dependencias Python"
 WORKDIR /app
 
 # Copiar requirements
-COPY requirements-prod.txt ./
+COPY requirements.txt ./
 
 # Instalar dependencias Python
 RUN pip install --upgrade pip && \
-    pip install -r requirements-prod.txt
+    pip install -r requirements.txt
 
 # -----------------------------------------------------------------------------
 # STAGE 4: Development - Imagen para desarrollo
@@ -105,8 +105,8 @@ LABEL stage=development
 LABEL description="Imagen de desarrollo con herramientas adicionales"
 
 # Instalar dependencias de desarrollo
-COPY requirements-dev.txt ./
-RUN pip install -r requirements-dev.txt
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
 
 # Copiar código fuente
 COPY --chown=zentoerp:zentoerp . .
