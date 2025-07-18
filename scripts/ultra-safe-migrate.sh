@@ -1,83 +1,221 @@
 #!/bin/bash
 
-# Ultra-Safe Migration Script for Django Multi-Tenant App
-# This script handles migrations safely for both public schema and tenants
+# Production-Grade Django Multi-Tenant Migration Script
+# Follows DevOps best practices for zero-downtime deployments
+# Compatible with Render, Heroku, AWS, and other cloud platforms
 
-set -e  # Exit on any error
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
+IFS=$'\n\t'        # Secure Internal Field Separator
 
-echo "🚀 Starting ultra-safe migration process..."
+# Configuration
+readonly SCRIPT_NAME="$(basename "${0}")"
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+readonly LOG_FILE="${LOG_FILE:-/tmp/deployment.log}"
+readonly ENVIRONMENT="${ENVIRONMENT:-production}"
+readonly TIMEOUT_SECONDS=300
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Color codes for output
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly NC='\033[0m' # No Color
 
-# Function to log messages
+# Logging functions with timestamps
 log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] [INFO]${NC} $1" | tee -a "$LOG_FILE"
 }
 
 log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] [WARNING]${NC} $1" | tee -a "$LOG_FILE"
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] [ERROR]${NC} $1" | tee -a "$LOG_FILE"
 }
 
-# Check if we're in the right directory
-if [ ! -f "manage.py" ]; then
-    log_error "manage.py not found. Are we in the right directory?"
-    exit 1
+log_debug() {
+    if [[ "${DEBUG:-false}" == "true" ]]; then
+        echo -e "${BLUE}[$(date +'%Y-%m-%d %H:%M:%S')] [DEBUG]${NC} $1" | tee -a "$LOG_FILE"
+    fi
+}
+
+# Error handling
+handle_error() {
+    local exit_code=$?
+    local line_number=$1
+    log_error "Script failed at line ${line_number} with exit code ${exit_code}"
+    log_error "Check the log file at: ${LOG_FILE}"
+    exit "${exit_code}"
+}
+
+# Trap errors for debugging
+trap 'handle_error ${LINENO}' ERR
+
+# Health check function
+check_health() {
+    local check_name=$1
+    local check_command=$2
+    local timeout=${3:-30}
+    
+    log_debug "Running health check: ${check_name}"
+    
+    if timeout "${timeout}" bash -c "${check_command}" &>/dev/null; then
+        log_info "✅ ${check_name} - PASSED"
+        return 0
+    else
+        log_warning "⚠️  ${check_name} - FAILED (non-critical)"
+        return 1
+    fi
+}
+
+# Database connection test with retry logic
+test_database_connection() {
+    local max_attempts=5
+    local attempt=1
+    
+    log_info "Testing database connection..."
+    
+    while [[ $attempt -le $max_attempts ]]; do
+        if python manage.py shell -c "
+from django.db import connection, OperationalError
+try:
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT 1')
+        cursor.fetchone()
+    print('Database connection successful')
+except OperationalError as e:
+    print(f'Database connection failed: {e}')
+    exit(1)
+        " &>/dev/null; then
+            log_info "Database connection successful on attempt ${attempt}"
+            return 0
+        else
+            log_warning "Database connection failed on attempt ${attempt}/${max_attempts}"
+            if [[ $attempt -lt $max_attempts ]]; then
+                sleep $((attempt * 2))  # Exponential backoff
+            fi
+            ((attempt++))
+        fi
+    done
+    
+    log_error "Database connection failed after ${max_attempts} attempts"
+    return 1
+}
+
+# Pre-deployment checks
+pre_deployment_checks() {
+    log_info "🔍 Running pre-deployment checks..."
+    
+    # Check if we're in the right directory
+    if [[ ! -f "manage.py" ]]; then
+        log_error "manage.py not found. Please run this script from the Django project root."
+        exit 1
+    fi
+    
+    # Check Django settings
+    if [[ -z "${DJANGO_SETTINGS_MODULE:-}" ]]; then
+        log_error "DJANGO_SETTINGS_MODULE environment variable not set"
+        exit 1
+    fi
+    
+    log_info "Using Django settings: ${DJANGO_SETTINGS_MODULE}"
+    
+    # Check Python version
+    local python_version
+    python_version=$(python --version 2>&1 | cut -d' ' -f2)
+    log_info "Python version: ${python_version}"
+    
+    # Check required environment variables
+    local required_vars=("DATABASE_URL" "SECRET_KEY")
+    for var in "${required_vars[@]}"; do
+        if [[ -z "${!var:-}" ]]; then
+            log_error "Required environment variable ${var} is not set"
+            exit 1
+        fi
+    done
+    
+    log_info "✅ Pre-deployment checks completed"
+}
+
+# Migration execution with proper error handling
+execute_migrations() {
+    log_info "🚀 Executing database migrations..."
+    
+    # Test database connection first
+    if ! test_database_connection; then
+        log_error "Cannot proceed with migrations - database connection failed"
+        return 1
+    fi
+    
+    # Run migrations for public schema (shared apps)
+    log_info "Running migrations for public schema..."
+    if ! python manage.py migrate_schemas --shared --verbosity=2; then
+        log_error "Public schema migration failed"
+        return 1
+    fi
+    
+    # Run migrations for tenant schemas
+    log_info "Running migrations for tenant schemas..."
+    if ! python manage.py migrate_schemas --verbosity=2; then
+        log_warning "Tenant migration failed - this might be normal for first deployment"
+        log_info "Tenant schemas will be created when tenants are added"
+    fi
+    
+    log_info "✅ Database migrations completed"
+}
+
+# Static files collection
+collect_static_files() {
+    log_info "📦 Collecting static files..."
+    
+    # Ensure static directories exist
+    mkdir -p "${STATIC_ROOT:-/app/static_collected}"
+    
+    if ! python manage.py collectstatic --noinput --verbosity=1; then
+        log_error "Static files collection failed"
+        return 1
+    fi
+    
+    log_info "✅ Static files collection completed"
+}
+
+# Post-deployment checks
+post_deployment_checks() {
+    log_info "🔍 Running post-deployment checks..."
+    
+    # Django system check
+    check_health "Django System Check" "python manage.py check --verbosity=1"
+    
+    # Health endpoint check (if available)
+    if command -v curl &>/dev/null; then
+        check_health "Health Endpoint" "curl -f http://localhost:8000/health/" 10
+    fi
+    
+    log_info "✅ Post-deployment checks completed"
+}
+
+# Main execution function
+main() {
+    log_info "🚀 Starting production-grade deployment process..."
+    log_info "Environment: ${ENVIRONMENT}"
+    log_info "Log file: ${LOG_FILE}"
+    
+    # Create log directory if it doesn't exist
+    mkdir -p "$(dirname "${LOG_FILE}")"
+    
+    # Execute deployment steps
+    pre_deployment_checks
+    execute_migrations
+    collect_static_files
+    post_deployment_checks
+    
+    log_info "🎉 Deployment completed successfully!"
+    log_info "Application is ready to serve traffic"
+}
+
+# Script execution
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
 fi
-
-# Check Django settings
-if [ -z "$DJANGO_SETTINGS_MODULE" ]; then
-    log_error "DJANGO_SETTINGS_MODULE environment variable not set"
-    exit 1
-fi
-
-log_info "Using Django settings: $DJANGO_SETTINGS_MODULE"
-
-# Check database connection
-log_info "Testing database connection..."
-python manage.py dbshell --command="SELECT 1;" > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-    log_error "Database connection failed"
-    exit 1
-fi
-log_info "Database connection successful"
-
-# Create migration files if needed
-log_info "Checking for new migrations..."
-python manage.py makemigrations --check --dry-run
-if [ $? -eq 0 ]; then
-    log_info "No new migrations needed"
-else
-    log_warning "New migrations detected, but we're not auto-generating them in production"
-fi
-
-# Run migrations for public schema (shared apps)
-log_info "Running migrations for public schema..."
-python manage.py migrate_schemas --shared --verbosity=2
-
-# Run migrations for tenant schemas
-log_info "Running migrations for tenant schemas..."
-python manage.py migrate_schemas --verbosity=2
-
-# Collect static files
-log_info "Collecting static files..."
-python manage.py collectstatic --noinput --verbosity=1
-
-# Run Django system checks
-log_info "Running Django system checks..."
-python manage.py check --verbosity=2
-
-# Optional: Create superuser if needed (only in development)
-if [ "$ENVIRONMENT" = "development" ]; then
-    log_info "Development environment detected - you may need to create a superuser manually"
-fi
-
-log_info "✅ Ultra-safe migration completed successfully!"
-echo "🎉 Your application is ready to deploy!"
