@@ -227,70 +227,49 @@ pre_deployment_checks() {
     return 0
 }
 
-# Verify CSS build prerequisites (Docker-aware)
-verify_css_prerequisites() {
-    log_info "🔧 Checking CSS build prerequisites..."
-    
-    # Check if CSS already exists (Docker pre-compiled)
-    if [[ -f "static/css/style.css" ]]; then
-        local file_size=$(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "0")
-        if [[ "$file_size" -gt 100 ]]; then
-            log_info "✅ CSS file already exists (${file_size} bytes) - likely pre-compiled"
-            return 0
-        fi
-    fi
-    
-    # If CSS doesn't exist, we need npm to build it
-    if ! command -v npm &> /dev/null; then
-        log_error "npm not found. CSS build cannot proceed."
-        log_error "This suggests we're in a production environment where CSS should be pre-compiled."
-        return 1
-    fi
-    
-    if [[ ! -f "package.json" ]]; then
-        log_error "package.json not found. CSS build cannot proceed."
-        return 1
-    fi
-    
-    return 0
-}
+# Verify static files before collection (simplified)
+verify_static_prerequisites() {
 
-# Build CSS from Tailwind (optimized - Docker aware)
-build_css() {
-    log_info "🎨 Building CSS with Tailwind..."
+# Verify CSS exists (Docker-aware - no building in production)
+verify_css_exists() {
+    log_info "🎨 Verifying CSS availability..."
     
     # En Docker/producción, el CSS ya debería estar compilado
     if [[ -f "static/css/style.css" ]]; then
         local file_size=$(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "0")
         if [[ "$file_size" -gt 100 ]]; then
-            log_info "✅ CSS already compiled and available (${file_size} bytes)"
-            log_info "ℹ️  Skipping npm build - using pre-compiled CSS from Docker build"
-            return 0
-        fi
-    fi
-    
-    # Solo intentar compilar si npm está disponible
-    if ! verify_css_prerequisites; then
-        log_error "❌ CSS file not found and npm not available for compilation"
-        log_error "   In Docker/production, CSS should be pre-compiled during image build"
-        log_error "   Expected file: $(pwd)/static/css/style.css"
-        return 1
-    fi
-    
-    log_info "📦 Compiling CSS using npm (development mode)..."
-    if npm run build-css; then
-        if [[ -f "static/css/style.css" ]]; then
-            local file_size=$(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "unknown")
-            log_info "✅ CSS build completed successfully (${file_size} bytes)"
+            log_info "✅ CSS file found and valid (${file_size} bytes)"
+            log_info "ℹ️  Using pre-compiled CSS from Docker build process"
             return 0
         else
-            log_error "CSS build appeared to succeed but output file static/css/style.css was not created"
+            log_error "❌ CSS file exists but appears empty or corrupted (${file_size} bytes)"
             return 1
         fi
-    else
-        log_error "npm run build-css command failed"
-        return 1
     fi
+    
+    # CSS no existe - esto es un problema en producción
+    log_error "❌ CSS file not found: static/css/style.css"
+    log_error "   Expected location: $(pwd)/static/css/style.css"
+    log_info "🔍 Debugging information:"
+    log_info "   Listing static/ directory:"
+    ls -la static/ 2>&1 || echo "   static/ directory doesn't exist"
+    
+    # En desarrollo local, podríamos intentar compilar
+    if command -v npm &> /dev/null && [[ -f "package.json" ]]; then
+        log_warning "⚠️  Attempting CSS compilation in development mode..."
+        if npm run build-css; then
+            if [[ -f "static/css/style.css" ]]; then
+                local file_size=$(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "unknown")
+                log_info "✅ CSS compiled successfully in development mode (${file_size} bytes)"
+                return 0
+            fi
+        fi
+        log_error "❌ CSS compilation failed"
+    else
+        log_error "❌ npm not available - CSS should be pre-compiled in Docker"
+    fi
+    
+    return 1
 }
 
 # Verify static files before collection (simplified)
@@ -456,10 +435,10 @@ main() {
         exit 1
     fi
     
-    # Step 3: Build CSS with Tailwind
-    log_info "📋 Step 3/5: Building CSS with Tailwind..."
-    if ! build_css; then
-        log_error "❌ CSS build failed - deployment cannot continue without styles"
+    # Step 3: Verify CSS exists (Docker pre-compiled)
+    log_info "📋 Step 3/5: Verifying CSS files..."
+    if ! verify_css_exists; then
+        log_error "❌ CSS verification failed - deployment cannot continue without styles"
         exit 1
     fi
     
@@ -488,7 +467,7 @@ main() {
     log_info ""
     log_info "🎉 DEPLOYMENT COMPLETED SUCCESSFULLY!"
     log_info "✅ Database migrations applied"
-    log_info "✅ CSS build completed"
+    log_info "✅ CSS files verified"
     log_info "✅ Static files collected"
     log_info "✅ Multi-tenant system configured"
     log_info "🚀 Application is ready to serve traffic"
