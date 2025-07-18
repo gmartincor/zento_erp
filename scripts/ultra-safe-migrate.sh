@@ -283,6 +283,31 @@ pre_deployment_checks() {
     log_info "✅ Pre-deployment checks passed"
 }
 
+# Build CSS from Tailwind
+build_css() {
+    log_info "🎨 Building CSS with Tailwind..."
+    
+    # Check if npm is available
+    if ! command -v npm &> /dev/null; then
+        log_error "npm not found. CSS build will be skipped."
+        return 1
+    fi
+    
+    # Check if package.json exists
+    if [[ ! -f "package.json" ]]; then
+        log_error "package.json not found. CSS build will be skipped."
+        return 1
+    fi
+    
+    # Run CSS build
+    if ! npm run build-css; then
+        log_error "CSS build failed"
+        return 1
+    fi
+    
+    log_info "✅ CSS build completed"
+}
+
 # Static files collection
 collect_static_files() {
     log_info "📦 Collecting static files..."
@@ -419,19 +444,25 @@ main() {
         exit 1
     fi
     
-    # Step 3: Static files (optional)
+    # Step 3: Build CSS with Tailwind
+    log_info "📋 Step 3/5: Building CSS with Tailwind..."
+    if ! build_css; then
+        log_warning "⚠️  CSS build failed, but continuing..."
+    fi
+    
+    # Step 4: Static files (optional)
     if [[ "$SKIP_STATIC" != "true" ]]; then
-        log_info "📋 Step 3/4: Collecting static files..."
+        log_info "📋 Step 4/5: Collecting static files..."
         if ! collect_static_files; then
             log_warning "⚠️  Static files collection failed, but continuing..."
         fi
     else
-        log_info "📋 Step 3/4: Skipping static files collection"
+        log_info "📋 Step 4/5: Skipping static files collection"
     fi
     
-    # Step 4: Post-deployment validation (optional)
+    # Step 5: Post-deployment validation (optional)
     if [[ "$SKIP_CHECKS" != "true" ]]; then
-        log_info "📋 Step 4/4: Running post-deployment validation..."
+        log_info "📋 Step 5/5: Running post-deployment validation..."
         if ! post_deployment_validation; then
             log_warning "⚠️  Some validations failed, but deployment is complete"
         fi
