@@ -75,7 +75,7 @@ services:
       
       # Database - USAR CREDENCIALES REALES
       - key: DATABASE_URL
-        value: "postgresql://zentoerp_user:b7OCqNrdoVtdSObjiYVcU1BeubLTEWcO@dpg-d1sg1b3ipnbc73e279t0-a/zentoerp_production"
+        value: "postgresql://zentoerp_user:b7OCqNrdoVtdSObjiYVcU1BeubLTEWcO@dpg-d1sg1b3ipnbc73e279t0-a.oregon-postgres.render.com/zentoerp_production"
       - key: DB_NAME
         value: "zentoerp_production"
       - key: DB_USER
@@ -83,7 +83,7 @@ services:
       - key: DB_PASSWORD
         value: "b7OCqNrdoVtdSObjiYVcU1BeubLTEWcO"
       - key: DB_HOST
-        value: "dpg-d1sg1b3ipnbc73e279t0-a"
+        value: "dpg-d1sg1b3ipnbc73e279t0-a.oregon-postgres.render.com"
       - key: DB_PORT
         value: "5432"
       
