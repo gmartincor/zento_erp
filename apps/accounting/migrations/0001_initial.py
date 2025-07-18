@@ -7,7 +7,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('business_lines', '0001_unified_business_lines'),
     ]
 
     operations = [

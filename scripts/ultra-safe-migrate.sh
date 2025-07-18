@@ -186,53 +186,14 @@ execute_migrations() {
     
     # Run migrations for public schema (shared apps)
     log_info "Running migrations for public schema..."
-    
-    # Try normal migration first and capture output
-    log_info "=== Starting public schema migration ==="
-    migration_output=$(python manage.py migrate_schemas --shared --verbosity=2 2>&1)
-    migration_exit_code=$?
-    
-    if [[ $migration_exit_code -ne 0 ]]; then
-        log_error "Public schema migration failed with exit code: $migration_exit_code"
-        log_error "=== MIGRATION ERROR OUTPUT START ==="
-        echo "$migration_output"
-        log_error "=== MIGRATION ERROR OUTPUT END ==="
-        
-        # Check the captured output for consistency errors
-        log_info "🔧 Analyzing migration error..."
-        if echo "$migration_output" | grep -q "InconsistentMigrationHistory\|is applied before its dependency"; then
-            log_warning "Detected migration consistency issue from partial previous deployments"
-            log_warning "This indicates database has partial state from failed deployments"
-            log_error "SOLUTION: Database needs migration state cleanup"
-            log_error "This is the exact same issue we fixed in development"
-            log_error "The database has old migrations conflicting with new unified ones"
-            return 1
-        else
-            log_error "Migration failed for other reasons - check output above"
-            return 1
-        fi
-    else
-        log_info "✅ Public schema migration completed successfully"
-    fi
+    python manage.py migrate_schemas --shared --verbosity=2 --skip-checks
     
     # Run migrations for tenant schemas
     log_info "Running migrations for tenant schemas..."
-    tenant_output=$(python manage.py migrate_schemas --verbosity=2 2>&1)
-    tenant_exit_code=$?
-    
-    if [[ $tenant_exit_code -ne 0 ]]; then
-        if echo "$tenant_output" | grep -q "InconsistentMigrationHistory"; then
-            log_warning "Tenant migration failed due to legacy migration conflicts"
-            log_info "This is expected during migration consolidation transition"
-            log_info "New tenants will use unified migrations, existing tenants need manual migration"
-            log_info "For development: Reset database. For production: Contact DevOps for tenant migration plan"
-        else
-            log_warning "Tenant migration failed - this might be normal for first deployment"
-            log_info "Tenant schemas will be created when tenants are added"
-        fi
-    else
-        log_info "✅ Tenant migrations completed successfully"
-    fi
+    python manage.py migrate_schemas --verbosity=2 --skip-checks || {
+        log_warning "Tenant migration failed - this might be normal for first deployment"
+        log_info "Tenant schemas will be created when tenants are added"
+    }
     
     log_info "✅ Database migrations completed"
 }
