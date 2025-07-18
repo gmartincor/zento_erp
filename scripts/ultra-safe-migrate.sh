@@ -122,14 +122,15 @@ try:
         print('INFO: Tenant público ya existe')
         print(f'  ID: {existing_public.id}')
         print(f'  Name: {existing_public.name}')
+        print(f'  Email: {existing_public.email}')
         sys.exit(0)
     
-    # Crear tenant público REQUERIDO por django-tenants
+    # Crear tenant público REQUERIDO por django-tenants con email único
     with transaction.atomic():
         public_tenant = Tenant.objects.create(
             schema_name='public',
             name='Public Schema',
-            email='admin@zentoerp.com',
+            email='public-schema@zentoerp.com',  # Email único para tenant público
             phone='',
             professional_number='',
             notes='Tenant público requerido por django-tenants',
@@ -141,7 +142,18 @@ try:
         print(f'  ID: {public_tenant.id}')
         print(f'  Schema: {public_tenant.schema_name}')
         print(f'  Name: {public_tenant.name}')
+        print(f'  Email: {public_tenant.email}')
         
+except IntegrityError as e:
+    print(f'ERROR: Error de integridad: {e}')
+    # Intentar buscar si ya existe con diferente email
+    existing = Tenant.objects.filter(schema_name='public').first()
+    if existing:
+        print(f'INFO: Tenant público encontrado con email diferente: {existing.email}')
+        sys.exit(0)
+    else:
+        print('ERROR: No se pudo crear ni encontrar tenant público')
+        sys.exit(1)
 except Exception as e:
     print(f'ERROR: No se pudo crear tenant público: {e}')
     # Si no podemos crear el tenant público, intentemos hacer migrate primero
@@ -168,27 +180,52 @@ except Exception as e:
     fi
 }
 
-# Execute database migrations with tenant fix
+# Execute database migrations (simplified - tenant público ya existe)
 execute_migrations() {
     log_info "📋 Executing database migrations..."
     local python_cmd=$(get_python_cmd)
     
-    # Intentar crear tenant público ANTES de migraciones
-    log_info "🔧 Paso 1: Verificar tenant público..."
-    local tenant_result
-    ensure_public_tenant_exists
-    tenant_result=$?
+    # Verificar que el tenant público existe
+    log_info "🔧 Paso 1: Verificar que tenant público existe..."
+    local verification_output
+    verification_output=$($python_cmd manage.py shell -c "
+from apps.tenants.models import Tenant
+public_tenant = Tenant.objects.filter(schema_name='public').first()
+if public_tenant:
+    print(f'✅ Tenant público encontrado: {public_tenant.name} (ID: {public_tenant.id})')
+else:
+    print('❌ Tenant público NO encontrado')
+    exit(1)
+" 2>&1)
     
-    if [[ $tenant_result -eq 1 ]]; then
-        log_error "❌ Error crítico con tenant público"
+    echo "$verification_output"
+    
+    if echo "$verification_output" | grep -q "✅ Tenant público encontrado"; then
+        log_info "✅ Tenant público verificado correctamente"
+    else
+        log_error "❌ Tenant público no encontrado - esto no debería suceder"
         return 1
-    elif [[ $tenant_result -eq 2 ]]; then
-        log_info "⚠️  Tenant público se creará después de migraciones iniciales"
     fi
     
-    log_info "🔧 Paso 2: Ejecutando migraciones shared (público)..."
+    # Verificar y crear migraciones pendientes si es necesario
+    log_info "🔧 Paso 2: Verificar migraciones pendientes..."
+    local makemigrations_output
+    makemigrations_output=$($python_cmd manage.py makemigrations --dry-run --verbosity=1 2>&1)
     
-    # Ejecutar migraciones para esquema público primero
+    if echo "$makemigrations_output" | grep -q "No changes detected"; then
+        log_info "✅ No hay migraciones pendientes"
+    else
+        log_warning "⚠️  Detectadas migraciones pendientes, creándolas..."
+        if $python_cmd manage.py makemigrations --verbosity=1; then
+            log_info "✅ Migraciones creadas exitosamente"
+        else
+            log_warning "⚠️  Error creando migraciones, continuando..."
+        fi
+    fi
+    
+    log_info "🔧 Paso 3: Ejecutando migraciones shared (público)..."
+    
+    # Ejecutar migraciones para esquema público
     if $python_cmd manage.py migrate_schemas --shared --verbosity=2 --skip-checks; then
         log_info "✅ Migraciones shared completadas"
     else
@@ -199,17 +236,6 @@ execute_migrations() {
             log_info "✅ Migrate estándar completado"
         else
             log_error "❌ Tanto migrate_schemas como migrate fallaron"
-            return 1
-        fi
-    fi
-    
-    # Ahora intentar crear tenant público si no se pudo antes
-    if [[ $tenant_result -eq 2 ]]; then
-        log_info "🔧 Paso 3: Creando tenant público después de migraciones..."
-        if ensure_public_tenant_exists; then
-            log_info "✅ Tenant público creado exitosamente"
-        else
-            log_error "❌ No se pudo crear tenant público después de migraciones"
             return 1
         fi
     fi
@@ -294,6 +320,7 @@ try:
     public_tenant = Tenant.objects.filter(schema_name='public').first()
     if public_tenant:
         print(f'✅ Tenant público existe: {public_tenant.name}')
+        print(f'    Email: {public_tenant.email}')
     else:
         print('❌ Tenant público NO encontrado')
         exit(1)
@@ -302,6 +329,7 @@ try:
     principal_tenant = Tenant.objects.filter(schema_name='principal').first()
     if principal_tenant:
         print(f'✅ Tenant principal existe: {principal_tenant.name}')
+        print(f'    Email: {principal_tenant.email}')
         
         # Verificar dominio
         domain = Domain.objects.filter(tenant=principal_tenant, is_primary=True).first()
@@ -311,6 +339,17 @@ try:
             print('⚠️  Sin dominio principal')
     else:
         print('⚠️  Tenant principal no encontrado')
+    
+    # Test 4: Verificar emails únicos
+    total_tenants = Tenant.objects.count()
+    unique_emails = Tenant.objects.values('email').distinct().count()
+    print(f'✅ Total tenants: {total_tenants}')
+    print(f'✅ Emails únicos: {unique_emails}')
+    
+    if total_tenants == unique_emails:
+        print('✅ Integridad de emails correcta')
+    else:
+        print('⚠️  Advertencia: Emails duplicados detectados')
     
     print('✅ Configuración multi-tenant validada exitosamente')
     
@@ -373,8 +412,8 @@ main() {
         exit 1
     fi
     
-    # Step 2: Database migrations (INCLUYE FIX DEL TENANT PÚBLICO)
-    log_info "📋 Step 2/4: Executing database migrations with tenant fix..."
+    # Step 2: Database migrations (SIMPLIFICADO - tenant público ya existe)
+    log_info "📋 Step 2/4: Executing database migrations (tenant público pre-creado)..."
     if ! execute_migrations; then
         log_error "❌ Database migrations failed"
         exit 1
@@ -403,13 +442,13 @@ main() {
     # Success message
     log_info ""
     log_info "🎉 DEPLOYMENT COMPLETED SUCCESSFULLY!"
-    log_info "✅ Migraciones aplicadas con fix de tenant público"
+    log_info "✅ Migraciones aplicadas con tenant público pre-existente"
     log_info "✅ Sistema multi-tenant configurado correctamente"
     log_info "🚀 Application is ready to serve traffic"
     log_info ""
     log_info "📊 Summary:"
-    log_info "   - Database migrations: ✅ Applied with tenant fix"
-    log_info "   - Tenant público: ✅ Created/Verified"
+    log_info "   - Database migrations: ✅ Applied (public tenant verified)"
+    log_info "   - Tenant público: ✅ Pre-existing in database"
     log_info "   - Static files: $([ "$SKIP_STATIC" == "true" ] && echo "⏭️  Skipped" || echo "✅ Collected")"
     log_info "   - Validation: $([ "$SKIP_CHECKS" == "true" ] && echo "⏭️  Skipped" || echo "✅ Passed")"
     log_info ""
