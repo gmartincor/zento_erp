@@ -5,8 +5,35 @@ from .base import *
 # SECURITY SETTINGS - Configuración robusta para larga duración
 DEBUG = False
 
-# Get allowed hosts from environment or use default
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
+# ALLOWED_HOSTS - Configuración robusta para multi-tenant + Render
+# Incluye dominios personalizados Y dominios de Render para health checks
+ALLOWED_HOSTS = [
+    # Dominio principal y subdominios
+    TENANT_DOMAIN,                    # zentoerp.com
+    f'*.{TENANT_DOMAIN}',            # *.zentoerp.com
+    f'www.{TENANT_DOMAIN}',          # www.zentoerp.com
+    '.zentoerp.com',                 # Cualquier subdominio
+    'zentoerp.com',                  # Dominio raíz
+    
+    # Dominios de Render (CRÍTICOS para health checks)
+    'zentoerp-web.onrender.com',     # Dominio específico de tu servicio
+    '*.onrender.com',                # Cualquier subdominio de Render
+    'localhost',                     # Para desarrollo local
+    '127.0.0.1',                     # Para desarrollo local
+]
+
+# Agregar hosts adicionales desde variables de entorno (si existen)
+additional_hosts = config('ADDITIONAL_ALLOWED_HOSTS', default='', cast=Csv())
+if additional_hosts:
+    ALLOWED_HOSTS.extend(additional_hosts)
+
+# También leer de ALLOWED_HOSTS env var como fallback
+env_allowed_hosts = config('ALLOWED_HOSTS', default='', cast=Csv())
+if env_allowed_hosts:
+    # Agregar hosts únicos de la variable de entorno
+    for host in env_allowed_hosts:
+        if host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(host)
 
 # Security headers más robustos
 SECURE_SSL_REDIRECT = True
@@ -176,18 +203,7 @@ TENANT_DOMAIN_MODEL = 'tenants.Domain'
 TENANT_SUBFOLDER_PREFIX = ''  # Solo subdominios, no subcarpetas
 TENANT_LIMIT_SET_CALLS = True  # Optimización para producción
 
-# Configuración de dominios permitidos para multi-tenant
-ALLOWED_HOSTS = [
-    TENANT_DOMAIN,
-    f'*.{TENANT_DOMAIN}',
-    '.zentoerp.com',
-    'zentoerp.com',
-]
-
-# Agregar hosts adicionales desde variables de entorno
-additional_hosts = config('ADDITIONAL_ALLOWED_HOSTS', default='', cast=Csv())
-if additional_hosts:
-    ALLOWED_HOSTS.extend(additional_hosts)
+# ALLOWED_HOSTS ya está configurado arriba - no redefinir aquí
 
 # Configuración de CORS para subdominios (si se usa)
 CORS_ALLOWED_ORIGINS = [
