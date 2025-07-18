@@ -227,9 +227,6 @@ pre_deployment_checks() {
     return 0
 }
 
-# Verify static files before collection (simplified)
-verify_static_prerequisites() {
-
 # Verify CSS exists (Docker-aware - no building in production)
 verify_css_exists() {
     log_info "🎨 Verifying CSS availability..."
