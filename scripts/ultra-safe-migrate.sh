@@ -187,29 +187,26 @@ execute_migrations() {
     # Run migrations for public schema (shared apps)
     log_info "Running migrations for public schema..."
     
-    # Try normal migration first
+    # Try normal migration first and capture output
     echo "=== Starting migration"
-    if ! python manage.py migrate_schemas --shared --verbosity=2 2>&1; then
-        local exit_code=$?
-        log_error "Public schema migration failed with exit code: $exit_code"
+    migration_output=$(python manage.py migrate_schemas --shared --verbosity=2 2>&1)
+    migration_exit_code=$?
+    
+    if [[ $migration_exit_code -ne 0 ]]; then
+        log_error "Public schema migration failed with exit code: $migration_exit_code"
         
-        # Check if it's a consistency error from partial previous deployments
-        log_info "🔧 Checking for migration consistency issues..."
-        if python manage.py migrate_schemas --shared --verbosity=2 2>&1 | grep -q "InconsistentMigrationHistory\|is applied before its dependency"; then
+        # Check the captured output for consistency errors
+        log_info "🔧 Analyzing migration error..."
+        if echo "$migration_output" | grep -q "InconsistentMigrationHistory\|is applied before its dependency"; then
             log_warning "Detected migration consistency issue from partial previous deployments"
-            log_warning "This is normal for first deployment with failed previous attempts"
-            
-            # Run fresh database setup for first deployment
-            log_info "🛠️ Running fresh database setup (safe for first deployment)..."
-            if [[ -f "${SCRIPT_DIR}/fresh-database-setup.sh" ]]; then
-                "${SCRIPT_DIR}/fresh-database-setup.sh"
-                log_info "✅ Fresh database setup completed - deployment should continue normally"
-            else
-                log_error "Fresh database setup script not found at ${SCRIPT_DIR}/fresh-database-setup.sh"
-                return 1
-            fi
+            log_warning "This indicates database has partial state from failed deployments"
+            log_error "SOLUTION: For first deployment, database needs to be reset manually"
+            log_error "This script cannot automatically reset production databases (safety measure)"
+            log_error "Contact DevOps team to reset database state or use manual intervention"
+            return 1
         else
-            log_error "Migration failed for reasons other than consistency - manual intervention required"
+            log_error "Migration failed for other reasons:"
+            echo "$migration_output" | tail -20
             return 1
         fi
     fi
