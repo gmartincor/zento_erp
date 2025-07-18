@@ -1,6 +1,3 @@
-"""
-Comando de gestión para crear tenants en zentoerp.com
-"""
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -27,17 +24,23 @@ class Command(BaseCommand):
             help='Nombre del tenant (ej: Nutrición Pro)'
         )
         parser.add_argument(
-            '--description',
+            'tenant_email',
+            type=str,
+            help='Email del tenant (ej: admin@nutricionpro.com)'
+        )
+        parser.add_argument(
+            '--notes',
             type=str,
             default='',
-            help='Descripción del tenant'
+            help='Notas adicionales del tenant'
         )
 
     def handle(self, *args, **options):
         schema_name = options['schema_name']
         domain_name = options['domain_name']
         tenant_name = options['tenant_name']
-        description = options['description']
+        tenant_email = options['tenant_email']
+        notes = options['notes']
 
         try:
             with transaction.atomic():
@@ -45,7 +48,8 @@ class Command(BaseCommand):
                 tenant = Tenant.objects.create(
                     schema_name=schema_name,
                     name=tenant_name,
-                    description=description,
+                    email=tenant_email,
+                    notes=notes,
                     status=Tenant.StatusChoices.ACTIVE
                 )
 
