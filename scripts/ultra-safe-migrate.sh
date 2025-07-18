@@ -289,23 +289,37 @@ build_css() {
     
     # Check if npm is available
     if ! command -v npm &> /dev/null; then
-        log_error "npm not found. CSS build will be skipped."
+        log_error "npm not found. CSS build cannot proceed."
         return 1
     fi
     
     # Check if package.json exists
     if [[ ! -f "package.json" ]]; then
-        log_error "package.json not found. CSS build will be skipped."
+        log_error "package.json not found. CSS build cannot proceed."
         return 1
     fi
     
-    # Run CSS build
-    if ! npm run build-css; then
-        log_error "CSS build failed"
+    # Check if source CSS exists
+    if [[ ! -f "static/css/tailwind.css" ]]; then
+        log_error "Source file static/css/tailwind.css not found."
         return 1
     fi
     
-    log_info "✅ CSS build completed"
+    # Run CSS build with verbose output
+    log_info "Running: npm run build-css"
+    if npm run build-css; then
+        # Verify the output file was created
+        if [[ -f "static/css/style.css" ]]; then
+            log_info "✅ CSS build completed successfully"
+            log_info "Generated file size: $(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "unknown") bytes"
+        else
+            log_error "CSS build appeared to succeed but output file static/css/style.css was not created"
+            return 1
+        fi
+    else
+        log_error "npm run build-css command failed"
+        return 1
+    fi
 }
 
 # Static files collection
@@ -447,7 +461,8 @@ main() {
     # Step 3: Build CSS with Tailwind
     log_info "📋 Step 3/5: Building CSS with Tailwind..."
     if ! build_css; then
-        log_warning "⚠️  CSS build failed, but continuing..."
+        log_error "❌ CSS build failed - this is critical for the application"
+        exit 1
     fi
     
     # Step 4: Static files (optional)
