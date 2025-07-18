@@ -188,27 +188,31 @@ execute_migrations() {
     log_info "Running migrations for public schema..."
     
     # Try normal migration first and capture output
-    echo "=== Starting migration"
+    log_info "=== Starting public schema migration ==="
     migration_output=$(python manage.py migrate_schemas --shared --verbosity=2 2>&1)
     migration_exit_code=$?
     
     if [[ $migration_exit_code -ne 0 ]]; then
         log_error "Public schema migration failed with exit code: $migration_exit_code"
+        log_error "=== MIGRATION ERROR OUTPUT START ==="
+        echo "$migration_output"
+        log_error "=== MIGRATION ERROR OUTPUT END ==="
         
         # Check the captured output for consistency errors
         log_info "🔧 Analyzing migration error..."
         if echo "$migration_output" | grep -q "InconsistentMigrationHistory\|is applied before its dependency"; then
             log_warning "Detected migration consistency issue from partial previous deployments"
             log_warning "This indicates database has partial state from failed deployments"
-            log_error "SOLUTION: For first deployment, database needs to be reset manually"
-            log_error "This script cannot automatically reset production databases (safety measure)"
-            log_error "Contact DevOps team to reset database state or use manual intervention"
+            log_error "SOLUTION: Database needs migration state cleanup"
+            log_error "This is the exact same issue we fixed in development"
+            log_error "The database has old migrations conflicting with new unified ones"
             return 1
         else
-            log_error "Migration failed for other reasons:"
-            echo "$migration_output" | tail -20
+            log_error "Migration failed for other reasons - check output above"
             return 1
         fi
+    else
+        log_info "✅ Public schema migration completed successfully"
     fi
     
     # Run migrations for tenant schemas
