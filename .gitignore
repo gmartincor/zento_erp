@@ -187,6 +187,12 @@ cookies.txt
 dashboard.html
 test_chart.html
 
+# Archivos de diagnóstico y corrección temporal
+temp_diagnostics/
+scripts/*-original.sh.backup
+scripts/diagnose_*.py
+scripts/fix_*.sh
+
 # Static libraries downloaded
 static/js/chart.min.js
 static/js/dashboard/
