@@ -76,23 +76,57 @@ test_database_connection() {
     local attempt=1
     
     log_info "Testing database connection..."
+    log_debug "DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-not set}"
+    log_debug "DATABASE_URL present: $([ -n "${DATABASE_URL:-}" ] && echo "yes" || echo "no")"
+    log_debug "ENVIRONMENT: ${ENVIRONMENT:-not set}"
     
     while [[ $attempt -le $max_attempts ]]; do
-        if python manage.py shell -c "
+        local connection_test_output
+        connection_test_output=$(python manage.py shell -c "
 from django.db import connection, OperationalError
+from django.conf import settings
+import os
+
+print(f'Django settings module: {os.environ.get(\"DJANGO_SETTINGS_MODULE\", \"not set\")}')
+print(f'Database engine: {settings.DATABASES[\"default\"][\"ENGINE\"]}')
+print(f'Database name: {settings.DATABASES[\"default\"].get(\"NAME\", \"not set\")}')
+print(f'Database host: {settings.DATABASES[\"default\"].get(\"HOST\", \"not set\")}')
+
 try:
     with connection.cursor() as cursor:
         cursor.execute('SELECT 1')
         cursor.fetchone()
-    print('Database connection successful')
-except OperationalError as e:
-    print(f'Database connection failed: {e}')
+    print('SUCCESS: Database connection successful')
+except Exception as e:
+    error_msg = str(e)
+    print(f'ERROR: Database connection failed: {error_msg}')
+    
+    # Verificar si es un error de DNS que puede ser normal en local
+    if 'could not translate host name' in error_msg and 'render.com' not in error_msg:
+        print('INFO: This might be a Render internal URL that only works in production')
+        print('INFO: If you are testing locally, try using the External Database URL from Render')
+    
+    print(f'DEBUG: Connection parameters: {connection.settings_dict}')
     exit(1)
-        " &>/dev/null; then
+        " 2>&1)
+        
+        if echo "$connection_test_output" | grep -q "SUCCESS: Database connection successful"; then
             log_info "Database connection successful on attempt ${attempt}"
+            log_debug "Connection details: $connection_test_output"
             return 0
         else
             log_warning "Database connection failed on attempt ${attempt}/${max_attempts}"
+            
+            # Mostrar información útil en caso de error
+            if echo "$connection_test_output" | grep -q "could not translate host name"; then
+                log_info "Note: Render internal URLs only work in the Render environment"
+                log_info "If testing locally, use the External Database URL from Render"
+            fi
+            
+            if [[ "${DEBUG:-false}" == "true" ]]; then
+                log_error "Full connection output: $connection_test_output"
+            fi
+            
             if [[ $attempt -lt $max_attempts ]]; then
                 sleep $((attempt * 2))  # Exponential backoff
             fi
@@ -101,6 +135,7 @@ except OperationalError as e:
     done
     
     log_error "Database connection failed after ${max_attempts} attempts"
+    log_error "If using Render internal URL, this is expected locally but should work in production"
     return 1
 }
 

@@ -33,25 +33,46 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
 # DATABASE - Configuración optimizada para producción multi-tenant de larga duración
-DATABASES = {
-    'default': {
-        'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            'sslmode': 'require',
-            'connect_timeout': 60,
-            'options': '-c default_transaction_isolation=read_committed -c statement_timeout=30000'
-        },
-        'CONN_MAX_AGE': 300,  # 5 minutos (más conservador para estabilidad)
-        'CONN_HEALTH_CHECKS': True,
-        'ATOMIC_REQUESTS': True,
-        'TIME_ZONE': 'UTC',  # Especificar zona horaria
+import dj_database_url
+
+# Configuración primaria con DATABASE_URL (Render, Heroku, etc.)
+DATABASE_URL = config('DATABASE_URL', default='')
+
+if DATABASE_URL:
+    # Usar DATABASE_URL si está disponible (Render, Heroku, etc.)
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=300)
     }
-}
+    # Configurar django-tenants engine
+    DATABASES['default']['ENGINE'] = 'django_tenants.postgresql_backend'
+    # Opciones optimizadas para producción
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require',
+        'connect_timeout': 60,
+    }
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+    DATABASES['default']['ATOMIC_REQUESTS'] = True
+    DATABASES['default']['TIME_ZONE'] = 'UTC'
+else:
+    # Fallback a variables individuales
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django_tenants.postgresql_backend',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+            'OPTIONS': {
+                'sslmode': 'require',
+                'connect_timeout': 60,
+            },
+            'CONN_MAX_AGE': 300,  # 5 minutos (más conservador para estabilidad)
+            'CONN_HEALTH_CHECKS': True,
+            'ATOMIC_REQUESTS': True,
+            'TIME_ZONE': 'UTC',  # Especificar zona horaria
+        }
+    }
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
