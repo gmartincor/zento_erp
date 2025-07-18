@@ -19,7 +19,15 @@ class TenantDebugMiddleware:
             from django_tenants.utils import connection
             tenant = connection.tenant
             print(f"POST-TENANT DEBUG - Tenant: {tenant.schema_name if tenant else 'None'}")
-            print(f"POST-TENANT DEBUG - Tenant name: {tenant.name if tenant else 'None'}")
+            
+            # Manejar FakeTenant vs Tenant real
+            if tenant:
+                if hasattr(tenant, 'name'):
+                    print(f"POST-TENANT DEBUG - Tenant name: {tenant.name}")
+                else:
+                    print(f"POST-TENANT DEBUG - Tenant type: {type(tenant).__name__} (no name attr)")
+            else:
+                print(f"POST-TENANT DEBUG - Tenant name: None")
         except Exception as e:
             print(f"POST-TENANT DEBUG ERROR: {e}")
         

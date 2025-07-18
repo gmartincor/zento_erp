@@ -3,6 +3,19 @@ from django.db import connection
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 import json
+from datetime import datetime
+
+@never_cache
+@csrf_exempt  
+def home_view(request):
+    """Vista simple para la raíz del sitio"""
+    return JsonResponse({
+        "message": "Zento ERP API",
+        "version": "1.0.0",
+        "status": "running",
+        "timestamp": datetime.now().isoformat(),
+        "tenant": getattr(request, 'tenant', None) and request.tenant.schema_name or "unknown"
+    }, status=200)
 
 @never_cache
 @csrf_exempt
@@ -17,7 +30,7 @@ def health_check(request):
         health_status = {
             "status": "healthy",
             "database": "connected",
-            "timestamp": "2025-07-18T10:00:00Z"
+            "timestamp": datetime.now().isoformat()
         }
         
         return JsonResponse(health_status, status=200)
@@ -28,7 +41,7 @@ def health_check(request):
             "status": "unhealthy",
             "error": str(e),
             "database": "disconnected",
-            "timestamp": "2025-07-18T10:00:00Z"
+            "timestamp": datetime.now().isoformat()
         }
         
         return JsonResponse(health_status, status=503)
