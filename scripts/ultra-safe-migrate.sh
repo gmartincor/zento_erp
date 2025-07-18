@@ -227,10 +227,23 @@ pre_deployment_checks() {
     return 0
 }
 
-# Verify CSS build prerequisites
+# Verify CSS build prerequisites (Docker-aware)
 verify_css_prerequisites() {
+    log_info "🔧 Checking CSS build prerequisites..."
+    
+    # Check if CSS already exists (Docker pre-compiled)
+    if [[ -f "static/css/style.css" ]]; then
+        local file_size=$(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "0")
+        if [[ "$file_size" -gt 100 ]]; then
+            log_info "✅ CSS file already exists (${file_size} bytes) - likely pre-compiled"
+            return 0
+        fi
+    fi
+    
+    # If CSS doesn't exist, we need npm to build it
     if ! command -v npm &> /dev/null; then
         log_error "npm not found. CSS build cannot proceed."
+        log_error "This suggests we're in a production environment where CSS should be pre-compiled."
         return 1
     fi
     
@@ -242,13 +255,29 @@ verify_css_prerequisites() {
     return 0
 }
 
-# Build CSS from Tailwind (optimized)
+# Build CSS from Tailwind (optimized - Docker aware)
 build_css() {
     log_info "🎨 Building CSS with Tailwind..."
     
-    verify_css_prerequisites || return 1
+    # En Docker/producción, el CSS ya debería estar compilado
+    if [[ -f "static/css/style.css" ]]; then
+        local file_size=$(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "0")
+        if [[ "$file_size" -gt 100 ]]; then
+            log_info "✅ CSS already compiled and available (${file_size} bytes)"
+            log_info "ℹ️  Skipping npm build - using pre-compiled CSS from Docker build"
+            return 0
+        fi
+    fi
     
-    log_info "Running: npm run build-css"
+    # Solo intentar compilar si npm está disponible
+    if ! verify_css_prerequisites; then
+        log_error "❌ CSS file not found and npm not available for compilation"
+        log_error "   In Docker/production, CSS should be pre-compiled during image build"
+        log_error "   Expected file: $(pwd)/static/css/style.css"
+        return 1
+    fi
+    
+    log_info "📦 Compiling CSS using npm (development mode)..."
     if npm run build-css; then
         if [[ -f "static/css/style.css" ]]; then
             local file_size=$(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "unknown")
@@ -264,7 +293,7 @@ build_css() {
     fi
 }
 
-# Verify static files before collection
+# Verify static files before collection (simplified)
 verify_static_prerequisites() {
     log_info "🔧 Verifying static files prerequisites..."
     
@@ -272,6 +301,8 @@ verify_static_prerequisites() {
     if [[ ! -f "static/css/style.css" ]]; then
         log_error "❌ Critical file static/css/style.css missing before collectstatic"
         log_error "   Expected: $(pwd)/static/css/style.css"
+        log_info "🔍 Listing static/ directory:"
+        ls -la static/ 2>&1 || echo "   static/ directory doesn't exist"
         return 1
     fi
     
@@ -279,6 +310,8 @@ verify_static_prerequisites() {
     local file_size=$(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "0")
     if [[ "$file_size" -lt 100 ]]; then
         log_error "❌ CSS file appears empty or corrupted (${file_size} bytes)"
+        log_info "🔍 CSS file content sample:"
+        head -5 "static/css/style.css" 2>&1 || echo "   Cannot read file"
         return 1
     fi
     
