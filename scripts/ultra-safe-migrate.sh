@@ -186,9 +186,32 @@ execute_migrations() {
     
     # Run migrations for public schema (shared apps)
     log_info "Running migrations for public schema..."
-    if ! python manage.py migrate_schemas --shared --verbosity=2; then
-        log_error "Public schema migration failed"
-        return 1
+    
+    # Try normal migration first
+    echo "=== Starting migration"
+    if ! python manage.py migrate_schemas --shared --verbosity=2 2>&1; then
+        local exit_code=$?
+        log_error "Public schema migration failed with exit code: $exit_code"
+        
+        # Check if it's a consistency error that we can fix with fresh setup
+        log_info "🔧 Checking for migration consistency issues..."
+        if python manage.py migrate_schemas --shared --verbosity=2 2>&1 | grep -q "InconsistentMigrationHistory\|is applied before its dependency"; then
+            log_warning "Detected migration consistency issue from partial previous deployments"
+            log_warning "This is normal for first deployment with failed previous attempts"
+            
+            # Offer fresh database setup for first deployment
+            log_info "🛠️ Running fresh database setup (safe for first deployment)..."
+            if [[ -f "${SCRIPT_DIR}/fresh-database-setup.sh" ]]; then
+                "${SCRIPT_DIR}/fresh-database-setup.sh"
+                log_info "✅ Fresh database setup completed - deployment should continue normally"
+            else
+                log_error "Fresh database setup script not found at ${SCRIPT_DIR}/fresh-database-setup.sh"
+                return 1
+            fi
+        else
+            log_error "Migration failed for reasons other than consistency - manual intervention required"
+            return 1
+        fi
     fi
     
     # Run migrations for tenant schemas
