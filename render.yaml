@@ -1,0 +1,122 @@
+# =============================================================================
+# render.yaml.template - Configuración de servicios para Render (TEMPLATE)
+# =============================================================================
+# INSTRUCCIONES:
+# 1. Copia este archivo a render.yaml
+# 2. Reemplaza todas las variables [VARIABLE] con valores reales
+# 3. NO versionas render.yaml en Git (está en .gitignore)
+
+services:
+  # ---------------------------------------------------------------------------
+  # Web Service Principal - Django Multi-tenant
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: zentoerp-web
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    branch: production
+    
+    # Comandos Docker
+    buildCommand: echo "Building Docker image..."
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 3 --worker-class sync --max-requests 1000 --max-requests-jitter 100 --timeout 30 --keep-alive 2 --log-level info --access-logfile - --error-logfile - config.wsgi:application
+    preDeployCommand: ./scripts/ultra-safe-migrate.sh
+    healthCheckPath: /health/
+    autoDeploy: true
+    
+    # Configuración de dominio profesional con wildcard DNS
+    domains:
+      - zentoerp.com
+      - "*.zentoerp.com"
+      - www.zentoerp.com
+    
+    # Variables de entorno para producción
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "False"
+      - key: LOAD_TEST_DATA
+        value: "False"
+      
+      # Configuración de hosts permitidos - PRODUCCIÓN PROFESIONAL
+      - key: ALLOWED_HOSTS
+        value: "zentoerp.com,*.zentoerp.com,www.zentoerp.com,zentoerp-web.onrender.com,*.onrender.com"
+      
+      # Dominio principal para tenants
+      - key: TENANT_DOMAIN
+        value: "zentoerp.com"
+      
+      # Habilitar dominio personalizado
+      - key: CUSTOM_DOMAIN_ENABLED
+        value: "True"
+      
+      # Security - GENERAR NUEVA CLAVE SEGURA
+      - key: SECRET_KEY
+        value: "(u1hp!$g[GENERAR_SECRET_KEY_NUEVA]1l27z-%i3u((%-)w4r43+t2^a)r5^=k=z*i[GENERAR_SECRET_KEY_NUEVA]#(n*9"
+      
+      # Configuraciones SSL para producción profesional
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"  # 1 año
+      - key: SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: "True"
+      - key: SECURE_HSTS_PRELOAD
+        value: "True"
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
+      
+      # Database - USAR CREDENCIALES REALES
+      - key: DATABASE_URL
+        value: "postgresql://zentoerp_user:b7OCqNrdoVtdSObjiYVcU1BeubLTEWcO@dpg-d1sg1b3ipnbc73e279t0-a/zentoerp_production"
+      - key: DB_NAME
+        value: "zentoerp_production"
+      - key: DB_USER
+        value: "zentoerp_user"
+      - key: DB_PASSWORD
+        value: "b7OCqNrdoVtdSObjiYVcU1BeubLTEWcO"
+      - key: DB_HOST
+        value: "dpg-d1sg1b3ipnbc73e279t0-a"
+      - key: DB_PORT
+        value: "5432"
+      
+      # Cache configuration (sin Redis)
+      - key: CACHE_BACKEND
+        value: "database"
+      
+      # Configuración de archivos estáticos
+      - key: STATIC_URL
+        value: "/static/"
+      - key: MEDIA_URL
+        value: "/media/"
+      - key: STATIC_ROOT
+        value: /app/static_collected
+      - key: MEDIA_ROOT
+        value: /app/media
+      
+      # Multi-tenant configuration
+      - key: TENANT_MODEL
+        value: "tenants.Tenant"
+      - key: TENANT_DOMAIN_MODEL
+        value: "tenants.Domain"
+      
+      # Logging
+      - key: LOG_FILE
+        value: /tmp/django.log
+      
+      # Email (configurar según proveedor)
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: DEFAULT_FROM_EMAIL
+        value: noreply@zentoerp.com

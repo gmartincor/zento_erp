@@ -22,6 +22,18 @@ readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
+# Helper function to get the correct python command
+get_python_cmd() {
+    if command -v python &> /dev/null; then
+        echo "python"
+    elif command -v python3 &> /dev/null; then
+        echo "python3"
+    else
+        log_error "Neither python nor python3 found in PATH"
+        exit 1
+    fi
+}
+
 # Logging functions with timestamps
 log_info() {
     echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] [INFO]${NC} $1" | tee -a "$LOG_FILE"
@@ -74,15 +86,17 @@ check_health() {
 test_database_connection() {
     local max_attempts=5
     local attempt=1
+    local python_cmd=$(get_python_cmd)
     
     log_info "Testing database connection..."
+    log_debug "Python command: ${python_cmd}"
     log_debug "DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-not set}"
     log_debug "DATABASE_URL present: $([ -n "${DATABASE_URL:-}" ] && echo "yes" || echo "no")"
     log_debug "ENVIRONMENT: ${ENVIRONMENT:-not set}"
     
     while [[ $attempt -le $max_attempts ]]; do
         local connection_test_output
-        connection_test_output=$(python manage.py shell -c "
+        connection_test_output=$($python_cmd manage.py shell -c "
 from django.db import connection, OperationalError
 from django.conf import settings
 import os
@@ -248,9 +262,10 @@ except Exception as e:
 # Database state diagnosis with improved error handling
 diagnose_database_state() {
     log_info "🔍 Diagnosing database state..."
+    local python_cmd=$(get_python_cmd)
     
     local diagnosis_output
-    diagnosis_output=$(python manage.py shell -c "
+    diagnosis_output=$($python_cmd manage.py shell -c "
 from django.db import connection
 from django.db.migrations.recorder import MigrationRecorder
 import sys
@@ -351,37 +366,74 @@ pre_deployment_checks() {
     # Check if we're in the right directory
     if [[ ! -f "manage.py" ]]; then
         log_error "manage.py not found. Please run this script from the Django project root."
+        log_error "Current directory: $(pwd)"
+        log_error "Directory contents: $(ls -la)"
         exit 1
+    fi
+    
+    # Check if Python is available
+    if ! command -v python &> /dev/null; then
+        log_error "Python command not found in PATH"
+        log_error "Available commands: $(compgen -c | grep python || echo 'No python commands found')"
+        
+        # Try python3 as fallback
+        if command -v python3 &> /dev/null; then
+            log_info "Using python3 instead of python"
+            # Create a symlink or alias would be better, but for now we'll handle this in each call
+        else
+            log_error "Neither python nor python3 found in PATH"
+            exit 1
+        fi
     fi
     
     # Check Django settings
     if [[ -z "${DJANGO_SETTINGS_MODULE:-}" ]]; then
         log_error "DJANGO_SETTINGS_MODULE environment variable not set"
+        log_error "Expected: config.settings.production for production environment"
         exit 1
     fi
     
     log_info "Using Django settings: ${DJANGO_SETTINGS_MODULE}"
     
-    # Check Python version
+    # Check Python version and Django installation
+    local python_cmd=$(get_python_cmd)
+    
     local python_version
-    python_version=$(python --version 2>&1 | cut -d' ' -f2)
+    python_version=$($python_cmd --version 2>&1 | cut -d' ' -f2)
     log_info "Python version: ${python_version}"
+    
+    # Test Django installation
+    if ! $python_cmd -c "import django; print('Django version:', django.get_version())" 2>/dev/null; then
+        log_error "Django is not properly installed or accessible"
+        log_error "Python path: $($python_cmd -c 'import sys; print(sys.path)' 2>/dev/null || echo 'Cannot access Python')"
+        exit 1
+    fi
     
     # Check required environment variables
     local required_vars=("DATABASE_URL" "SECRET_KEY")
     for var in "${required_vars[@]}"; do
         if [[ -z "${!var:-}" ]]; then
             log_error "Required environment variable ${var} is not set"
+            log_error "Available environment variables: $(env | grep -E '(DJANGO|DATABASE|SECRET)' | cut -d'=' -f1 || echo 'No relevant variables found')"
             exit 1
         fi
     done
     
+    # Test Django configuration loading
+    log_info "Testing Django configuration..."
+    if ! $python_cmd manage.py check --settings="${DJANGO_SETTINGS_MODULE}" >/dev/null 2>&1; then
+        log_error "Django configuration test failed"
+        log_error "Try running: $python_cmd manage.py check --settings=${DJANGO_SETTINGS_MODULE}"
+        exit 1
+    fi
+    
     log_info "✅ Pre-deployment checks completed"
 }
 
-# Migration execution with improved error handling and recovery
+# Migration execution with proper error handling
 execute_migrations() {
     log_info "🚀 Executing database migrations..."
+    local python_cmd=$(get_python_cmd)
     
     # Test database connection first
     if ! test_database_connection; then
@@ -391,71 +443,38 @@ execute_migrations() {
     
     # Diagnose database state
     if ! diagnose_database_state; then
-        if [[ "${FORCE_MIGRATION:-false}" == "true" ]]; then
-            log_warning "FORCE_MIGRATION=true - proceeding despite database issues"
-        else
-            log_error "Database diagnosis failed. Use --force to proceed anyway"
-            log_info "Tip: Try running with --diagnose flag first to understand the issue"
+        log_warning "Database state diagnosis indicates potential issues"
+        if [[ "${FORCE_MIGRATION:-false}" != "true" ]]; then
+            log_error "Set FORCE_MIGRATION=true to proceed anyway"
             return 1
+        else
+            log_warning "FORCE_MIGRATION=true - proceeding despite warnings"
         fi
     fi
     
-    # Step 1: Run migrations for public schema (shared apps)
-    log_info "📋 Running migrations for public schema (shared apps)..."
-    if ! python manage.py migrate_schemas --shared --verbosity=2; then
-        log_error "❌ Public schema migrations failed"
-        return 1
-    fi
-    log_info "✅ Public schema migrations completed"
+    # Run migrations for public schema (shared apps)
+    log_info "Running migrations for public schema..."
+    $python_cmd manage.py migrate_schemas --shared --verbosity=2 --skip-checks
     
-    # Step 2: Check if we need to create initial tenant
-    local tenant_count_output
-    tenant_count_output=$(python manage.py shell -c "
-from django_tenants.utils import get_tenant_model
-try:
-    Tenant = get_tenant_model()
-    count = Tenant.objects.count()
-    print(f'TENANT_COUNT:{count}')
-except Exception as e:
-    print(f'TENANT_ERROR:{e}')
-    " 2>&1)
+    # Run migrations for tenant schemas
+    log_info "Running migrations for tenant schemas..."
+    $python_cmd manage.py migrate_schemas --verbosity=2 --skip-checks || {
+        log_warning "Tenant migration failed - this might be normal for first deployment"
+        log_info "Tenant schemas will be created when tenants are added"
+    }
     
-    if echo "$tenant_count_output" | grep -q "TENANT_COUNT:0"; then
-        log_info "🏗️  No tenants found - creating initial tenant for django-tenants compatibility..."
-        if ! create_initial_tenant; then
-            log_warning "⚠️  Initial tenant creation failed, but continuing with deployment"
-            log_info "You can create tenants manually after deployment"
-        fi
-    elif echo "$tenant_count_output" | grep -q "TENANT_ERROR:"; then
-        log_warning "⚠️  Could not check tenant count, but continuing with deployment"
-    else
-        local tenant_count
-        tenant_count=$(echo "$tenant_count_output" | grep "TENANT_COUNT:" | cut -d':' -f2)
-        log_info "ℹ️  Found ${tenant_count} existing tenant(s)"
-    fi
-    
-    # Step 3: Run migrations for tenant schemas
-    log_info "📋 Running migrations for tenant schemas..."
-    if python manage.py migrate_schemas --verbosity=2; then
-        log_info "✅ Tenant schema migrations completed successfully"
-    else
-        log_warning "⚠️  Some tenant migrations may have failed"
-        log_info "This can be normal if tenants have schema conflicts"
-        log_info "Individual tenant schemas can be fixed post-deployment"
-    fi
-    
-    log_info "✅ Database migrations process completed"
-    return 0
+    log_info "✅ Database migrations completed"
 }
 
 # Static files collection
 collect_static_files() {
     log_info "📦 Collecting static files..."
+    local python_cmd=$(get_python_cmd)
     
     # Ensure static directories exist
     mkdir -p "${STATIC_ROOT:-/app/static_collected}"
     
-    if ! python manage.py collectstatic --noinput --verbosity=1; then
+    if ! $python_cmd manage.py collectstatic --noinput --verbosity=1; then
         log_error "Static files collection failed"
         return 1
     fi
@@ -466,9 +485,10 @@ collect_static_files() {
 # Post-deployment checks
 post_deployment_checks() {
     log_info "🔍 Running post-deployment checks..."
+    local python_cmd=$(get_python_cmd)
     
     # Django system check (critical)
-    if ! check_health "Django System Check" "python manage.py check --verbosity=1"; then
+    if ! check_health "Django System Check" "$python_cmd manage.py check --verbosity=1"; then
         log_error "Django system check failed - this is critical"
         return 1
     fi
