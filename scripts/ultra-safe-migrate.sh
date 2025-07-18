@@ -139,6 +139,88 @@ except Exception as e:
     return 1
 }
 
+# Database state diagnosis
+diagnose_database_state() {
+    log_info "🔍 Diagnosing database state..."
+    
+    local diagnosis_output
+    diagnosis_output=$(python manage.py shell -c "
+from django.db import connection
+from django.core.management.color import no_style
+from django.db.migrations.recorder import MigrationRecorder
+import sys
+
+try:
+    # Check if database is empty or has tables
+    with connection.cursor() as cursor:
+        # Get list of tables
+        table_names = connection.introspection.table_names(cursor)
+        print(f'Total tables in database: {len(table_names)}')
+        
+        if len(table_names) == 0:
+            print('STATUS: EMPTY_DATABASE - Fresh database, ready for initial deployment')
+            sys.exit(0)
+        
+        # Check if django_migrations table exists
+        if 'django_migrations' not in table_names:
+            print('STATUS: NO_MIGRATION_TABLE - Database has tables but no migration tracking')
+            print(f'Existing tables: {table_names[:10]}...' if len(table_names) > 10 else f'Existing tables: {table_names}')
+            sys.exit(0)
+        
+        # Check migration status
+        recorder = MigrationRecorder(connection)
+        applied_migrations = recorder.applied_migrations()
+        print(f'Applied migrations count: {len(applied_migrations)}')
+        
+        # Check for our specific app migrations
+        app_migrations = {}
+        for app, migration in applied_migrations:
+            if app not in app_migrations:
+                app_migrations[app] = []
+            app_migrations[app].append(migration)
+        
+        print('Applied migrations by app:')
+        for app, migrations in app_migrations.items():
+            print(f'  {app}: {len(migrations)} migrations')
+        
+        # Check if we have the key tables for our apps
+        expected_tables = ['tenants_tenant', 'tenants_domain', 'business_lines', 
+                          'clients', 'client_services', 'users']
+        missing_tables = [table for table in expected_tables if table not in table_names]
+        
+        if missing_tables:
+            print(f'STATUS: INCOMPLETE_SCHEMA - Missing tables: {missing_tables}')
+        else:
+            print('STATUS: COMPLETE_SCHEMA - All expected tables present')
+            
+except Exception as e:
+    print(f'ERROR: Could not diagnose database: {e}')
+    sys.exit(1)
+    " 2>&1)
+    
+    echo "$diagnosis_output"
+    
+    # Parse the status and provide recommendations
+    if echo "$diagnosis_output" | grep -q "STATUS: EMPTY_DATABASE"; then
+        log_info "✅ Database is empty - perfect for fresh deployment"
+        return 0
+    elif echo "$diagnosis_output" | grep -q "STATUS: NO_MIGRATION_TABLE"; then
+        log_warning "⚠️  Database has tables but no migration tracking"
+        log_info "Recommendation: This might be a legacy database that needs migration setup"
+        return 1
+    elif echo "$diagnosis_output" | grep -q "STATUS: INCOMPLETE_SCHEMA"; then
+        log_warning "⚠️  Database schema is incomplete"
+        log_info "Recommendation: Some migrations may have failed or database is corrupted"
+        return 1
+    elif echo "$diagnosis_output" | grep -q "STATUS: COMPLETE_SCHEMA"; then
+        log_info "✅ Database schema appears complete"
+        return 0
+    else
+        log_error "❌ Could not determine database status"
+        return 1
+    fi
+}
+
 # Pre-deployment checks
 pre_deployment_checks() {
     log_info "🔍 Running pre-deployment checks..."
@@ -182,6 +264,17 @@ execute_migrations() {
     if ! test_database_connection; then
         log_error "Cannot proceed with migrations - database connection failed"
         return 1
+    fi
+    
+    # Diagnose database state
+    if ! diagnose_database_state; then
+        log_warning "Database state diagnosis indicates potential issues"
+        if [[ "${FORCE_MIGRATION:-false}" != "true" ]]; then
+            log_error "Set FORCE_MIGRATION=true to proceed anyway"
+            return 1
+        else
+            log_warning "FORCE_MIGRATION=true - proceeding despite warnings"
+        fi
     fi
     
     # Run migrations for public schema (shared apps)
@@ -228,8 +321,154 @@ post_deployment_checks() {
     log_info "✅ Post-deployment checks completed"
 }
 
+# Display usage information
+show_usage() {
+    cat << EOF
+Usage: $SCRIPT_NAME [OPTIONS]
+
+Production-Grade Django Multi-Tenant Migration Script
+
+OPTIONS:
+    -h, --help              Show this help message
+    -d, --diagnose          Only diagnose database state, don't migrate
+    -f, --force             Force migration even if database state looks problematic
+    -c, --clean-deploy      Assume clean database deployment (skip some checks)
+    --skip-static          Skip static files collection
+    --skip-checks          Skip post-deployment checks
+
+ENVIRONMENT VARIABLES:
+    DATABASE_URL           Database connection string (required)
+    SECRET_KEY            Django secret key (required)
+    DJANGO_SETTINGS_MODULE Django settings module (required)
+    STATIC_ROOT           Static files directory (optional)
+    LOG_FILE              Log file path (default: /tmp/deployment.log)
+    DEBUG                 Enable debug logging (default: false)
+    FORCE_MIGRATION       Force migration despite warnings (default: false)
+
+EXAMPLES:
+    # Fresh deployment on empty database
+    $SCRIPT_NAME --clean-deploy
+    
+    # Diagnose database state only
+    $SCRIPT_NAME --diagnose
+    
+    # Force migration on problematic database
+    $SCRIPT_NAME --force
+    
+    # Quick deployment without static files
+    $SCRIPT_NAME --skip-static
+
+EOF
+}
+
+# Database state diagnosis only
+diagnose_only() {
+    log_info "🔍 Database State Diagnosis Mode"
+    
+    if ! test_database_connection; then
+        log_error "Cannot diagnose - database connection failed"
+        exit 1
+    fi
+    
+    diagnose_database_state
+    local diagnosis_result=$?
+    
+    if [[ $diagnosis_result -eq 0 ]]; then
+        log_info "✅ Database is ready for deployment"
+    else
+        log_warning "⚠️  Database may need attention before deployment"
+        log_info "Consider using --force flag or cleaning the database"
+    fi
+    
+    exit $diagnosis_result
+}
+
 # Main execution function
 main() {
+    local DIAGNOSE_ONLY=false
+    local FORCE_MIGRATION=false
+    local CLEAN_DEPLOY=false
+    local SKIP_STATIC=false
+    local SKIP_CHECKS=false
+    
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_usage
+                exit 0
+                ;;
+            -d|--diagnose)
+                DIAGNOSE_ONLY=true
+                shift
+                ;;
+            -f|--force)
+                FORCE_MIGRATION=true
+                export FORCE_MIGRATION=true
+                shift
+                ;;
+            -c|--clean-deploy)
+                CLEAN_DEPLOY=true
+                shift
+                ;;
+            --skip-static)
+                SKIP_STATIC=true
+                shift
+                ;;
+            --skip-checks)
+                SKIP_CHECKS=true
+                shift
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                show_usage
+                exit 1
+                ;;
+        esac
+    done
+    
+    log_info "🚀 Starting production-grade deployment process..."
+    log_info "Environment: ${ENVIRONMENT}"
+    log_info "Log file: ${LOG_FILE}"
+    
+    if [[ "$FORCE_MIGRATION" == "true" ]]; then
+        log_warning "⚠️  FORCE_MIGRATION enabled - will proceed despite warnings"
+    fi
+    
+    if [[ "$CLEAN_DEPLOY" == "true" ]]; then
+        log_info "📦 Clean deployment mode - assuming fresh database"
+    fi
+    
+    # Create log directory if it doesn't exist
+    mkdir -p "$(dirname "${LOG_FILE}")"
+    
+    # Handle diagnose-only mode
+    if [[ "$DIAGNOSE_ONLY" == "true" ]]; then
+        diagnose_only
+    fi
+    
+    # Execute deployment steps
+    pre_deployment_checks
+    execute_migrations
+    
+    if [[ "$SKIP_STATIC" != "true" ]]; then
+        collect_static_files
+    else
+        log_info "📦 Skipping static files collection"
+    fi
+    
+    if [[ "$SKIP_CHECKS" != "true" ]]; then
+        post_deployment_checks
+    else
+        log_info "🔍 Skipping post-deployment checks"
+    fi
+    
+    log_info "🎉 Deployment completed successfully!"
+    log_info "Application is ready to serve traffic"
+}
+
+# Main execution function
+main_legacy() {
     log_info "🚀 Starting production-grade deployment process..."
     log_info "Environment: ${ENVIRONMENT}"
     log_info "Log file: ${LOG_FILE}"
