@@ -193,13 +193,13 @@ execute_migrations() {
         local exit_code=$?
         log_error "Public schema migration failed with exit code: $exit_code"
         
-        # Check if it's a consistency error that we can fix with fresh setup
+        # Check if it's a consistency error from partial previous deployments
         log_info "🔧 Checking for migration consistency issues..."
         if python manage.py migrate_schemas --shared --verbosity=2 2>&1 | grep -q "InconsistentMigrationHistory\|is applied before its dependency"; then
             log_warning "Detected migration consistency issue from partial previous deployments"
             log_warning "This is normal for first deployment with failed previous attempts"
             
-            # Offer fresh database setup for first deployment
+            # Run fresh database setup for first deployment
             log_info "🛠️ Running fresh database setup (safe for first deployment)..."
             if [[ -f "${SCRIPT_DIR}/fresh-database-setup.sh" ]]; then
                 "${SCRIPT_DIR}/fresh-database-setup.sh"
