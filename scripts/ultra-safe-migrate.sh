@@ -139,6 +139,90 @@ except Exception as e:
     return 1
 }
 
+# Create initial tenant to resolve django-tenants configuration issues
+create_initial_tenant() {
+    log_info "🏗️  Creating initial tenant to resolve django-tenants configuration..."
+    
+    # Configuration for initial tenant
+    local tenant_schema="${TENANT_SCHEMA:-principal}"
+    local tenant_domain="${TENANT_DOMAIN:-app.zentoerp.com}"
+    local tenant_name="${TENANT_NAME:-Principal}"
+    
+    log_info "Tenant configuration:"
+    log_info "  - Schema: ${tenant_schema}"
+    log_info "  - Domain: ${tenant_domain}"
+    log_info "  - Name: ${tenant_name}"
+    
+    local creation_output
+    creation_output=$(python manage.py shell -c "
+from django.db import transaction
+from django_tenants.utils import get_tenant_model, get_tenant_domain_model
+import sys
+
+try:
+    Tenant = get_tenant_model()
+    Domain = get_tenant_domain_model()
+    
+    # Check if tenant already exists
+    if Tenant.objects.filter(schema_name='${tenant_schema}').exists():
+        print('INFO: Tenant already exists with this schema name')
+        sys.exit(0)
+    
+    with transaction.atomic():
+        # Create tenant
+        tenant = Tenant.objects.create(
+            schema_name='${tenant_schema}',
+            name='${tenant_name}',
+            description='Initial tenant created automatically during deployment to resolve django-tenants configuration'
+        )
+        
+        # Create domain
+        domain = Domain.objects.create(
+            domain='${tenant_domain}',
+            tenant=tenant,
+            is_primary=True
+        )
+        
+        print(f'SUCCESS: Tenant created successfully')
+        print(f'  - Name: {tenant.name}')
+        print(f'  - Schema: {tenant.schema_name}')
+        print(f'  - Domain: {domain.domain}')
+        
+except Exception as e:
+    print(f'ERROR: Failed to create tenant: {e}')
+    sys.exit(1)
+    " 2>&1)
+    
+    echo "$creation_output"
+    
+    if echo "$creation_output" | grep -q "SUCCESS: Tenant created successfully"; then
+        log_info "✅ Initial tenant created successfully"
+        
+        # Now run tenant migrations to create the missing tables
+        log_info "🔄 Running tenant migrations to create missing tables..."
+        if python manage.py migrate_schemas --verbosity=1; then
+            log_info "✅ Tenant migrations completed successfully"
+            return 0
+        else
+            log_error "❌ Tenant migrations failed after creating tenant"
+            return 1
+        fi
+    elif echo "$creation_output" | grep -q "INFO: Tenant already exists"; then
+        log_info "ℹ️  Tenant already exists, running migrations..."
+        if python manage.py migrate_schemas --verbosity=1; then
+            log_info "✅ Tenant migrations completed successfully"
+            return 0
+        else
+            log_error "❌ Tenant migrations failed"
+            return 1
+        fi
+    else
+        log_error "❌ Failed to create initial tenant"
+        log_error "Creation output: $creation_output"
+        return 1
+    fi
+}
+
 # Database state diagnosis
 diagnose_database_state() {
     log_info "🔍 Diagnosing database state..."
@@ -188,8 +272,21 @@ try:
                           'clients', 'client_services', 'users']
         missing_tables = [table for table in expected_tables if table not in table_names]
         
-        if missing_tables:
-            print(f'STATUS: INCOMPLETE_SCHEMA - Missing tables: {missing_tables}')
+        # Special check for django-tenants configuration issues
+        tenant_app_tables = ['business_lines', 'clients', 'client_services', 'expenses']
+        missing_tenant_tables = [table for table in tenant_app_tables if table not in table_names]
+        
+        if missing_tenant_tables:
+            # Check if this might be a tenant app configuration issue
+            cursor.execute(\"SELECT COUNT(*) FROM tenants_tenant\")
+            tenant_count = cursor.fetchone()[0]
+            
+            if tenant_count == 0 and missing_tenant_tables:
+                print(f'STATUS: TENANT_CONFIG_ISSUE - Missing tenant app tables: {missing_tenant_tables}')
+                print(f'No tenants found but tenant app migrations are applied')
+                print(f'This suggests tenant apps were incorrectly applied to public schema')
+            else:
+                print(f'STATUS: INCOMPLETE_SCHEMA - Missing tables: {missing_tables}')
         else:
             print('STATUS: COMPLETE_SCHEMA - All expected tables present')
             
@@ -208,6 +305,19 @@ except Exception as e:
         log_warning "⚠️  Database has tables but no migration tracking"
         log_info "Recommendation: This might be a legacy database that needs migration setup"
         return 1
+    elif echo "$diagnosis_output" | grep -q "STATUS: TENANT_CONFIG_ISSUE"; then
+        log_error "🚨 CRITICAL: Tenant app configuration issue detected"
+        log_error "Apps configured as TENANT_APPS but no tenants exist"
+        log_info "🔧 Auto-repairing: Creating initial tenant to resolve the issue..."
+        
+        if create_initial_tenant; then
+            log_info "✅ Tenant configuration issue resolved"
+            return 0
+        else
+            log_error "❌ Failed to auto-repair tenant configuration"
+            log_info "Recommendation: Run repair-production-db.sh script manually"
+            return 1
+        fi
     elif echo "$diagnosis_output" | grep -q "STATUS: INCOMPLETE_SCHEMA"; then
         log_warning "⚠️  Database schema is incomplete"
         log_info "Recommendation: Some migrations may have failed or database is corrupted"
@@ -310,12 +420,20 @@ collect_static_files() {
 post_deployment_checks() {
     log_info "🔍 Running post-deployment checks..."
     
-    # Django system check
-    check_health "Django System Check" "python manage.py check --verbosity=1"
+    # Django system check (critical)
+    if ! check_health "Django System Check" "python manage.py check --verbosity=1"; then
+        log_error "Django system check failed - this is critical"
+        return 1
+    fi
     
-    # Health endpoint check (if available)
+    # Health endpoint check (non-critical)
     if command -v curl &>/dev/null; then
-        check_health "Health Endpoint" "curl -f http://localhost:8000/health/" 10
+        if check_health "Health Endpoint" "curl -f http://localhost:8000/health/" 10; then
+            log_info "Health endpoint is responding correctly"
+        else
+            log_warning "Health endpoint check failed, but this is non-critical during deployment"
+            log_info "The application may not be fully started yet during pre-deploy phase"
+        fi
     fi
     
     log_info "✅ Post-deployment checks completed"
