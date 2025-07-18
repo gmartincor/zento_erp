@@ -137,8 +137,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),  # Directorio donde está style.css
 ]
 
-# Configuración de storage con Whitenoise
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Configuración de storage con Whitenoise (versión más permisiva)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Directorio donde se recolectan los archivos estáticos
 STATIC_ROOT = config('STATIC_ROOT', default=os.path.join(BASE_DIR, 'static_collected'))
