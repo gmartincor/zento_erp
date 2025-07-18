@@ -29,6 +29,12 @@ class Command(BaseCommand):
             help='Email del tenant (ej: admin@nutricionpro.com)'
         )
         parser.add_argument(
+            '--phone',
+            type=str,
+            default='+34600000000',
+            help='Teléfono del tenant'
+        )
+        parser.add_argument(
             '--notes',
             type=str,
             default='',
@@ -40,6 +46,7 @@ class Command(BaseCommand):
         domain_name = options['domain_name']
         tenant_name = options['tenant_name']
         tenant_email = options['tenant_email']
+        phone = options['phone']
         notes = options['notes']
 
         try:
@@ -49,6 +56,7 @@ class Command(BaseCommand):
                     schema_name=schema_name,
                     name=tenant_name,
                     email=tenant_email,
+                    phone=phone,
                     notes=notes,
                     status=Tenant.StatusChoices.ACTIVE
                 )

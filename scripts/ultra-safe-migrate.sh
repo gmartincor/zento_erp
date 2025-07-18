@@ -148,12 +148,16 @@ create_initial_tenant() {
     local tenant_domain="${TENANT_DOMAIN:-zentoerp.com}"
     local tenant_name="${TENANT_NAME:-Principal}"
     local tenant_email="${TENANT_EMAIL:-admin@zentoerp.com}"
+    local tenant_phone="${TENANT_PHONE:-+34600000000}"
+    local tenant_professional_number="${TENANT_PROFESSIONAL_NUMBER:-}"
     
     log_info "Tenant configuration:"
     log_info "  - Schema: ${tenant_schema}"
     log_info "  - Domain: ${tenant_domain}"
     log_info "  - Name: ${tenant_name}"
     log_info "  - Email: ${tenant_email}"
+    log_info "  - Phone: ${tenant_phone}"
+    log_info "  - Professional Number: ${tenant_professional_number}"
     
     local creation_output
     creation_output=$(python manage.py shell -c "
@@ -176,6 +180,8 @@ try:
             schema_name='${tenant_schema}',
             name='${tenant_name}',
             email='${tenant_email}',
+            phone='${tenant_phone}',
+            professional_number='${tenant_professional_number}',
             notes='Initial tenant created automatically during deployment to resolve django-tenants configuration',
             status=Tenant.StatusChoices.ACTIVE
         )
