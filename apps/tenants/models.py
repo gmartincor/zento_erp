@@ -30,15 +30,23 @@ class Tenant(TenantMixin, TimeStampedModel, SoftDeleteModel):
     phone = models.CharField(
         max_length=20,
         blank=True,
-        null=True,
+        default="",
         verbose_name="Teléfono"
     )
     
     professional_number = models.CharField(
         max_length=50,
         blank=True,
+        default="",
         verbose_name="Número de colegiado",
         help_text="Número de colegiado profesional"
+    )
+    
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        blank=True,
+        help_text="URL slug for tenant identification"
     )
     
     status = models.CharField(
@@ -57,6 +65,7 @@ class Tenant(TenantMixin, TimeStampedModel, SoftDeleteModel):
     
     notes = models.TextField(
         blank=True,
+        default="",
         verbose_name="Notas",
         help_text="Información adicional sobre el nutricionista"
     )
@@ -97,6 +106,17 @@ class Tenant(TenantMixin, TimeStampedModel, SoftDeleteModel):
     def save(self, *args, **kwargs):
         if self.email:
             self.email = self.email.lower().strip()
+        
+        # Generar slug único si no existe
+        if not self.slug:
+            from django.utils.text import slugify
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            while Tenant.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         
         self.full_clean()
         super().save(*args, **kwargs)

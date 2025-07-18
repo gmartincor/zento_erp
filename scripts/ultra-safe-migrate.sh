@@ -175,15 +175,16 @@ try:
         sys.exit(0)
     
     with transaction.atomic():
-        # Create tenant
+        # Create tenant with all required fields for production compatibility
         tenant = Tenant.objects.create(
             schema_name='${tenant_schema}',
             name='${tenant_name}',
             email='${tenant_email}',
             phone='${tenant_phone}',
             professional_number='${tenant_professional_number}',
-            notes='Initial tenant created automatically during deployment to resolve django-tenants configuration',
+            notes='${tenant_notes:-Initial tenant created automatically during deployment to resolve django-tenants configuration}',
             status=Tenant.StatusChoices.ACTIVE
+            # slug will be auto-generated in the save() method
         )
         
         # Create domain
@@ -197,9 +198,13 @@ try:
         print(f'  - Name: {tenant.name}')
         print(f'  - Schema: {tenant.schema_name}')
         print(f'  - Domain: {domain.domain}')
+        print(f'  - Slug: {tenant.slug}')
+        print(f'  - Status: {tenant.status}')
         
 except Exception as e:
     print(f'ERROR: Failed to create tenant: {e}')
+    import traceback
+    traceback.print_exc()
     sys.exit(1)
     " 2>&1)
     
