@@ -76,7 +76,7 @@ class Invoice(TimeStampedModel):
     ]
     
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
-    reference = models.CharField(max_length=50, unique=True, blank=True)
+    reference = models.CharField(max_length=50, unique=True, null=True, blank=True)
     issue_date = models.DateField(default=date.today, verbose_name="Fecha de emisión")
     client_type = models.CharField(max_length=20, choices=CLIENT_TYPES, verbose_name="Tipo de cliente")
     client_name = models.CharField(max_length=200, verbose_name="Nombre del cliente")
