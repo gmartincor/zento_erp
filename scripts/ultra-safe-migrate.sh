@@ -213,9 +213,21 @@ execute_migrations() {
     
     # Run migrations for tenant schemas
     log_info "Running migrations for tenant schemas..."
-    if ! python manage.py migrate_schemas --verbosity=2; then
-        log_warning "Tenant migration failed - this might be normal for first deployment"
-        log_info "Tenant schemas will be created when tenants are added"
+    tenant_output=$(python manage.py migrate_schemas --verbosity=2 2>&1)
+    tenant_exit_code=$?
+    
+    if [[ $tenant_exit_code -ne 0 ]]; then
+        if echo "$tenant_output" | grep -q "InconsistentMigrationHistory"; then
+            log_warning "Tenant migration failed due to legacy migration conflicts"
+            log_info "This is expected during migration consolidation transition"
+            log_info "New tenants will use unified migrations, existing tenants need manual migration"
+            log_info "For development: Reset database. For production: Contact DevOps for tenant migration plan"
+        else
+            log_warning "Tenant migration failed - this might be normal for first deployment"
+            log_info "Tenant schemas will be created when tenants are added"
+        fi
+    else
+        log_info "✅ Tenant migrations completed successfully"
     fi
     
     log_info "✅ Database migrations completed"
