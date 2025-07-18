@@ -128,8 +128,33 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 horas
 
 # STATIC FILES SETTINGS
+# =============================================================================
+# Configuración robusta para archivos estáticos con Whitenoise
+
+# Directorios donde Django busca archivos estáticos antes de collectstatic
+# CRÍTICO: Debe incluir el directorio donde se genera style.css
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),  # Directorio donde está style.css
+]
+
+# Configuración de storage con Whitenoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Directorio donde se recolectan los archivos estáticos
 STATIC_ROOT = config('STATIC_ROOT', default=os.path.join(BASE_DIR, 'static_collected'))
+
+# Finders de archivos estáticos (asegurar que están configurados)
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',  # Busca en STATICFILES_DIRS
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',  # Busca en apps
+]
+
+# Configuración adicional de Whitenoise para mejor rendimiento
+WHITENOISE_USE_FINDERS = True  # Permitir que Whitenoise use finders en desarrollo
+WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'gz', 'tgz', 'bz2', 'tbz', 'xz', 'br']
+WHITENOISE_MAX_AGE = 31536000  # 1 año cache para archivos estáticos
+
+# Media files
 MEDIA_ROOT = config('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
 
 # Add whitenoise middleware

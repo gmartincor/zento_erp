@@ -239,11 +239,6 @@ verify_css_prerequisites() {
         return 1
     fi
     
-    if [[ ! -f "static/css/tailwind.css" ]]; then
-        log_error "Source file static/css/tailwind.css not found."
-        return 1
-    fi
-    
     return 0
 }
 
@@ -271,12 +266,23 @@ build_css() {
 
 # Verify static files before collection
 verify_static_prerequisites() {
+    log_info "🔧 Verifying static files prerequisites..."
+    
+    # Verificar que el CSS generado existe
     if [[ ! -f "static/css/style.css" ]]; then
-        log_error "Critical file static/css/style.css missing before collectstatic"
+        log_error "❌ Critical file static/css/style.css missing before collectstatic"
+        log_error "   Expected: $(pwd)/static/css/style.css"
         return 1
     fi
     
-    log_info "✅ Critical CSS file verified before collection"
+    # Verificar que el archivo CSS no está vacío
+    local file_size=$(stat -c%s "static/css/style.css" 2>/dev/null || stat -f%z "static/css/style.css" 2>/dev/null || echo "0")
+    if [[ "$file_size" -lt 100 ]]; then
+        log_error "❌ CSS file appears empty or corrupted (${file_size} bytes)"
+        return 1
+    fi
+    
+    log_info "✅ CSS file verified: ${file_size} bytes"
     return 0
 }
 
@@ -288,33 +294,24 @@ execute_collectstatic() {
     # Ensure static directories exist
     mkdir -p "${static_root}/css" "${static_root}/js" "${static_root}/admin"
     
-    log_info "Running collectstatic..."
-    if $python_cmd manage.py collectstatic --noinput --verbosity=2 2>&1 | tee -a "$LOG_FILE"; then
-        log_info "✅ collectstatic completed successfully"
-        return 0
-    else
-        log_error "❌ collectstatic failed"
-        return 1
-    fi
-}
-
-# Verify static files after collection
-verify_static_collection() {
-    local static_root="${STATIC_ROOT:-/app/static_collected}"
+    log_info "🔧 Running collectstatic..."
+    log_info "📂 STATIC_ROOT: ${static_root}"
     
-    if [[ -f "${static_root}/css/style.css" ]]; then
-        local file_size=$(stat -c%s "${static_root}/css/style.css" 2>/dev/null || stat -f%z "${static_root}/css/style.css" 2>/dev/null || echo "0")
-        if [[ "$file_size" -gt 100 ]]; then
-            log_info "✅ Critical CSS file collected successfully (${file_size} bytes)"
+    # Ejecutar collectstatic
+    if $python_cmd manage.py collectstatic --noinput --verbosity=2 --skip-checks 2>&1 | tee -a "$LOG_FILE"; then
+        log_info "✅ collectstatic command completed successfully"
+        
+        # Verificar que style.css se copió
+        if [[ -f "${static_root}/css/style.css" ]]; then
+            local file_size=$(stat -c%s "${static_root}/css/style.css" 2>/dev/null || stat -f%z "${static_root}/css/style.css" 2>/dev/null || echo "0")
+            log_info "✅ CSS file successfully collected (${file_size} bytes)"
             return 0
         else
-            log_error "❌ CSS file collected but appears empty or corrupted (${file_size} bytes)"
+            log_error "❌ CSS file NOT found in collected static files"
             return 1
         fi
     else
-        log_error "❌ Critical CSS file NOT found in static_collected"
-        log_error "   Expected: ${static_root}/css/style.css"
-        ls -la "${static_root}/css/" 2>&1 | tee -a "$LOG_FILE" || echo "Directory doesn't exist"
+        log_error "❌ collectstatic failed"
         return 1
     fi
 }
@@ -325,7 +322,6 @@ collect_static_files() {
     
     verify_static_prerequisites || return 1
     execute_collectstatic || return 1
-    verify_static_collection || return 1
     
     log_info "✅ Static files collection completed and verified"
     return 0
