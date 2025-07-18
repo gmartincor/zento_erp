@@ -112,7 +112,7 @@ ensure_public_tenant_exists() {
     local result
     result=$($python_cmd manage.py shell -c "
 from django.db import transaction, IntegrityError
-from tenants.models import Tenant, Domain
+from apps.tenants.models import Tenant, Domain
 import sys
 
 try:
@@ -281,7 +281,7 @@ post_deployment_validation() {
     # Verificar que django-tenants funciona correctamente
     local validation_result
     validation_result=$($python_cmd manage.py shell -c "
-from tenants.models import Tenant, Domain
+from apps.tenants.models import Tenant, Domain
 from django_tenants.utils import get_tenant_model, get_tenant_domain_model
 
 try:
