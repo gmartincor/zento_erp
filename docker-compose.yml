@@ -6,6 +6,7 @@
 #   docker-compose --profile full-dev up         # Desarrollo completo
 #   docker-compose --profile prod up             # Producción
 #   docker-compose --profile dev-tools up        # Herramientas de desarrollo
+#   docker-compose --profile dev-synced up       # Desarrollo con BD sincronizada
 
 version: '3.8'
 
@@ -30,6 +31,7 @@ services:
     profiles:
       - dev
       - full-dev
+      - dev-synced
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-guillermomartincorrea} -d ${DB_NAME:-crm_nutricion_pro}"]
       interval: 10s
@@ -71,6 +73,8 @@ services:
       args:
         - BUILDKIT_INLINE_CACHE=1
     container_name: ${COMPOSE_PROJECT_NAME:-zentoerp}_app_dev
+    env_file:
+      - .env.dev-with-prod-db  # Para perfil dev-synced usar BD sincronizada
     environment:
       # Django settings
       DJANGO_SETTINGS_MODULE: config.settings.base
@@ -79,10 +83,7 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       LOAD_TEST_DATA: ${LOAD_TEST_DATA:-True}
       
-      # Database
-      DB_NAME: ${DB_NAME:-crm_nutricion_pro}
-      DB_USER: ${DB_USER:-guillermomartincorrea}
-      DB_PASSWORD: ${DB_PASSWORD:-password}
+      # Database - Override para dev-synced
       DB_HOST: postgres
       DB_PORT: 5432
       
@@ -111,10 +112,11 @@ services:
     profiles:
       - dev
       - full-dev
+      - dev-synced
     depends_on:
       postgres:
         condition: service_healthy
-    command: /app/scripts/docker-entrypoint.sh development
+    command: /app/scripts/docker-entrypoint.sh
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
       interval: 30s
@@ -176,7 +178,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    command: /app/scripts/docker-entrypoint.sh production
+    command: /app/scripts/docker-entrypoint.sh
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${PORT:-8000}/health/"]
       interval: 30s

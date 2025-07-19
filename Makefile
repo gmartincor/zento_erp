@@ -15,12 +15,16 @@ help: ## Mostrar ayuda
 	@echo "🐳 ZentoERP - Comandos disponibles:"
 	@echo ""
 	@echo "DESARROLLO:"
-	@echo "  dev          - Desarrollo básico (PostgreSQL + App)"
+	@echo "  dev          - Desarrollo normal (con BD de producción)"
+	@echo "  dev-empty    - Desarrollo con BD vacía (solo si necesitas empezar de cero)"
 	@echo "  full-dev     - Desarrollo completo (PostgreSQL + Redis + App)"
 	@echo "  build        - Rebuild imágenes"
 	@echo "  clean        - Limpiar containers y volúmenes"
 	@echo "  test         - Ejecutar tests"
 	@echo "  logs         - Ver logs"
+	@echo ""
+	@echo "SINCRONIZACIÓN BD:"
+	@echo "  backup-local - Backup BD local actual"
 	@echo ""
 	@echo "PRODUCCIÓN:"
 	@echo "  verify-prod  - Verificar configuración de producción"
@@ -36,8 +40,14 @@ help: ## Mostrar ayuda
 # =============================================================================
 # DEVELOPMENT
 # =============================================================================
-dev: ## Desarrollo básico
-	@echo "🚀 Iniciando desarrollo básico..."
+dev: ## Desarrollo normal (con BD de producción)
+	@echo "🚀 Iniciando desarrollo con BD de producción..."
+	@echo "💡 BD con todos los datos reales de producción"
+	@docker-compose --env-file .env.dev-with-prod-db --profile dev-synced up --remove-orphans
+
+dev-empty: ## Desarrollo con BD vacía (solo si necesitas empezar de cero)
+	@echo "🚀 Iniciando desarrollo con BD vacía..."
+	@echo "⚠️  Solo usar si necesitas BD completamente nueva"
 	@docker-compose --profile dev up --remove-orphans
 
 full-dev: ## Desarrollo completo
@@ -80,15 +90,44 @@ setup: ## Configurar entorno inicial
 	@./scripts/setup.sh
 
 # =============================================================================
-# SHORTCUTS
+# SHORTCUTS & QUICK COMMANDS
 # =============================================================================
 up: dev ## Alias para 'dev'
 down: ## Parar servicios
 	@docker-compose down
 
-# =============================================================================
-# PRODUCTION COMMANDS
-# =============================================================================
+# Comandos rápidos para desarrollo diario
+migrate: ## Ejecutar migraciones
+	@echo "🔄 Ejecutando migraciones..."
+	@docker exec zentoerp_dev_synced_app_dev python manage.py migrate
+
+makemigrations: ## Crear nuevas migraciones
+	@echo "📝 Creando migraciones..."
+	@docker exec zentoerp_dev_synced_app_dev python manage.py makemigrations
+
+shell: ## Abrir shell de Django
+	@echo "🐍 Abriendo shell de Django..."
+	@docker exec -it zentoerp_dev_synced_app_dev python manage.py shell
+
+superuser: ## Crear superusuario de desarrollo
+	@echo "👑 Creando superusuario..."
+	@docker exec zentoerp_dev_synced_app_dev python manage.py create_superuser_dev --prod-creds
+
+tenant: ## Crear tenant de desarrollo
+	@echo "🏠 Creando tenant..."
+	@docker exec -it zentoerp_dev_synced_app_dev python manage.py create_nutritionist_dev
+
+status: ## Ver estado de contenedores
+	@echo "📊 Estado de contenedores:"
+	@docker-compose ps
+
+restart: ## Reiniciar aplicación
+	@echo "🔄 Reiniciando aplicación..."
+	@docker-compose restart app-dev
+
+backup-local: ## Hacer backup de BD local
+	@echo "� Haciendo backup de BD local..."
+	@docker-compose exec postgres pg_dump -U guillermomartincorrea -d crm_nutricion_pro > "./backups/local_backup_$(date +'%Y%m%d_%H%M%S').sql"
 
 verify-prod: ## Verificar configuración de producción
 	@echo "🔍 Verificando configuración de producción..."

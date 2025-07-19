@@ -34,12 +34,21 @@ wait_for_postgres() {
     
     log "🔄 Esperando que PostgreSQL esté disponible en ${host}:${port}..."
     
-    while ! pg_isready -h "$host" -p "$port" -U "$user" -d "$db" > /dev/null 2>&1; do
-        warn "PostgreSQL no está listo. Reintentando en 2 segundos..."
+    # Verificar que podemos conectarnos a la base de datos específica usando Python
+    local attempts=0
+    while [ $attempts -lt 30 ]; do
+        if python -c "import psycopg2; psycopg2.connect(host='$host', port='$port', user='$user', password='$DB_PASSWORD', database='$db')" 2>/dev/null; then
+            log "✅ PostgreSQL está listo y accesible!"
+            return 0
+        fi
+        
+        warn "Esperando acceso a base de datos. Intento $((attempts + 1))/30..."
         sleep 2
+        attempts=$((attempts + 1))
     done
     
-    log "✅ PostgreSQL está listo!"
+    error "No se pudo conectar a PostgreSQL después de 30 intentos"
+    return 1
 }
 
 # Función para esperar que Redis esté listo (si está configurado)
@@ -102,15 +111,13 @@ check_configuration() {
 
 # Función para inicializar datos si es necesario
 initialize_data() {
-    local load_test_data=${LOAD_TEST_DATA:-False}
     local environment=${ENVIRONMENT:-development}
     
-    if [ "$environment" = "development" ] && [ "$load_test_data" = "True" ]; then
-        log "🎭 Cargando datos de prueba para desarrollo..."
-        python manage.py setup_test_data || warn "No se pudieron cargar los datos de prueba"
-    elif [ "$environment" = "production" ]; then
+    if [ "$environment" = "production" ]; then
         log "🚀 Inicializando configuración de producción..."
         python manage.py init_production --skip-migrate --skip-collectstatic || warn "Error en inicialización de producción"
+    else
+        log "📊 Usando datos existentes (desarrollo con BD sincronizada). No se cargan fixtures."
     fi
 }
 

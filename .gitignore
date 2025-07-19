@@ -48,6 +48,19 @@ venv.bak/
 .env.test
 .env.production
 
+# Backups y dumps de base de datos (específicos de cada desarrollador)
+backups/database/
+backups/*.sql
+*.sql
+*_dump_*.sql
+*_backup_*.sql
+sync_status.txt
+
+# Scripts de sincronización específicos (se pueden regenerar)
+scripts/production_to_dev_workflow.sh
+scripts/sync_production_db.sh
+scripts/verify_safety.sh
+
 # Render configuration with secrets
 render.yaml
 render.yml
