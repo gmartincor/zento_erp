@@ -127,59 +127,36 @@ CACHES = {
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 horas
 
-# STATIC FILES SETTINGS
-# =============================================================================
-# Configuración robusta para archivos estáticos con Whitenoise para multi-tenant
-
-# URL para archivos estáticos
 STATIC_URL = '/static/'
 
-# Directorios donde Django busca archivos estáticos antes de collectstatic
-# CRÍTICO: Debe incluir el directorio donde se genera style.css
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Directorio donde está style.css
+    os.path.join(BASE_DIR, 'static'),
 ]
 
-# Configuración de storage con Whitenoise optimizada para multi-tenant
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Directorio donde se recolectan los archivos estáticos
 STATIC_ROOT = config('STATIC_ROOT', default=os.path.join(BASE_DIR, 'static_collected'))
 
-# Finders de archivos estáticos (asegurar que están configurados)
 STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.FileSystemFinder',  # Busca en STATICFILES_DIRS
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',  # Busca en apps
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
-# Configuración especializada de Whitenoise para multi-tenant
 WHITENOISE_USE_FINDERS = True
-WHITENOISE_AUTOREFRESH = False
 WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['js', 'css', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'gz', 'tgz', 'bz2', 'tbz', 'xz', 'br']
 WHITENOISE_MAX_AGE = 31536000
 
-# Media files
 MEDIA_ROOT = config('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
 MEDIA_URL = '/media/'
 
-# Configuración crítica: Whitenoise DEBE ir ANTES de SecurityMiddleware para multi-tenant
 if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
-    try:
-        security_index = MIDDLEWARE.index('django.middleware.security.SecurityMiddleware')
-        MIDDLEWARE.insert(security_index, 'whitenoise.middleware.WhiteNoiseMiddleware')
-    except ValueError:
-        try:
-            tenant_index = MIDDLEWARE.index('django_tenants.middleware.main.TenantMainMiddleware')
-            MIDDLEWARE.insert(tenant_index + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-        except ValueError:
-            MIDDLEWARE.insert(0, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    tenant_index = MIDDLEWARE.index('django_tenants.middleware.main.TenantMainMiddleware')
+    MIDDLEWARE.insert(tenant_index + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 
-
-# Session configuration SIN Redis
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_CACHE_ALIAS = 'default'
-SESSION_COOKIE_AGE = 86400  # 24 horas
+SESSION_COOKIE_AGE = 86400
 
 # LOGGING
 LOGGING = {
