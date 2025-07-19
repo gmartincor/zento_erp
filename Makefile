@@ -79,6 +79,10 @@ test: ## Ejecutar tests
 	@echo "🧪 Ejecutando tests..."
 	@docker-compose --profile dev run --rm app-dev python manage.py test
 
+test-charts: ## Verificar configuración de charts
+	@echo "📊 Verificando configuración de charts..."
+	@./scripts/test-charts.sh
+
 # =============================================================================
 # UTILS
 # =============================================================================

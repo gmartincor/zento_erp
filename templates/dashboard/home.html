@@ -13,16 +13,31 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== Dashboard Modular ===');
+    console.log('=== Dashboard Modular Debug ===');
     
+    // Debug: Check static files availability
+    console.log('🔍 Current location:', window.location.href);
+    console.log('🔍 Static root:', '{% get_static_prefix %}');
+    
+    // Debug: Check Chart.js availability
     if (typeof Chart === 'undefined') {
-        console.error('❌ Chart.js not available');
+        console.error('❌ Chart.js not available - Check if chart.min.js is loaded');
+        console.log('🔍 Verify Chart.js URL: {% static "js/chart.min.js" %}');
         return;
+    } else {
+        console.log('✅ Chart.js available, version:', Chart.version || 'unknown');
     }
     
+    // Debug: Check dashboard modules availability
     if (!window.dashboardCharts) {
         console.error('❌ Dashboard charts module not loaded');
+        console.log('🔍 Check these JS files:');
+        console.log('   - {% static "js/dashboard/config.js" %}');
+        console.log('   - {% static "js/dashboard/utils.js" %}');
+        console.log('   - {% static "js/dashboard/charts.js" %}');
         return;
+    } else {
+        console.log('✅ Dashboard charts module loaded');
     }
     
     // Prepare data from Django template
@@ -61,9 +76,14 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // Initialize dashboard charts
-    console.log('📊 Dashboard data:', dashboardData);
-    window.dashboardCharts.init(dashboardData);
-    console.log('✅ Dashboard charts initialized successfully');
+    console.log('📊 Dashboard data prepared:', dashboardData);
+    try {
+        window.dashboardCharts.init(dashboardData);
+        console.log('✅ Dashboard charts initialized successfully');
+    } catch (error) {
+        console.error('❌ Error initializing charts:', error);
+        console.error('🔍 Stack trace:', error.stack);
+    }
 });
 </script>
 {% endblock %}
