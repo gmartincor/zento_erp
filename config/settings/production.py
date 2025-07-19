@@ -151,7 +151,7 @@ STATICFILES_FINDERS = [
 
 # Configuración adicional de Whitenoise para mejor rendimiento
 WHITENOISE_USE_FINDERS = True  # Permitir que Whitenoise use finders en desarrollo
-WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'gz', 'tgz', 'bz2', 'tbz', 'xz', 'br']
+WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['js', 'css', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'gz', 'tgz', 'bz2', 'tbz', 'xz', 'br']
 WHITENOISE_MAX_AGE = 31536000  # 1 año cache para archivos estáticos
 
 # Media files

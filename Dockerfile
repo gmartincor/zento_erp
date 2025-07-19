@@ -111,9 +111,8 @@ RUN pip install -r requirements.txt
 # Copiar código fuente
 COPY --chown=zentoerp:zentoerp . .
 
-# Copiar assets compilados desde frontend-builder
+# Copiar CSS compilado desde frontend-builder (NO sobrescribir JS)
 COPY --from=frontend-builder --chown=zentoerp:zentoerp /frontend/static/css/style.css ./static/css/style.css
-COPY --from=frontend-builder --chown=zentoerp:zentoerp /frontend/static/js/ ./static/js/
 
 # Cambiar a usuario no-root
 USER zentoerp
@@ -141,9 +140,8 @@ WORKDIR /app
 # Copiar código fuente
 COPY . .
 
-# Copiar assets compilados desde frontend-builder
+# Copiar CSS compilado desde frontend-builder (NO sobrescribir JS)
 COPY --from=frontend-builder /frontend/static/css/style.css ./static/css/style.css
-COPY --from=frontend-builder /frontend/static/js/ ./static/js/
 
 # Crear directorios necesarios
 RUN mkdir -p static_collected media logs
