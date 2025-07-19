@@ -141,7 +141,7 @@ STATICFILES_DIRS = [
 ]
 
 # Configuración de storage con Whitenoise optimizada para multi-tenant
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Directorio donde se recolectan los archivos estáticos
 STATIC_ROOT = config('STATIC_ROOT', default=os.path.join(BASE_DIR, 'static_collected'))
@@ -153,40 +153,26 @@ STATICFILES_FINDERS = [
 ]
 
 # Configuración especializada de Whitenoise para multi-tenant
-WHITENOISE_USE_FINDERS = False  # Desactivar en producción para mejor rendimiento
-WHITENOISE_AUTOREFRESH = False  # Desactivar en producción
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = False
 WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['js', 'css', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'gz', 'tgz', 'bz2', 'tbz', 'xz', 'br']
-WHITENOISE_MAX_AGE = 31536000  # 1 año cache para archivos estáticos
-WHITENOISE_INDEX_FILE = False  # Desactivar serving de index files
-WHITENOISE_ROOT = STATIC_ROOT  # Asegurar que Whitenoise use el directorio correcto
-WHITENOISE_MIMETYPES = {
-    '.js': 'application/javascript; charset=utf-8',
-    '.css': 'text/css; charset=utf-8',
-    '.json': 'application/json; charset=utf-8',
-}
-# Configuración crítica para multi-tenant: permitir que Whitenoise sirva archivos 
-# sin verificar el tenant en el host header
-WHITENOISE_STATIC_PREFIX = '/static/'
+WHITENOISE_MAX_AGE = 31536000
 
 # Media files
 MEDIA_ROOT = config('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
 MEDIA_URL = '/media/'
 
-# Configuración optimizada de Whitenoise para multi-tenant
-# CRÍTICO: Whitenoise debe estar ANTES de SecurityMiddleware para funcionar con subdominios
+# Configuración crítica: Whitenoise DEBE ir ANTES de SecurityMiddleware para multi-tenant
 if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
-    # Buscar SecurityMiddleware e insertar Whitenoise ANTES
     try:
         security_index = MIDDLEWARE.index('django.middleware.security.SecurityMiddleware')
         MIDDLEWARE.insert(security_index, 'whitenoise.middleware.WhiteNoiseMiddleware')
     except ValueError:
-        # Si no encuentra SecurityMiddleware, insertar después de TenantMainMiddleware
         try:
             tenant_index = MIDDLEWARE.index('django_tenants.middleware.main.TenantMainMiddleware')
             MIDDLEWARE.insert(tenant_index + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
         except ValueError:
-            # Último recurso: agregar al principio (después de debug middleware si existe)
-            MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+            MIDDLEWARE.insert(0, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 
 
@@ -271,7 +257,6 @@ CORS_ALLOWED_ORIGINS = [
 # Configuración adicional para archivos estáticos cross-origin
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
-CORS_PREFLIGHT_MAX_AGE = 86400
 
 # Configuración de cookies para subdominios
 CSRF_COOKIE_DOMAIN = f'.{TENANT_DOMAIN}'
