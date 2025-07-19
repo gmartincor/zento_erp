@@ -129,7 +129,7 @@ SESSION_COOKIE_AGE = 86400  # 24 horas
 
 # STATIC FILES SETTINGS
 # =============================================================================
-# Configuración robusta para archivos estáticos con Whitenoise
+# Configuración robusta para archivos estáticos con Whitenoise para multi-tenant
 
 # URL para archivos estáticos
 STATIC_URL = '/static/'
@@ -140,8 +140,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),  # Directorio donde está style.css
 ]
 
-# Configuración de storage con Whitenoise (versión más permisiva)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Configuración de storage con Whitenoise optimizada para multi-tenant
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Directorio donde se recolectan los archivos estáticos
 STATIC_ROOT = config('STATIC_ROOT', default=os.path.join(BASE_DIR, 'static_collected'))
@@ -152,18 +152,43 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',  # Busca en apps
 ]
 
-# Configuración adicional de Whitenoise para mejor rendimiento
-WHITENOISE_USE_FINDERS = True  # Permitir que Whitenoise use finders en desarrollo
+# Configuración especializada de Whitenoise para multi-tenant
+WHITENOISE_USE_FINDERS = False  # Desactivar en producción para mejor rendimiento
+WHITENOISE_AUTOREFRESH = False  # Desactivar en producción
 WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['js', 'css', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'gz', 'tgz', 'bz2', 'tbz', 'xz', 'br']
 WHITENOISE_MAX_AGE = 31536000  # 1 año cache para archivos estáticos
+WHITENOISE_INDEX_FILE = False  # Desactivar serving de index files
+WHITENOISE_ROOT = STATIC_ROOT  # Asegurar que Whitenoise use el directorio correcto
+WHITENOISE_MIMETYPES = {
+    '.js': 'application/javascript; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+}
+# Configuración crítica para multi-tenant: permitir que Whitenoise sirva archivos 
+# sin verificar el tenant en el host header
+WHITENOISE_STATIC_PREFIX = '/static/'
 
 # Media files
 MEDIA_ROOT = config('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
+MEDIA_URL = '/media/'
 
-# Add whitenoise middleware AFTER TenantMainMiddleware (critical for multi-tenant)
+# Configuración optimizada de Whitenoise para multi-tenant
+# CRÍTICO: Whitenoise debe estar ANTES de SecurityMiddleware para funcionar con subdominios
 if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
-    tenant_index = MIDDLEWARE.index('django_tenants.middleware.main.TenantMainMiddleware')
-    MIDDLEWARE.insert(tenant_index + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    # Buscar SecurityMiddleware e insertar Whitenoise ANTES
+    try:
+        security_index = MIDDLEWARE.index('django.middleware.security.SecurityMiddleware')
+        MIDDLEWARE.insert(security_index, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    except ValueError:
+        # Si no encuentra SecurityMiddleware, insertar después de TenantMainMiddleware
+        try:
+            tenant_index = MIDDLEWARE.index('django_tenants.middleware.main.TenantMainMiddleware')
+            MIDDLEWARE.insert(tenant_index + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+        except ValueError:
+            # Último recurso: agregar al principio (después de debug middleware si existe)
+            MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
+
 
 # Session configuration SIN Redis
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
@@ -239,7 +264,14 @@ TENANT_LIMIT_SET_CALLS = True  # Optimización para producción
 CORS_ALLOWED_ORIGINS = [
     f"https://{TENANT_DOMAIN}",
     f"https://*.{TENANT_DOMAIN}",
+    "https://zentoerp.com",
+    "https://*.zentoerp.com",
 ]
+
+# Configuración adicional para archivos estáticos cross-origin
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
+CORS_PREFLIGHT_MAX_AGE = 86400
 
 # Configuración de cookies para subdominios
 CSRF_COOKIE_DOMAIN = f'.{TENANT_DOMAIN}'

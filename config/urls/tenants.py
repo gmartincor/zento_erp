@@ -19,6 +19,12 @@ urlpatterns = [
     path('invoicing/', include('apps.invoicing.urls')),
 ]
 
+# Configuración de archivos estáticos y media
+# CRÍTICO: En producción con Whitenoise, no agregar static() URLs ya que Whitenoise las maneja
+# Solo agregar en desarrollo local
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+else:
+    # En producción, solo servir archivos media (Whitenoise maneja static)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
