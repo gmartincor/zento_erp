@@ -131,6 +131,9 @@ SESSION_COOKIE_AGE = 86400  # 24 horas
 # =============================================================================
 # Configuración robusta para archivos estáticos con Whitenoise
 
+# URL para archivos estáticos
+STATIC_URL = '/static/'
+
 # Directorios donde Django busca archivos estáticos antes de collectstatic
 # CRÍTICO: Debe incluir el directorio donde se genera style.css
 STATICFILES_DIRS = [
@@ -157,8 +160,10 @@ WHITENOISE_MAX_AGE = 31536000  # 1 año cache para archivos estáticos
 # Media files
 MEDIA_ROOT = config('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
 
-# Add whitenoise middleware
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+# Add whitenoise middleware AFTER TenantMainMiddleware (critical for multi-tenant)
+if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
+    tenant_index = MIDDLEWARE.index('django_tenants.middleware.main.TenantMainMiddleware')
+    MIDDLEWARE.insert(tenant_index + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 # Session configuration SIN Redis
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
