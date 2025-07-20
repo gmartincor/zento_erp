@@ -35,7 +35,7 @@
                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                     </div>
                     <div>
-                        <select name="category" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        <select name="category" class="category-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Todas las categorías</option>
                             {% for value, label in category_choices %}
                                 <option value="{{ value }}" {% if request.GET.category == value %}selected{% endif %}>{{ label }}</option>
@@ -43,7 +43,7 @@
                         </select>
                     </div>
                     <div>
-                        <select name="business_line" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        <select name="business_line" class="business-line-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Todas las líneas</option>
                             {% for line in business_lines %}
                                 <option value="{{ line.id }}" {% if request.GET.business_line == line.id|stringformat:"s" %}selected{% endif %}>{{ line.name }}</option>
@@ -51,7 +51,7 @@
                         </select>
                     </div>
                     <div>
-                        <select name="status" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        <select name="status" class="filter-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Todos los estados</option>
                             {% for value, label in status_choices %}
                                 <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>

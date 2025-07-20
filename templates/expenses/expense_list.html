@@ -65,13 +65,13 @@
         <div class="mt-4 lg:mt-0 flex flex-col sm:flex-row gap-3">
             <!-- Filtros temporales -->
             <form method="get" class="flex flex-col lg:flex-row lg:items-end gap-2" x-data="{ year: {{ current_year }}, month: {{ current_month|default:'null' }} }">
-                <select name="year" x-model="year" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
+                <select name="year" x-model="year" class="select-md px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
                     {% for year_option in available_years %}
                         <option value="{{ year_option }}" {% if year_option == current_year %}selected{% endif %}>{{ year_option }}</option>
                     {% endfor %}
                 </select>
                 
-                <select name="month" x-model="month" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
+                <select name="month" x-model="month" class="select-lg px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
                     <option value="">Todos los meses</option>
                     {% for month_num, month_name in available_months %}
                         <option value="{{ month_num }}" {% if month_num == current_month %}selected{% endif %}>{{ month_name }}</option>

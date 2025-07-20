@@ -18,7 +18,7 @@
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Días hasta vencimiento
                         </label>
-                        <select name="days" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        <select name="days" class="filter-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                             <option value="7" {% if days_filter == 7 %}selected{% endif %}>7 días</option>
                             <option value="15" {% if days_filter == 15 %}selected{% endif %}>15 días</option>
                             <option value="30" {% if days_filter == 30 %}selected{% endif %}>30 días</option>
@@ -29,7 +29,7 @@
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Categoría
                         </label>
-                        <select name="category" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        <select name="category" class="category-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Todas las categorías</option>
                             {% for value, label in category_choices %}
                                 <option value="{{ value }}" {% if category_filter == value %}selected{% endif %}>{{ label }}</option>

@@ -1,0 +1,52 @@
+/* Estilos mejorados para campos select - aplicación automática */
+select:not([class*="no-arrow"]) {
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%236b7280"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2rem !important;
+    min-width: 8rem;
+}
+
+/* Dark mode arrow automático */
+.dark select:not([class*="no-arrow"]) {
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%239ca3af"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>');
+}
+
+/* Estilos específicos para select con clases form-select */
+select.form-select {
+    min-width: 8rem;
+}
+
+/* Variantes de ancho mínimo específicas */
+.select-sm, select.select-sm { min-width: 5rem; }
+.select-md, select.select-md { min-width: 8rem; }
+.select-lg, select.select-lg { min-width: 12rem; }
+.select-xl, select.select-xl { min-width: 16rem; }
+
+/* Estilos específicos para filtros */
+.filter-select, select.filter-select {
+    min-width: 9rem;
+}
+
+.category-select, select.category-select {
+    min-width: 10rem;
+}
+
+.business-line-select, select.business-line-select {
+    min-width: 9rem;
+}
+
+.period-select, select.period-select {
+    min-width: 8rem;
+}
+
+/* Para casos específicos donde no queremos la flecha automática */
+.no-arrow {
+    background-image: none !important;
+    appearance: initial !important;
+    padding-right: 0.75rem !important;
+}

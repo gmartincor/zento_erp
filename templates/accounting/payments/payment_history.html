@@ -24,7 +24,7 @@
                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                 </div>
                 <div>
-                    <select name="period" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <select name="period" class="period-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                         {% for period_value, period_label in available_periods %}
                             <option value="{{ period_value }}" {% if period_value == selected_period %}selected{% endif %}>
                                 {{ period_label }}
@@ -33,7 +33,7 @@
                     </select>
                 </div>
                 <div>
-                    <select name="category" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                    <select name="category" class="category-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                         <option value="">Todas las categorías</option>
                         <option value="personal" {% if filters.category == 'personal' %}selected{% endif %}>Personal</option>
                         <option value="business" {% if filters.category == 'business' %}selected{% endif %}>Business</option>

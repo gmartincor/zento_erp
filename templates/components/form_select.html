@@ -1,0 +1,10 @@
+<select name="{{ name }}" 
+        class="px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white appearance-none bg-white bg-no-repeat bg-[position:right_8px_center] bg-[length:12px] {{ min_width|default:'min-w-40' }} {{ class_extra }}"
+        style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; fill=&quot;none&quot; viewBox=&quot;0 0 24 24&quot; stroke=&quot;%236b7280&quot;><path stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; stroke-width=&quot;2&quot; d=&quot;M19 9l-7 7-7-7&quot;/></svg>');">>
+    {% if placeholder %}
+        <option value="">{{ placeholder }}</option>
+    {% endif %}
+    {% for option_value, option_label in options %}
+        <option value="{{ option_value }}" {% if option_value == value %}selected{% endif %}>{{ option_label }}</option>
+    {% endfor %}
+</select>

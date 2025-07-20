@@ -12,7 +12,7 @@
             {% endif %}
             
             <div>
-                <select name="period" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                <select name="period" class="period-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                     {% for period_value, period_label in available_periods %}
                         <option value="{{ period_value }}" {% if period_value == period %}selected{% endif %}>
                             {{ period_label }}
@@ -23,7 +23,7 @@
             
             {% if business_lines_choices %}
             <div>
-                <select name="business_line" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                <select name="business_line" class="business-line-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Todas las líneas</option>
                     {% for line_id, line_name in business_lines_choices %}
                         <option value="{{ line_id }}" {% if line_id == selected_business_line %}selected{% endif %}>{{ line_name }}</option>
@@ -34,7 +34,7 @@
             
             {% if payment_methods %}
             <div>
-                <select name="payment_method" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                <select name="payment_method" class="filter-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Todos los métodos</option>
                     {% for method_code, method_name in payment_methods %}
                         <option value="{{ method_code }}" {% if method_code == selected_payment_method %}selected{% endif %}>{{ method_name }}</option>
