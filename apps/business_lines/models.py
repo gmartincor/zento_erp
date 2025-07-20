@@ -75,6 +75,13 @@ class BusinessLine(TimeStampedModel):
             raise ValueError("El nivel máximo permitido es 3")
         
         super().save(*args, **kwargs)
+        
+        self._update_descendants_levels()
+
+    def _update_descendants_levels(self):
+        BusinessLine.objects.filter(parent=self).update(level=self.level + 1)
+        for child in self.children.all():
+            child._update_descendants_levels()
 
     def _generate_unique_slug(self):
         base_slug = slugify(self.name)
@@ -130,7 +137,7 @@ class BusinessLine(TimeStampedModel):
             child._collect_descendant_ids(id_set)
 
     def update_active_status(self):
-        from apps.business_lines.services import BusinessLineService
+        from apps.business_lines.services.business_line_service import BusinessLineService
         BusinessLineService.update_business_line_status(self)
     
     def propagate_status_to_ancestors(self):

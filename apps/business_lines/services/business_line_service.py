@@ -1,4 +1,4 @@
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Max
 
 class BusinessLineService:
     
@@ -35,9 +35,13 @@ class BusinessLineService:
     def update_all_business_lines_status():
         from apps.business_lines.models import BusinessLine
         
-        leaf_lines = BusinessLine.objects.filter(
-            ~Exists(BusinessLine.objects.filter(parent=OuterRef('pk')))
-        )
+        # Actualizar desde el nivel más profundo hacia arriba
+        # Esto asegura que los padres se actualicen después de sus hijos
+        max_level = BusinessLine.objects.aggregate(
+            max_level=Max('level')
+        )['max_level'] or 0
         
-        for line in leaf_lines:
-            BusinessLineService.update_business_line_status(line)
+        for level in range(max_level, 0, -1):  # De mayor a menor nivel
+            lines_at_level = BusinessLine.objects.filter(level=level)
+            for line in lines_at_level:
+                BusinessLineService.update_business_line_status(line)
