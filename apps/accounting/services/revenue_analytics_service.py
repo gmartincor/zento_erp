@@ -263,8 +263,11 @@ class RevenueAnalyticsService(RevenueCalculationMixin):
         end_date: Optional[date] = None
     ) -> Dict[str, Any]:
         
+        # Obtener IDs de la línea y todos sus descendientes
+        line_descendant_ids = business_line.get_descendant_ids()
+        
         services_query = ClientService.objects.filter(
-            business_line=business_line,
+            business_line__id__in=line_descendant_ids,
             is_active=True
         )
         
