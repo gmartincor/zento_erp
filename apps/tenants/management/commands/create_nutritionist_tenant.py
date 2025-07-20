@@ -160,16 +160,16 @@ class Command(BaseCommand):
             self.stdout.write(f'   ⚠️ Error en migraciones: {str(e)}')
 
     def _create_tenant_user(self, tenant, username, email, password):
-        """Crea el usuario admin para el tenant"""
-        self.stdout.write('👤 Creando usuario admin...')
+        """Crea el usuario principal para el tenant (NO admin del sistema)"""
+        self.stdout.write('👤 Creando usuario principal del tenant...')
         
         with schema_context(tenant.schema_name):
             user = User.objects.create_user(
                 username=username,
                 email=email,
                 password=password,
-                is_staff=True,
-                is_superuser=True,
+                is_staff=False,  
+                is_superuser=False,  
                 tenant=tenant
             )
             self.stdout.write(f'   ✅ Usuario "{username}" creado')
