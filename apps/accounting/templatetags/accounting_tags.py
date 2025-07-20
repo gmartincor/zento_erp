@@ -1,7 +1,7 @@
+import re
 from django import template
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.safestring import mark_safe
 
 from apps.accounting.services.statistics_service import StatisticsService
@@ -240,16 +240,31 @@ def payment_status_badge(payment):
     )
 
 @register.simple_tag
-def currency_field(field, symbol="€"):
+def currency_field(field, symbol='€'):
     field_html = str(field)
     
-    currency_html = f'''
-    <div class="relative">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span class="text-gray-500 dark:text-gray-400 sm:text-sm">{symbol}</span>
-        </div>
-        {field_html}
-    </div>
-    '''
+    # Apply consistent styling to the field without currency symbol
+    if 'class="' in field_html:
+        field_html = re.sub(
+            r'class="[^"]*"',
+            'class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"',
+            field_html
+        )
+    else:
+        field_html = field_html.replace(
+            '>',
+            ' class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400">',
+            1
+        )
     
-    return mark_safe(currency_html)
+    # Force placeholder to use dot notation regardless of locale
+    if 'placeholder=' not in field_html:
+        field_html = field_html.replace('>', ' placeholder="0.00">', 1)
+    else:
+        field_html = re.sub(r'placeholder="[^"]*"', 'placeholder="0.00"', field_html)
+    
+    # Force value format to use dot notation
+    if 'value=' in field_html:
+        field_html = re.sub(r'value="([0-9]+),([0-9]+)"', r'value="\1.\2"', field_html)
+    
+    return mark_safe(field_html)

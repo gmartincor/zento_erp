@@ -46,7 +46,7 @@ class PaymentFieldsMixin:
                 'step': '0.01',
                 'placeholder': '0.00'
             }),
-            label="Importe"
+            label="Importe €"
         )
         
         apply_currency_field_styles(self.fields['amount'], base_input_class)

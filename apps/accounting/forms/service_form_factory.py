@@ -59,6 +59,13 @@ class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMi
             'business_line', 'category', 
             'price', 'start_date', 'admin_status', 'is_active', 'notes', 'remanentes'
         ]
+        widgets = {
+            'price': forms.NumberInput(attrs={
+                'step': '0.01',
+                'min': '0',
+                'placeholder': '0.00'
+            }),
+        }
     
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
@@ -68,6 +75,10 @@ class BaseClientServiceForm(ServiceFormMixin, ClientFieldsMixin, ServiceFieldsMi
         super().__init__(*args, **kwargs)
         self.setup_form_styles()
         self.setup_business_line_context(self.user, self.business_line, self.category)
+        
+        from apps.core.form_utils import apply_currency_field_styles
+        apply_currency_field_styles(self.fields['price'])
+        
         if self.source_service:
             self.setup_source_service_data()
         self._setup_period_fields()

@@ -31,7 +31,7 @@ class Company(TimeStampedModel):
     bank_name = models.CharField(max_length=100, verbose_name="Banco")
     iban = models.CharField(max_length=34, verbose_name="IBAN")
     mercantile_registry = models.CharField(max_length=200, blank=True, verbose_name="Registro Mercantil")
-    share_capital = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Capital social")
+    share_capital = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Capital social €")
     invoice_prefix = models.CharField(max_length=10, default="FN", verbose_name="Prefijo de factura")
     current_number = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     logo = models.ImageField(upload_to='company/logos/', blank=True, null=True)
@@ -141,7 +141,7 @@ class InvoiceItem(models.Model):
     unit_price = models.DecimalField(
         max_digits=10, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))],
-        verbose_name="Precio unitario"
+        verbose_name="Precio unitario €"
     )
     vat_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=21.00,

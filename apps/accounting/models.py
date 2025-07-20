@@ -122,7 +122,7 @@ class ClientService(TimeStampedModel):
         max_digits=10,
         decimal_places=2,
         default=0.00,
-        verbose_name="Precio base"
+        verbose_name="Precio base €"
     )
     
     start_date = models.DateField(
@@ -362,7 +362,7 @@ class ServicePayment(TimeStampedModel):
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name="Monto",
+        verbose_name="Importe €",
         help_text="Monto del pago (opcional para períodos sin pago)"
     )
     
@@ -414,8 +414,8 @@ class ServicePayment(TimeStampedModel):
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name="Remanente",
-        help_text="Cantidad de remanente aplicado (positivo o negativo)"
+        verbose_name="Remanente €",
+        help_text="Valor positivo o negativo a aplicar al período"
     )
     
     refunded_amount = models.DecimalField(
