@@ -46,7 +46,8 @@ window.dashboardUtils = {
                 this.classList.add('bg-blue-500', 'text-white');
                 
                 const period = this.dataset.period;
-                updateFunction(period);
+                const level = document.getElementById(`${chartType}-level-filter`)?.value || null;
+                updateFunction(period, level);
             });
         });
     }

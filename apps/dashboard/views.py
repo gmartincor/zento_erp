@@ -27,8 +27,14 @@ def dashboard_home(request):
 def get_filtered_business_lines(request):
     start_date = parse_date(request.GET.get('start_date')) if request.GET.get('start_date') else None
     end_date = parse_date(request.GET.get('end_date')) if request.GET.get('end_date') else None
+    level = request.GET.get('level')
     
-    business_lines = DashboardDataService.get_business_lines_data(user=request.user, start_date=start_date, end_date=end_date)
+    business_lines = DashboardDataService.get_business_lines_data(
+        user=request.user, 
+        start_date=start_date, 
+        end_date=end_date,
+        level=int(level) if level else None
+    )
     
     return JsonResponse({
         'business_lines_data': [

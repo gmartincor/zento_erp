@@ -189,11 +189,19 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Ingresos por Línea de Negocio</h3>
-                <div class="flex space-x-2 text-sm">
-                    <button class="filter-btn px-3 py-1 rounded bg-blue-500 text-white" data-chart="business-lines" data-period="30">30d</button>
-                    <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="business-lines" data-period="90">90d</button>
-                    <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="business-lines" data-period="365">1a</button>
-                    <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="business-lines" data-period="all">Todo</button>
+                <div class="flex space-x-2 items-center">
+                    <select id="business-lines-level-filter" class="px-2 py-1 text-sm border border-gray-300 rounded">
+                        <option value="">Todos los niveles</option>
+                        <option value="1">Nivel 1</option>
+                        <option value="2">Nivel 2</option>
+                        <option value="3">Nivel 3</option>
+                    </select>
+                    <div class="flex space-x-2 text-sm">
+                        <button class="filter-btn px-3 py-1 rounded bg-blue-500 text-white" data-chart="business-lines" data-period="30">30d</button>
+                        <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="business-lines" data-period="90">90d</button>
+                        <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="business-lines" data-period="365">1a</button>
+                        <button class="filter-btn px-3 py-1 rounded bg-gray-300 text-gray-700" data-chart="business-lines" data-period="all">Todo</button>
+                    </div>
                 </div>
             </div>
             <div class="h-80" id="business-lines-chart">

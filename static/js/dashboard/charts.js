@@ -197,8 +197,43 @@ window.dashboardCharts = {
             console.log('Filtering expenses by period:', period);
         });
 
-        window.dashboardUtils.setupFilterButtons('business-lines', (period) => {
-            console.log('Filtering business lines by period:', period);
+        window.dashboardUtils.setupFilterButtons('business-lines', (period, level) => {
+            this.fetchBusinessLinesData(period, level);
         });
+        
+        const levelFilter = document.getElementById('business-lines-level-filter');
+        if (levelFilter && !levelFilter.hasAttribute('data-initialized')) {
+            levelFilter.setAttribute('data-initialized', 'true');
+            levelFilter.addEventListener('change', () => {
+                const activeButton = document.querySelector('[data-chart="business-lines"].bg-blue-500');
+                const period = activeButton ? activeButton.dataset.period : '30';
+                this.fetchBusinessLinesData(period, levelFilter.value || null);
+            });
+        }
+    },
+
+    fetchBusinessLinesData: function(period, level) {
+        const params = new URLSearchParams();
+        if (period && period !== 'all') {
+            const days = { '30': 30, '90': 90, '365': 365 }[period];
+            if (days) {
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setDate(endDate.getDate() - days);
+                params.append('start_date', startDate.toISOString().split('T')[0]);
+                params.append('end_date', endDate.toISOString().split('T')[0]);
+            }
+        }
+        if (level) {
+            params.append('level', level);
+        }
+
+        fetch(`/dashboard/api/business-lines/?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                this.data.business_lines_data = data.business_lines_data;
+                this.createBusinessLinesChart();
+            })
+            .catch(error => console.error('Error fetching business lines data:', error));
     }
 };

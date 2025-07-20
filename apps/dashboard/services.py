@@ -125,12 +125,15 @@ class DashboardDataService:
         return months[-12:]
     
     @classmethod
-    def get_business_lines_data(cls, user=None, start_date=None, end_date=None):
+    def get_business_lines_data(cls, user=None, start_date=None, end_date=None, level=None):
         if user:
             business_line_service = BusinessLineService()
             accessible_lines = business_line_service.get_accessible_lines(user).filter(is_active=True)
         else:
             accessible_lines = BusinessLine.objects.filter(is_active=True)
+        
+        if level:
+            accessible_lines = accessible_lines.filter(level=level)
         
         business_lines = []
         
