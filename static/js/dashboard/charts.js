@@ -28,21 +28,24 @@ window.dashboardCharts = {
                         data: data.map(d => window.dashboardUtils.parseFloatSafe(d.ingresos)),
                         borderColor: window.dashboardConfig.colors.success,
                         backgroundColor: window.dashboardConfig.colors.success + '20',
-                        tension: 0.4
+                        tension: 0.4,
+                        fill: true
                     },
                     {
                         label: 'Gastos',
                         data: data.map(d => window.dashboardUtils.parseFloatSafe(d.gastos)),
                         borderColor: window.dashboardConfig.colors.danger,
                         backgroundColor: window.dashboardConfig.colors.danger + '20',
-                        tension: 0.4
+                        tension: 0.4,
+                        fill: true
                     },
                     {
                         label: 'Beneficio',
                         data: data.map(d => window.dashboardUtils.parseFloatSafe(d.beneficio)),
                         borderColor: window.dashboardConfig.colors.primary,
                         backgroundColor: window.dashboardConfig.colors.primary + '20',
-                        tension: 0.4
+                        tension: 0.4,
+                        fill: true
                     }
                 ]
             },
