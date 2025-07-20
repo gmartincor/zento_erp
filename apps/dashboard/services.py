@@ -24,8 +24,14 @@ class DashboardDataService:
     
     @classmethod
     def get_business_payments_queryset(cls):
+        active_lines = BusinessLine.objects.filter(is_active=True)
+        all_descendant_ids = set()
+        for line in active_lines:
+            all_descendant_ids.update(line.get_descendant_ids())
+        
         business_services = ClientService.objects.filter(
-            business_line__parent__isnull=False
+            business_line__id__in=all_descendant_ids,
+            category=cls.BUSINESS_CATEGORY
         )
         return ServicePayment.objects.filter(client_service__in=business_services)
     
@@ -129,8 +135,9 @@ class DashboardDataService:
         business_lines = []
         
         for bl in accessible_lines:
+            descendant_ids = bl.get_descendant_ids()
             servicios = ClientService.objects.filter(
-                business_line=bl,
+                business_line__id__in=descendant_ids,
                 category=ClientService.CategoryChoices.BUSINESS
             )
             pagos = ServicePayment.objects.filter(client_service__in=servicios)
