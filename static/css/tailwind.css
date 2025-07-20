@@ -17,4 +17,17 @@
   .dark select {
     background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%239ca3af"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>');
   }
+  
+  .checkbox-wrapper input[type="checkbox"] {
+    @apply w-4 h-4 rounded border-gray-300 dark:border-gray-600;
+    @apply bg-white dark:bg-gray-700;
+    @apply text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400;
+    @apply focus:ring-2 focus:ring-offset-0;
+    vertical-align: top;
+    margin-top: 0.125rem;
+  }
+  
+  .checkbox-wrapper input[type="checkbox"]:checked {
+    @apply bg-blue-600 border-blue-600;
+  }
 }

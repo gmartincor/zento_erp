@@ -143,8 +143,10 @@
         
         <div class="flex items-start space-x-6">
             <div class="flex items-center">
-                {{ form.is_active }}
-                <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                <div class="checkbox-wrapper">
+                    {{ form.is_active }}
+                </div>
+                <label for="{{ form.is_active.id_for_label }}" class="ml-3 text-sm text-gray-700 dark:text-gray-300">
                     {{ form.is_active.label }}
                 </label>
             </div>
