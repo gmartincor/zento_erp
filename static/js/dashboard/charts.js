@@ -54,13 +54,22 @@ window.dashboardCharts = {
                 plugins: {
                     ...window.dashboardConfig.chartDefaults.plugins,
                     tooltip: {
+                        mode: 'index',
+                        intersect: false,
                         callbacks: {
+                            title: function(context) {
+                                return context[0].label;
+                            },
                             label: function(context) {
                                 return context.dataset.label + ': ' + 
                                        window.dashboardUtils.formatCurrency(context.parsed.y);
                             }
                         }
                     }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
                 }
             }
         });
@@ -85,7 +94,8 @@ window.dashboardCharts = {
                 }]
             },
             options: {
-                ...window.dashboardConfig.chartDefaults,
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     ...window.dashboardConfig.chartDefaults.plugins,
                     tooltip: {
@@ -163,7 +173,8 @@ window.dashboardCharts = {
                 }]
             },
             options: {
-                ...window.dashboardConfig.chartDefaults,
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     ...window.dashboardConfig.chartDefaults.plugins,
                     tooltip: {
