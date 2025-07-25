@@ -147,23 +147,36 @@ class ClientServiceCreateForm(BaseClientServiceForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_client_fields()
-    
+
     def clean(self):
         cleaned_data = super().clean()
+        # Normalize DNI for consistent lookup
+        dni = cleaned_data.get('client_dni', '').strip().upper()
+        if dni:
+            # Check for existing client (not deleted)
+            existing_client = Client.objects.filter(dni=dni, is_deleted=False).first()
+            if existing_client:
+                # Reuse existing client, update fields if needed
+                cleaned_data['client_instance'] = existing_client
+            # If not found, will be created in transaction manager
         self.validate_client_data(cleaned_data)
         self.validate_service_data(cleaned_data)
         self.validate_service_business_rules(cleaned_data)
         return cleaned_data
-    
+
     def save(self, commit=True):
         if not commit:
             return super().save(commit=False)
-        
+
         from apps.accounting.services.client_service_transaction import ClientServiceTransactionManager
-        
+
+        # Pass client_instance if found, else rely on transaction manager to create
+        form_data = self.cleaned_data.copy()
+        if 'client_instance' in form_data:
+            form_data['client_dni'] = form_data['client_instance'].dni
         return ClientServiceTransactionManager.create_client_service(
-            self.cleaned_data, 
-            self.business_line, 
+            form_data,
+            self.business_line,
             self.category
         )
 
@@ -195,28 +208,20 @@ class ClientServiceUpdateForm(BaseClientServiceForm):
         if not commit:
             return super().save(commit=False)
         
-        # Usar ClientServiceTransactionManager para actualizar cliente y servicio conjuntamente
         from apps.accounting.services.client_service_transaction import ClientServiceTransactionManager
         
-        # Extraer datos tanto del cliente como del servicio desde el formulario
         form_data = self.cleaned_data.copy()
         
-        # Agregar campos adicionales si están presentes en el formulario
         for field_name, field_value in self.cleaned_data.items():
             if field_name.startswith('client_'):
                 form_data[field_name] = field_value
             elif field_name in ['price', 'start_date', 'end_date', 'admin_status', 'is_active', 'notes', 'remanentes']:
                 form_data[field_name] = field_value
         
-        # Actualizar usando el manager de transacciones
         return ClientServiceTransactionManager.update_client_service(self.instance, form_data)
 
 
 class ServiceRenewalForm(BaseClientServiceForm):
-    """
-    Formulario simplificado para renovación de servicios.
-    La lógica de renovación se maneja en service_manager.py
-    """
     
     def __init__(self, *args, **kwargs):
         self.original_service = kwargs.pop('original_service', None)
@@ -225,7 +230,6 @@ class ServiceRenewalForm(BaseClientServiceForm):
             self._prefill_from_original()
     
     def _prefill_from_original(self):
-        """Prefilla el formulario con datos del servicio original"""
         if self.original_service:
             self.fields['price'].initial = self.original_service.price
             self.fields['business_line'].initial = self.original_service.business_line
@@ -237,10 +241,6 @@ class ServiceRenewalForm(BaseClientServiceForm):
         return cleaned_data
     
     def save(self, commit=True):
-        """
-        Guarda el nuevo servicio usando el ServiceManager.
-        La lógica de renovación está centralizada en service_manager.py
-        """
         if not commit:
             return super().save(commit=False)
         

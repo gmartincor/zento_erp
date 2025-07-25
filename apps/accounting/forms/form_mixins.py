@@ -156,11 +156,11 @@ class ClientFieldsMixin:
             errors['client_email'] = 'Formato de email inválido'
         
         if existing_client:
-            if Client.objects.filter(dni=client_dni).exclude(pk=existing_client.pk).exists():
-                errors['client_dni'] = f'Ya existe otro cliente con el DNI {client_dni}'
+            pass
         else:
-            if Client.objects.filter(dni=client_dni, is_deleted=False).exists():
-                errors['client_dni'] = f'Ya existe un cliente con DNI {client_dni}'
+            existing = Client.objects.filter(dni=client_dni, is_deleted=False).first()
+            if existing:
+                cleaned_data['client_instance'] = existing
         
         if errors:
             raise ValidationError(errors)
