@@ -87,7 +87,8 @@
                 <div>
                     <span class="text-gray-600 dark:text-gray-400">Activo hasta:</span>
                     <div class="font-medium text-gray-900 dark:text-white">
-                        {{ service.end_date|date:"d/m/Y"|default:"Sin definir" }}
+                        {% service_effective_end_date service as effective_date %}
+                        {{ effective_date|date:"d/m/Y"|default:"Sin definir" }}
                     </div>
                 </div>
             </div>
@@ -128,7 +129,7 @@
                        class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
                         Editar
                     </a>
-                    {% if service|service_is_active %}
+                    {% if service|service_can_terminate %}
                     <a href="{% get_service_termination_url service %}"
                        class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium">
                         Finalizar

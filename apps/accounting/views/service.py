@@ -180,8 +180,7 @@ class ServiceEditView(BaseServiceView, UpdateView):
     def get_object(self):
         service = get_object_or_404(
             ClientService.objects.select_related('client', 'business_line'),
-            id=self.kwargs['service_id'],
-            is_active=True
+            id=self.kwargs['service_id']
         )
         
         self.check_business_line_permission(service.business_line)

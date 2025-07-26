@@ -15,18 +15,22 @@ class ServiceTerminationManager:
                          reason: Optional[str] = None) -> ClientService:
         if not service.is_active:
             raise ValidationError("El servicio ya está inactivo")
-        
-        termination_date = termination_date or timezone.now().date()
+            
         today = timezone.now().date()
+        if service.end_date and service.end_date < today:
+            raise ValidationError("El servicio ya ha sido finalizado anteriormente")
+        
+        termination_date = termination_date or today
         
         ServiceTerminationManager.validate_termination_date(service, termination_date)
         ServiceTerminationManager._delete_affected_periods(service, termination_date)
+        ServiceTerminationManager._adjust_active_period(service, termination_date)
+        ServiceTerminationManager._final_cleanup(service, termination_date)
         
         service.end_date = termination_date
         
         if termination_date <= today:
             service.is_active = False
-        
         if reason:
             current_notes = service.notes or ""
             termination_note = f"Servicio finalizado el {termination_date.strftime('%d/%m/%Y')}"
@@ -39,8 +43,23 @@ class ServiceTerminationManager:
         return service
     
     @staticmethod
+    def _adjust_active_period(service: ClientService, termination_date: date) -> None:
+        adjustable_periods = ServiceTerminationManager._get_adjustable_periods(service, termination_date)
+        
+        for period in adjustable_periods:
+            period.period_end = termination_date
+            period.save(update_fields=['period_end', 'modified'])
+
+    @staticmethod
     def can_terminate_service(service: ClientService) -> bool:
-        return service.is_active
+        if not service.is_active:
+            return False
+            
+        today = timezone.now().date()
+        if service.end_date and service.end_date < today:
+            return False
+            
+        return True
     
     @staticmethod
     def get_termination_date_limits(service: ClientService) -> dict:
@@ -94,33 +113,40 @@ class ServiceTerminationManager:
     
     @staticmethod
     def _get_deletable_periods(service: ClientService, termination_date: date):
+        return service.payments.filter(period_start__gt=termination_date)
+    
+    @staticmethod
+    def _get_adjustable_periods(service: ClientService, termination_date: date):
         return service.payments.filter(
-            period_start__gt=termination_date,
-            status__in=[
-                ServicePayment.StatusChoices.AWAITING_START,
-                ServicePayment.StatusChoices.UNPAID_ACTIVE,
-                ServicePayment.StatusChoices.OVERDUE
-            ]
+            period_start__lte=termination_date,
+            period_end__gt=termination_date
         )
     
     @staticmethod
     def _delete_affected_periods(service: ClientService, termination_date: date) -> None:
         future_periods = ServiceTerminationManager._get_deletable_periods(service, termination_date)
         future_periods.delete()
-
+    
+    @staticmethod
+    def _final_cleanup(service: ClientService, termination_date: date) -> None:
+        remaining_future_periods = service.payments.filter(period_end__gt=termination_date)
+        if remaining_future_periods.exists():
+            for period in remaining_future_periods:
+                if period.period_start > termination_date:
+                    period.delete()
+                else:
+                    period.period_end = termination_date
+                    period.save(update_fields=['period_end', 'modified'])
+    
     @staticmethod
     def get_affected_payments_info(service: ClientService, termination_date: date) -> dict:
         future_periods = ServiceTerminationManager._get_deletable_periods(service, termination_date)
-        
-        partial_periods = service.payments.filter(
-            period_start__lte=termination_date,
-            period_end__gt=termination_date,
-            status=ServicePayment.StatusChoices.PAID
-        )
+        adjustable_periods = ServiceTerminationManager._get_adjustable_periods(service, termination_date)
         
         return {
             'future_periods': future_periods,
-            'partial_periods': partial_periods,
+            'adjustable_periods': adjustable_periods,
             'future_count': future_periods.count(),
-            'partial_count': partial_periods.count()
+            'adjustable_count': adjustable_periods.count(),
+            'total_affected': future_periods.count() + adjustable_periods.count()
         }
