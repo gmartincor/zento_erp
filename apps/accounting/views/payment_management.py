@@ -50,9 +50,8 @@ class PaymentManagementView(LoginRequiredMixin, BusinessLinePermissionMixin, Lis
         context = super().get_context_data(**kwargs)
         accessible_lines = self.get_allowed_business_lines()
         
-        total_payments = ServicePayment.objects.filter(
-            client_service__business_line__in=accessible_lines
-        ).aggregate(
+        filtered_queryset = self.get_queryset()
+        total_payments = filtered_queryset.aggregate(
             total=RevenueCalculationMixin.get_net_revenue_aggregation(),
             count=Count('id')
         )

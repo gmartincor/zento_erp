@@ -98,14 +98,40 @@ def service_is_active(service):
 
 
 @register.filter
+def service_can_terminate(service):
+    from ..services.service_termination_manager import ServiceTerminationManager
+    return ServiceTerminationManager.can_terminate_service(service)
+
+
+@register.filter
 def service_is_expired(service):
     return ServiceStateManager.is_service_expired(service)
+
+
+@register.simple_tag 
+def service_effective_end_date(service):
+    if service.end_date:
+        return service.end_date
+    
+    last_paid_period = service.payments.filter(status='PAID').order_by('-period_end').first()
+    if last_paid_period:
+        return last_paid_period.period_end
+    
+    last_pending_period = service.payments.filter(
+        status__in=['AWAITING_START', 'UNPAID_ACTIVE']
+    ).order_by('-period_end').first()
+    if last_pending_period:
+        return last_pending_period.period_end
+    
+    return None
 
 
 @register.simple_tag 
 def service_vigency_info(service):
     last_paid_period = service.payments.filter(status='PAID').order_by('-period_end').first()
     paid_end_date = last_paid_period.period_end if last_paid_period else None
+    
+    effective_end_date = service_effective_end_date(service)
     
     has_discrepancy = False
     discrepancy_type = None
@@ -120,6 +146,7 @@ def service_vigency_info(service):
     return {
         'end_date': service.end_date,
         'paid_end_date': paid_end_date,
+        'effective_end_date': effective_end_date,
         'has_paid_periods': paid_end_date is not None,
         'has_discrepancy': has_discrepancy,
         'discrepancy_type': discrepancy_type,

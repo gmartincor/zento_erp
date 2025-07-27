@@ -1,6 +1,6 @@
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Historial del Servicio</h3>
-{% load tenant_tags %}
+{% load tenant_tags service_status_tags %}
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -39,7 +39,8 @@
         <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <span class="text-gray-600 dark:text-gray-400">Activo hasta:</span>
             <span class="font-medium text-gray-900 dark:text-white ml-1">
-                {{ service.end_date|date:"d/m/Y" }}
+                {% service_effective_end_date service as effective_date %}
+                {{ effective_date|date:"d/m/Y" }}
             </span>
         </div>
         {% endif %}
