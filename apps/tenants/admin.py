@@ -7,6 +7,7 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.admin import AdminSite
+from django.db import connection
 from apps.core.constants import TENANT_SUCCESS_MESSAGES
 from apps.authentication.models import User
 from .models import Tenant, Domain
@@ -118,12 +119,9 @@ class TenantAdmin(admin.ModelAdmin):
                 }),
             )
     
-    def get_queryset(self, request):
-        return Tenant.all_objects.all()
-    
     def user_info(self, obj):
-        """Muestra información del usuario asociado"""
         try:
+            connection.set_schema_to_public()
             user = User.objects.filter(tenant=obj).first()
             if user:
                 return format_html(
@@ -140,8 +138,8 @@ class TenantAdmin(admin.ModelAdmin):
     user_info.short_description = 'Usuario'
     
     def domain_info(self, obj):
-        """Muestra información del dominio principal"""
         try:
+            connection.set_schema_to_public()
             domain = Domain.objects.filter(tenant=obj, is_primary=True).first()
             if domain:
                 return format_html(
@@ -160,16 +158,17 @@ class TenantAdmin(admin.ModelAdmin):
     actions = ['activate_tenants', 'suspend_tenants', 'restore_tenants']
     
     def save_model(self, request, obj, form, change):
-        if not change:  # Solo para creación
-            # El formulario ya maneja la creación completa
+        connection.set_schema_to_public()
+        
+        if not change:
             tenant = form.save()
-            # Asignar el tenant creado al obj para que el admin sepa que se creó
             for field in tenant._meta.fields:
                 setattr(obj, field.name, getattr(tenant, field.name))
         else:
             super().save_model(request, obj, form, change)
     
     def get_queryset(self, request):
+        connection.set_schema_to_public()
         return Tenant.all_objects.all()
     
     def status_badge(self, obj):
@@ -234,6 +233,7 @@ class TenantAdmin(admin.ModelAdmin):
     tenant_stats.short_description = 'Estadísticas'
     
     def activate_tenants(self, request, queryset):
+        connection.set_schema_to_public()
         count = 0
         for tenant in queryset:
             try:
@@ -250,6 +250,7 @@ class TenantAdmin(admin.ModelAdmin):
     activate_tenants.short_description = "Activar tenants seleccionados"
     
     def suspend_tenants(self, request, queryset):
+        connection.set_schema_to_public()
         count = 0
         for tenant in queryset:
             try:
@@ -266,6 +267,7 @@ class TenantAdmin(admin.ModelAdmin):
     suspend_tenants.short_description = "Suspender tenants seleccionados"
     
     def restore_tenants(self, request, queryset):
+        connection.set_schema_to_public()
         count = 0
         for tenant in queryset.filter(is_deleted=True):
             try:
