@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
-from django.db import transaction
+from django.db import transaction, connection
 from django_tenants.utils import schema_context
 from apps.tenants.models import Tenant, Domain
 from apps.authentication.models import User
@@ -11,6 +11,7 @@ class TenantCreationService:
     
     @staticmethod
     def validate_schema_name(schema_name):
+        connection.set_schema_to_public()
         schema_name = schema_name.lower().strip()
         
         if not re.match(r'^[a-z][a-z0-9_]*$', schema_name):
@@ -23,6 +24,7 @@ class TenantCreationService:
     
     @staticmethod
     def validate_domain_name(domain_name):
+        connection.set_schema_to_public()
         domain_name = domain_name.lower().strip()
         
         if not re.match(r'^[a-z0-9.-]+\.(zentoerp\.com|localhost)$', domain_name):
@@ -35,6 +37,7 @@ class TenantCreationService:
     
     @staticmethod
     def validate_email(email):
+        connection.set_schema_to_public()
         email = email.lower().strip()
         
         if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
@@ -47,6 +50,7 @@ class TenantCreationService:
     
     @staticmethod
     def validate_username(username):
+        connection.set_schema_to_public()
         username = username.strip()
         
         if User.objects.filter(username=username).exists():
@@ -56,6 +60,8 @@ class TenantCreationService:
     
     @staticmethod
     def create_complete_tenant(schema_name, tenant_name, email, phone, notes, domain_name, username, password):
+        connection.set_schema_to_public()
+        
         with transaction.atomic():
             tenant = Tenant.objects.create(
                 schema_name=schema_name,
