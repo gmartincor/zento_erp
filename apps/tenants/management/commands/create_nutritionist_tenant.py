@@ -6,123 +6,195 @@ from django_tenants.utils import schema_context
 from apps.tenants.models import Tenant, Domain
 from apps.authentication.models import User
 import re
+import getpass
 
 
 class Command(BaseCommand):
     help = 'Crea un nuevo tenant completo con dominio, usuario y configuración'
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            'schema_name',
-            type=str,
-            help='Nombre del schema del tenant (ej: carlos, maria-nutricion)'
-        )
-        parser.add_argument(
-            'domain_name',
-            type=str,
-            help='Nombre del dominio (ej: carlos.zentoerp.com, maria.zentoerp.com)'
-        )
-        parser.add_argument(
-            'tenant_name',
-            type=str,
-            help='Nombre del tenant (ej: Carlos Nutricionista, María Pérez)'
-        )
-        parser.add_argument(
-            'tenant_email',
-            type=str,
-            help='Email del tenant (ej: carlos@ejemplo.com)'
-        )
-        parser.add_argument(
-            '--username',
-            type=str,
-            help='Username para el usuario admin del tenant (default: usar schema_name)'
-        )
-        parser.add_argument(
-            '--password',
-            type=str,
-            default='changeme123',
-            help='Password inicial (default: changeme123)'
-        )
-        parser.add_argument(
-            '--phone',
-            type=str,
-            default='',
-            help='Teléfono del tenant'
-        )
-        parser.add_argument(
-            '--notes',
-            type=str,
-            default='',
-            help='Notas adicionales del tenant'
-        )
+        pass
 
     def handle(self, *args, **options):
-        schema_name = options['schema_name']
-        domain_name = options['domain_name']
-        tenant_name = options['tenant_name']
-        tenant_email = options['tenant_email']
-        username = options.get('username') or schema_name
-        password = options['password']
-        phone = options['phone']
-        notes = options['notes']
+        # Comando completamente interactivo
+        self._run_interactive_mode()
 
-        # Validaciones
-        if not self._validate_inputs(schema_name, domain_name, tenant_email, username):
-            return
-
+    def _run_interactive_mode(self):
+        """Ejecuta el comando en modo interactivo"""
+        self.stdout.write(self.style.SUCCESS('🏥 CRM NUTRICIÓN PRO - CREACIÓN INTERACTIVA DE TENANT'))
+        self.stdout.write('=' * 60)
+        
         try:
-            with transaction.atomic():
-                self.stdout.write('🚀 Creando tenant completo...')
-                
-                # 1. Crear tenant
-                tenant = self._create_tenant(schema_name, tenant_name, tenant_email, phone, notes)
-                
-                # 2. Crear dominio
-                domain = self._create_domain(domain_name, tenant)
-                
-                # 3. Aplicar migraciones al nuevo schema
-                self._migrate_tenant_schema(tenant)
-                
-                # 4. Crear usuario admin para el tenant
-                user = self._create_tenant_user(tenant, username, tenant_email, password)
-                
-                # 5. Mostrar resumen
-                self._show_success_summary(tenant, domain, user, password)
-
+            self.stdout.write('')
+            self.stdout.write('📝 Ingresa los datos del nuevo tenant:')
+            self.stdout.write('')
+            
+            # Obtener datos del tenant de forma interactiva
+            tenant_data = self._get_tenant_data_interactive()
+            
+            # Mostrar resumen y confirmar
+            self._show_tenant_summary(tenant_data)
+            if not self._confirm_creation():
+                self.stdout.write(self.style.WARNING('❌ Creación cancelada'))
+                return
+            
+            # Crear el tenant
+            self._create_tenant_with_data(tenant_data)
+            
+        except KeyboardInterrupt:
+            self.stdout.write('')
+            self.stdout.write(self.style.WARNING('❌ Operación cancelada por el usuario'))
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(f'❌ Error al crear tenant: {str(e)}')
             )
 
-    def _validate_inputs(self, schema_name, domain_name, email, username):
-        """Valida que los inputs sean correctos"""
-        errors = []
+
+
+    def _get_tenant_data_interactive(self):
+        """Obtiene los datos del tenant de forma interactiva"""
+        tenant_data = {}
         
-        # Validar schema_name
+        # Schema name
+        while True:
+            schema_name = input('🏷️  Schema name (ej: carlos, maria-nutricion): ').strip().lower()
+            if self._validate_schema_name(schema_name):
+                tenant_data['schema_name'] = schema_name
+                break
+            else:
+                self.stdout.write(self.style.ERROR('   ❌ Schema name inválido. Debe empezar con letra y solo contener letras minúsculas, números y guiones bajos'))
+        
+        # Domain name
+        while True:
+            domain_name = input('🌐 Dominio (ej: carlos.zentoerp.com): ').strip().lower()
+            if self._validate_domain_name(domain_name):
+                tenant_data['domain_name'] = domain_name
+                break
+            else:
+                self.stdout.write(self.style.ERROR('   ❌ Dominio inválido. Debe ser un subdominio de zentoerp.com'))
+        
+        # Tenant name
+        tenant_name = input('🏥 Nombre del tenant (ej: Carlos Nutricionista): ').strip()
+        tenant_data['tenant_name'] = tenant_name
+        
+        # Email
+        while True:
+            email = input('📧 Email del tenant: ').strip().lower()
+            if self._validate_email(email):
+                tenant_data['email'] = email
+                break
+            else:
+                self.stdout.write(self.style.ERROR('   ❌ Email inválido o ya existe'))
+        
+        # Username
+        username = input(f'👤 Username (default: {tenant_data["schema_name"]}): ').strip()
+        tenant_data['username'] = username if username else tenant_data["schema_name"]
+        
+        # Password
+        password = getpass.getpass('🔐 Password (default: changeme123): ')
+        tenant_data['password'] = password if password else 'changeme123'
+        
+        # Phone
+        phone = input('📞 Teléfono (opcional): ').strip()
+        tenant_data['phone'] = phone
+        
+        # Notes
+        notes = input('📝 Notas adicionales (opcional): ').strip()
+        tenant_data['notes'] = notes
+        
+        return tenant_data
+
+    def _validate_schema_name(self, schema_name):
+        """Valida el schema name"""
         if not re.match(r'^[a-z][a-z0-9_]*$', schema_name):
-            errors.append('Schema name debe empezar con letra y solo contener letras minúsculas, números y guiones bajos')
-        
-        if Tenant.objects.filter(schema_name=schema_name).exists():
-            errors.append(f'Ya existe un tenant con schema "{schema_name}"')
-        
-        # Validar domain_name
-        if not re.match(r'^[a-z0-9.-]+\.zentoerp\.com$', domain_name):
-            errors.append('El dominio debe ser un subdominio de zentoerp.com (ej: carlos.zentoerp.com)')
-        
-        if Domain.objects.filter(domain=domain_name).exists():
-            errors.append(f'Ya existe el dominio "{domain_name}"')
-        
-        # Validar email
-        if Tenant.objects.filter(email=email).exists():
-            errors.append(f'Ya existe un tenant con email "{email}"')
-        
-        if errors:
-            self.stdout.write(self.style.ERROR('❌ Errores de validación:'))
-            for error in errors:
-                self.stdout.write(f'   • {error}')
             return False
+        try:
+            return not Tenant.objects.filter(schema_name=schema_name).exists()
+        except:
+            return True  # Si no hay conexión, asumir que es válido
+
+    def _validate_domain_name(self, domain_name):
+        """Valida el domain name"""
+        if not re.match(r'^[a-z0-9.-]+\.zentoerp\.com$', domain_name):
+            return False
+        try:
+            return not Domain.objects.filter(domain=domain_name).exists()
+        except:
+            return True  # Si no hay conexión, asumir que es válido
+
+    def _validate_email(self, email):
+        """Valida el email"""
+        if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
+            return False
+        try:
+            return not Tenant.objects.filter(email=email).exists()
+        except:
+            return True  # Si no hay conexión, asumir que es válido
+
+    def _show_tenant_summary(self, tenant_data):
+        """Muestra un resumen de los datos del tenant"""
+        self.stdout.write('\n' + '=' * 60)
+        self.stdout.write(self.style.SUCCESS('📋 RESUMEN DEL TENANT A CREAR'))
+        self.stdout.write('=' * 60)
+        self.stdout.write(f'🏷️  Schema: {tenant_data["schema_name"]}')
+        self.stdout.write(f'🌐 Dominio: {tenant_data["domain_name"]}')
+        self.stdout.write(f'🏥 Nombre: {tenant_data["tenant_name"]}')
+        self.stdout.write(f'📧 Email: {tenant_data["email"]}')
+        self.stdout.write(f'👤 Username: {tenant_data["username"]}')
+        self.stdout.write(f'📞 Teléfono: {tenant_data["phone"] or "No especificado"}')
+        self.stdout.write(f'📝 Notas: {tenant_data["notes"] or "No especificado"}')
+        self.stdout.write('=' * 60)
+
+    def _confirm_creation(self):
+        """Confirma la creación del tenant"""
+        while True:
+            confirm = input('\n¿Proceder con la creación del tenant? (y/N): ').strip().lower()
+            if confirm in ['y', 'yes', 's', 'si']:
+                return True
+            elif confirm in ['n', 'no', '']:
+                return False
+            else:
+                self.stdout.write('   Por favor responde "y" para sí o "n" para no')
+
+    def _create_tenant_with_data(self, tenant_data):
+        """Crea el tenant con los datos proporcionados"""
+        self.stdout.write('\n🚀 Iniciando creación del tenant...')
         
-        return True
+        try:
+            with transaction.atomic():
+                # 1. Crear tenant
+                tenant = self._create_tenant(
+                    tenant_data['schema_name'],
+                    tenant_data['tenant_name'],
+                    tenant_data['email'],
+                    tenant_data['phone'],
+                    tenant_data['notes']
+                )
+                
+                # 2. Crear dominio
+                domain = self._create_domain(tenant_data['domain_name'], tenant)
+                
+                # 3. Aplicar migraciones al nuevo schema
+                self._migrate_tenant_schema(tenant)
+                
+                # 4. Crear usuario admin para el tenant
+                user = self._create_tenant_user(
+                    tenant,
+                    tenant_data['username'],
+                    tenant_data['email'],
+                    tenant_data['password']
+                )
+                
+                # 5. Mostrar resumen de éxito
+                self._show_success_summary(tenant, domain, user, tenant_data['password'])
+                
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f'❌ Error durante la creación: {str(e)}')
+            )
+            raise
+
+
 
     def _create_tenant(self, schema_name, tenant_name, tenant_email, phone, notes):
         """Crea el tenant"""

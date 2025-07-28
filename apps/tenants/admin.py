@@ -43,7 +43,12 @@ class TenantCreationForm(forms.ModelForm):
     create_domain = forms.BooleanField(
         initial=True,
         required=False,
-        help_text="Crear dominio automáticamente para desarrollo"
+        help_text="Crear dominio automáticamente"
+    )
+    domain_name = forms.CharField(
+        max_length=253,
+        required=False,
+        help_text="Nombre del dominio (ej: carlos.zentoerp.com). Si se deja vacío, se generará automáticamente."
     )
     
     class Meta:
@@ -82,14 +87,20 @@ class TenantCreationForm(forms.ModelForm):
             
             # Crear dominio si se solicita
             if self.cleaned_data.get('create_domain', True):
-                is_development = settings.DEBUG
+                # Usar dominio personalizado o generar uno automáticamente
+                custom_domain = self.cleaned_data.get('domain_name', '').strip()
                 
-                if is_development:
-                    domain_name = f"{tenant.schema_name}.localhost"
+                if custom_domain:
+                    domain_name = custom_domain
                 else:
-                    # En producción, usar un dominio genérico
-                    # El administrador deberá configurar el dominio real después
-                    domain_name = f"{tenant.schema_name}.ejemplo.com"
+                    # Generar dominio automáticamente según el entorno
+                    is_development = settings.DEBUG
+                    
+                    if is_development:
+                        domain_name = f"{tenant.schema_name}.localhost"
+                    else:
+                        # En producción, usar zentoerp.com
+                        domain_name = f"{tenant.schema_name}.zentoerp.com"
                 
                 Domain.objects.get_or_create(
                     domain=domain_name,
@@ -174,6 +185,28 @@ class TenantAdmin(admin.ModelAdmin):
         else:  # Editando tenant existente
             kwargs['form'] = TenantUpdateForm
         return super().get_form(request, obj, **kwargs)
+    
+    def get_fieldsets(self, request, obj=None):
+        """Usar fieldsets diferentes para creación y edición"""
+        if obj is None:  # Creando nuevo tenant
+            return (
+                ('Información del Nutricionista', {
+                    'fields': ('name', 'email', 'phone', 'professional_number', 'notes')
+                }),
+                ('Configuración de Usuario', {
+                    'fields': ('username', 'user_email', 'password', 'first_name', 'last_name'),
+                    'description': 'Datos para el usuario principal del tenant'
+                }),
+                ('Configuración de Dominio', {
+                    'fields': ('create_domain', 'domain_name'),
+                    'description': 'Configuración del dominio web'
+                }),
+                ('Estado', {
+                    'fields': ('status',)
+                }),
+            )
+        else:  # Editando tenant existente
+            return super().get_fieldsets(request, obj)
     
     def get_queryset(self, request):
         return Tenant.all_objects.all()
