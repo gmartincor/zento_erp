@@ -10,105 +10,8 @@ from django.contrib.admin import AdminSite
 from apps.core.constants import TENANT_SUCCESS_MESSAGES
 from apps.authentication.models import User
 from .models import Tenant, Domain
-from .forms import TenantUpdateForm, TenantStatusForm
+from .forms import TenantAdminCreationForm, TenantUpdateForm
 from .services import TenantService
-
-
-class TenantCreationForm(forms.ModelForm):
-    """Formulario para crear un tenant con su usuario asociado"""
-    
-    # Campos adicionales para el usuario
-    username = forms.CharField(
-        max_length=150,
-        help_text="Nombre de usuario para acceder al sistema"
-    )
-    user_email = forms.EmailField(
-        label="Email del usuario",
-        help_text="Email para el usuario (puede ser diferente al del tenant)"
-    )
-    password = forms.CharField(
-        widget=forms.PasswordInput,
-        help_text="Contraseña inicial para el usuario"
-    )
-    first_name = forms.CharField(
-        max_length=150,
-        required=False,
-        help_text="Nombre del usuario"
-    )
-    last_name = forms.CharField(
-        max_length=150,
-        required=False,
-        help_text="Apellidos del usuario"
-    )
-    create_domain = forms.BooleanField(
-        initial=True,
-        required=False,
-        help_text="Crear dominio automáticamente"
-    )
-    domain_name = forms.CharField(
-        max_length=253,
-        required=False,
-        help_text="Nombre del dominio (ej: carlos.zentoerp.com). Si se deja vacío, se generará automáticamente."
-    )
-    
-    class Meta:
-        model = Tenant
-        fields = ['name', 'email', 'phone', 'professional_number', 'notes']
-    
-    def save(self, commit=True):
-        tenant = super().save(commit=False)
-        
-        if commit:
-            # Generar schema_name automáticamente
-            import re
-            from django.conf import settings
-            
-            schema_base = re.sub(r'[^a-zA-Z0-9]', '', self.cleaned_data['username'].lower())
-            tenant.schema_name = f"tenant_{schema_base}"
-            
-            # Asegurar que el schema_name sea único
-            counter = 1
-            original_schema = tenant.schema_name
-            while Tenant.objects.filter(schema_name=tenant.schema_name).exists():
-                tenant.schema_name = f"{original_schema}_{counter}"
-                counter += 1
-            
-            tenant.save()
-            
-            # Crear usuario asociado
-            user = User.objects.create_user(
-                username=self.cleaned_data['username'],
-                email=self.cleaned_data['user_email'],
-                password=self.cleaned_data['password'],
-                first_name=self.cleaned_data['first_name'],
-                last_name=self.cleaned_data['last_name'],
-                tenant=tenant
-            )
-            
-            # Crear dominio si se solicita
-            if self.cleaned_data.get('create_domain', True):
-                # Usar dominio personalizado o generar uno automáticamente
-                custom_domain = self.cleaned_data.get('domain_name', '').strip()
-                
-                if custom_domain:
-                    domain_name = custom_domain
-                else:
-                    # Generar dominio automáticamente según el entorno
-                    is_development = settings.DEBUG
-                    
-                    if is_development:
-                        domain_name = f"{tenant.schema_name}.localhost"
-                    else:
-                        # En producción, usar zentoerp.com
-                        domain_name = f"{tenant.schema_name}.zentoerp.com"
-                
-                Domain.objects.get_or_create(
-                    domain=domain_name,
-                    tenant=tenant,
-                    defaults={'is_primary': True}
-                )
-        
-        return tenant
 
 
 @admin.register(Domain)
@@ -152,13 +55,11 @@ class TenantAdmin(admin.ModelAdmin):
     
     ordering = ['-created']
     
-    readonly_fields = [
-        'created',
-        'modified',
-        'deleted_at',
-        'schema_name',
-        'tenant_stats'
-    ]
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:  # Creación
+            return ['created', 'modified', 'deleted_at', 'tenant_stats']
+        else:  # Edición
+            return ['created', 'modified', 'deleted_at', 'schema_name', 'tenant_stats']
     
     fieldsets = (
         ('Información del Nutricionista', {
@@ -179,34 +80,43 @@ class TenantAdmin(admin.ModelAdmin):
     actions = ['activate_tenants', 'suspend_tenants', 'restore_tenants']
     
     def get_form(self, request, obj=None, **kwargs):
-        """Usar formulario especial para creación"""
-        if obj is None:  # Creando nuevo tenant
-            kwargs['form'] = TenantCreationForm
-        else:  # Editando tenant existente
+        if obj is None:
+            kwargs['form'] = TenantAdminCreationForm
+        else:
             kwargs['form'] = TenantUpdateForm
         return super().get_form(request, obj, **kwargs)
     
     def get_fieldsets(self, request, obj=None):
-        """Usar fieldsets diferentes para creación y edición"""
-        if obj is None:  # Creando nuevo tenant
+        if obj is None:
             return (
-                ('Información del Nutricionista', {
-                    'fields': ('name', 'email', 'phone', 'professional_number', 'notes')
+                ('Información del Tenant', {
+                    'fields': ('name', 'email', 'phone', 'notes')
                 }),
-                ('Configuración de Usuario', {
-                    'fields': ('username', 'user_email', 'password', 'first_name', 'last_name'),
-                    'description': 'Datos para el usuario principal del tenant'
+                ('Configuración Técnica', {
+                    'fields': ('schema_name', 'domain_name'),
+                    'description': 'Configuración técnica del tenant'
                 }),
-                ('Configuración de Dominio', {
-                    'fields': ('create_domain', 'domain_name'),
-                    'description': 'Configuración del dominio web'
-                }),
-                ('Estado', {
-                    'fields': ('status',)
+                ('Usuario Principal', {
+                    'fields': ('username', 'password'),
+                    'description': 'Credenciales del usuario principal del tenant'
                 }),
             )
-        else:  # Editando tenant existente
-            return super().get_fieldsets(request, obj)
+        else:
+            return (
+                ('Información del Nutricionista', {
+                    'fields': ('name', 'email', 'phone', 'professional_number')
+                }),
+                ('Configuración', {
+                    'fields': ('schema_name',)
+                }),
+                ('Estado y Control', {
+                    'fields': ('status', 'is_active', 'notes')
+                }),
+                ('Información del Sistema', {
+                    'fields': ('created', 'modified', 'is_deleted', 'deleted_at', 'tenant_stats'),
+                    'classes': ('collapse',)
+                }),
+            )
     
     def get_queryset(self, request):
         return Tenant.all_objects.all()
@@ -247,23 +157,17 @@ class TenantAdmin(admin.ModelAdmin):
             return 'Error'
     domain_info.short_description = 'Dominio'
     
-    fieldsets = (
-        ('Información del Nutricionista', {
-            'fields': ('name', 'email', 'phone', 'professional_number')
-        }),
-        ('Configuración', {
-            'fields': ('schema_name',)
-        }),
-        ('Estado y Control', {
-            'fields': ('status', 'is_active', 'notes')
-        }),
-        ('Información del Sistema', {
-            'fields': ('created', 'modified', 'is_deleted', 'deleted_at', 'tenant_stats'),
-            'classes': ('collapse',)
-        }),
-    )
-    
     actions = ['activate_tenants', 'suspend_tenants', 'restore_tenants']
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # Solo para creación
+            # El formulario ya maneja la creación completa
+            tenant = form.save()
+            # Asignar el tenant creado al obj para que el admin sepa que se creó
+            for field in tenant._meta.fields:
+                setattr(obj, field.name, getattr(tenant, field.name))
+        else:
+            super().save_model(request, obj, form, change)
     
     def get_queryset(self, request):
         return Tenant.all_objects.all()

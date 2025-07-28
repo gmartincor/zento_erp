@@ -4,6 +4,7 @@ from apps.core.mixins import TenantFormMixin
 from apps.core.constants import TENANT_ERROR_MESSAGES
 from .models import Tenant
 from .services import TenantValidationService
+from .forms import TenantUpdateForm
 
 
 class BaseTenantForm(forms.ModelForm, TenantFormMixin):
@@ -78,22 +79,6 @@ class BaseTenantForm(forms.ModelForm, TenantFormMixin):
 class TenantRegistrationForm(BaseTenantForm):
     class Meta(BaseTenantForm.Meta):
         fields = ['name', 'email', 'schema_name']
-
-
-class TenantUpdateForm(BaseTenantForm):
-    class Meta(BaseTenantForm.Meta):
-        fields = ['name', 'email', 'phone', 'professional_number', 'notes']
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if 'schema_name' in self.fields:
-            del self.fields['schema_name']
-    
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        if self.instance and self.instance.email == email:
-            return email
-        return super().clean_email()
 
 
 class TenantStatusForm(forms.ModelForm):

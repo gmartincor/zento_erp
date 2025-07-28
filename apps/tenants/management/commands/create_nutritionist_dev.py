@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from apps.tenants.models import Tenant, Domain
+from apps.tenants.services import TenantCreationService
 from apps.authentication.models import User
 import re
 import subprocess
@@ -118,30 +119,10 @@ class Command(BaseCommand):
         )
 
     def _create_nutritionist(self, name, username, password, email, domain_name, skip_hosts=False):
-        """Crear el nutricionista con los datos proporcionados"""
         try:
             self.stdout.write('')
             self.stdout.write('🚀 Creando nutricionista...')
             
-            # Verificaciones
-            if Domain.objects.filter(domain=domain_name).exists():
-                self.stdout.write(
-                    self.style.ERROR(f'❌ El dominio "{domain_name}" ya está registrado')
-                )
-                return
-
-            if User.objects.filter(username=username).exists():
-                self.stdout.write(
-                    self.style.ERROR(f'❌ El username "{username}" ya existe')
-                )
-                return
-
-            if Tenant.objects.filter(email=email).exists():
-                self.stdout.write(
-                    self.style.ERROR(f'❌ El email "{email}" ya está registrado')
-                )
-                return
-
             # Generar schema_name único
             schema_base = re.sub(r'[^a-zA-Z0-9]', '', username.lower())
             schema_name = f"tenant_{schema_base}"
@@ -152,40 +133,16 @@ class Command(BaseCommand):
                 schema_name = f"{original_schema}_{counter}"
                 counter += 1
 
-            # Crear el tenant
-            self.stdout.write('   📊 Creando tenant...')
-            tenant = Tenant.objects.create(
+            # Crear usando el servicio
+            tenant, domain, user = TenantCreationService.create_complete_tenant(
                 schema_name=schema_name,
-                name=name,
+                tenant_name=name,
                 email=email,
                 phone='',
-                professional_number='',
-                status=Tenant.StatusChoices.ACTIVE,
-                is_active=True
-            )
-
-            # Crear el usuario (NO superuser - usuario normal del tenant)
-            self.stdout.write('   👤 Creando usuario...')
-            name_parts = name.split()
-            first_name = name_parts[0] if name_parts else username
-            last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
-            
-            user = User.objects.create_user(
+                notes='',
+                domain_name=domain_name,
                 username=username,
-                email=email,
-                password=password,
-                first_name=first_name,
-                last_name=last_name,
-                tenant=tenant,
-                is_active=True
-            )
-
-            # Crear dominio
-            self.stdout.write('   🌐 Creando dominio...')
-            domain = Domain.objects.create(
-                domain=domain_name,
-                tenant=tenant,
-                is_primary=True
+                password=password
             )
 
             # Configurar /etc/hosts si es necesario

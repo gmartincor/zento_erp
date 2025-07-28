@@ -1,9 +1,8 @@
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.core.management import call_command
-from django_tenants.utils import schema_context
 from apps.tenants.models import Tenant, Domain
+from apps.tenants.services import TenantCreationService
 from apps.authentication.models import User
 import re
 import getpass
@@ -105,31 +104,24 @@ class Command(BaseCommand):
         return tenant_data
 
     def _validate_schema_name(self, schema_name):
-        """Valida el schema name"""
-        if not re.match(r'^[a-z][a-z0-9_]*$', schema_name):
-            return False
         try:
-            return not Tenant.objects.filter(schema_name=schema_name).exists()
-        except:
-            return True  # Si no hay conexión, asumir que es válido
+            return TenantCreationService.validate_schema_name(schema_name)
+        except Exception:
+            return False
 
     def _validate_domain_name(self, domain_name):
-        """Valida el domain name"""
-        if not re.match(r'^[a-z0-9.-]+\.zentoerp\.com$', domain_name):
-            return False
         try:
-            return not Domain.objects.filter(domain=domain_name).exists()
-        except:
-            return True  # Si no hay conexión, asumir que es válido
+            TenantCreationService.validate_domain_name(domain_name)
+            return True
+        except Exception:
+            return False
 
     def _validate_email(self, email):
-        """Valida el email"""
-        if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
-            return False
         try:
-            return not Tenant.objects.filter(email=email).exists()
-        except:
-            return True  # Si no hay conexión, asumir que es válido
+            TenantCreationService.validate_email(email)
+            return True
+        except Exception:
+            return False
 
     def _show_tenant_summary(self, tenant_data):
         """Muestra un resumen de los datos del tenant"""
@@ -157,37 +149,22 @@ class Command(BaseCommand):
                 self.stdout.write('   Por favor responde "y" para sí o "n" para no')
 
     def _create_tenant_with_data(self, tenant_data):
-        """Crea el tenant con los datos proporcionados"""
         self.stdout.write('\n🚀 Iniciando creación del tenant...')
         
         try:
-            with transaction.atomic():
-                # 1. Crear tenant
-                tenant = self._create_tenant(
-                    tenant_data['schema_name'],
-                    tenant_data['tenant_name'],
-                    tenant_data['email'],
-                    tenant_data['phone'],
-                    tenant_data['notes']
-                )
-                
-                # 2. Crear dominio
-                domain = self._create_domain(tenant_data['domain_name'], tenant)
-                
-                # 3. Aplicar migraciones al nuevo schema
-                self._migrate_tenant_schema(tenant)
-                
-                # 4. Crear usuario admin para el tenant
-                user = self._create_tenant_user(
-                    tenant,
-                    tenant_data['username'],
-                    tenant_data['email'],
-                    tenant_data['password']
-                )
-                
-                # 5. Mostrar resumen de éxito
-                self._show_success_summary(tenant, domain, user, tenant_data['password'])
-                
+            tenant, domain, user = TenantCreationService.create_complete_tenant(
+                schema_name=tenant_data['schema_name'],
+                tenant_name=tenant_data['tenant_name'],
+                email=tenant_data['email'],
+                phone=tenant_data['phone'],
+                notes=tenant_data['notes'],
+                domain_name=tenant_data['domain_name'],
+                username=tenant_data['username'],
+                password=tenant_data['password']
+            )
+            
+            self._show_success_summary(tenant, domain, user, tenant_data['password'])
+            
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(f'❌ Error durante la creación: {str(e)}')
@@ -195,57 +172,6 @@ class Command(BaseCommand):
             raise
 
 
-
-    def _create_tenant(self, schema_name, tenant_name, tenant_email, phone, notes):
-        """Crea el tenant"""
-        self.stdout.write('📋 Creando tenant...')
-        tenant = Tenant.objects.create(
-            schema_name=schema_name,
-            name=tenant_name,
-            email=tenant_email,
-            phone=phone,
-            notes=notes,
-            status=Tenant.StatusChoices.ACTIVE,
-            is_active=True
-        )
-        self.stdout.write(f'   ✅ Tenant "{tenant_name}" creado')
-        return tenant
-
-    def _create_domain(self, domain_name, tenant):
-        """Crea el dominio para el tenant"""
-        self.stdout.write('🌐 Creando dominio...')
-        domain = Domain.objects.create(
-            domain=domain_name,
-            tenant=tenant,
-            is_primary=True
-        )
-        self.stdout.write(f'   ✅ Dominio "{domain_name}" creado')
-        return domain
-
-    def _migrate_tenant_schema(self, tenant):
-        """Aplica migraciones al schema del tenant"""
-        self.stdout.write('📦 Aplicando migraciones al schema...')
-        try:
-            call_command('migrate_schemas', '--tenant', verbosity=0)
-            self.stdout.write('   ✅ Migraciones aplicadas')
-        except Exception as e:
-            self.stdout.write(f'   ⚠️ Error en migraciones: {str(e)}')
-
-    def _create_tenant_user(self, tenant, username, email, password):
-        """Crea el usuario principal para el tenant (NO admin del sistema)"""
-        self.stdout.write('👤 Creando usuario principal del tenant...')
-        
-        with schema_context(tenant.schema_name):
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                is_staff=False,  
-                is_superuser=False,  
-                tenant=tenant
-            )
-            self.stdout.write(f'   ✅ Usuario "{username}" creado')
-            return user
 
     def _show_success_summary(self, tenant, domain, user, password):
         """Muestra el resumen de éxito"""
