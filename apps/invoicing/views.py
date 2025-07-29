@@ -283,12 +283,20 @@ def generate_pdf_view(request, pk):
 def bulk_download_monthly_view(request):
     year = int(request.GET.get('year', timezone.now().year))
     month = int(request.GET.get('month', timezone.now().month))
+    status = request.GET.get('status', None)
     
     try:
-        invoices = BulkPDFService.get_period_invoices('monthly', year=year, month=month)
+        invoices = BulkPDFService.get_period_invoices('monthly', year=year, month=month, status=status)
         
         if not invoices.exists():
-            messages.warning(request, f'No se encontraron facturas enviadas o pagadas para {month:02d}/{year}')
+            status_text = ""
+            if status == 'SENT':
+                status_text = " enviadas"
+            elif status == 'PAID':
+                status_text = " pagadas"
+            else:
+                status_text = " enviadas o pagadas"
+            messages.warning(request, f'No se encontraron facturas{status_text} para {month:02d}/{year}')
             return redirect('invoicing:invoice_list')
         
         zip_content, success_count, error_count = BulkPDFService.generate_bulk_pdfs_zip(
@@ -332,12 +340,20 @@ def bulk_download_monthly_view(request):
 def bulk_download_quarterly_view(request):
     year = int(request.GET.get('year', timezone.now().year))
     quarter = int(request.GET.get('quarter', (timezone.now().month - 1) // 3 + 1))
+    status = request.GET.get('status', None)
     
     try:
-        invoices = BulkPDFService.get_period_invoices('quarterly', year=year, quarter=quarter)
+        invoices = BulkPDFService.get_period_invoices('quarterly', year=year, quarter=quarter, status=status)
         
         if not invoices.exists():
-            messages.warning(request, f'No se encontraron facturas enviadas o pagadas para Q{quarter}/{year}')
+            status_text = ""
+            if status == 'SENT':
+                status_text = " enviadas"
+            elif status == 'PAID':
+                status_text = " pagadas"
+            else:
+                status_text = " enviadas o pagadas"
+            messages.warning(request, f'No se encontraron facturas{status_text} para Q{quarter}/{year}')
             return redirect('invoicing:invoice_list')
         
         zip_content, success_count, error_count = BulkPDFService.generate_bulk_pdfs_zip(
@@ -375,15 +391,16 @@ def bulk_download_quarterly_view(request):
 def bulk_preview_view(request):
     period_type = request.GET.get('type')
     year = int(request.GET.get('year', timezone.now().year))
+    status = request.GET.get('status', None)
     
     try:
         if period_type == 'monthly':
             month = int(request.GET.get('month', timezone.now().month))
-            invoices = BulkPDFService.get_period_invoices('monthly', year=year, month=month)
+            invoices = BulkPDFService.get_period_invoices('monthly', year=year, month=month, status=status)
             period_name = f"{BulkPDFService.get_months_name()[month-1][1]} {year}"
         elif period_type == 'quarterly':
             quarter = int(request.GET.get('quarter', (timezone.now().month - 1) // 3 + 1))
-            invoices = BulkPDFService.get_period_invoices('quarterly', year=year, quarter=quarter)
+            invoices = BulkPDFService.get_period_invoices('quarterly', year=year, quarter=quarter, status=status)
             period_name = f"Q{quarter} {year}"
         else:
             return JsonResponse({'error': 'Tipo de período no válido'}, status=400)
@@ -392,7 +409,7 @@ def bulk_preview_view(request):
         
         return JsonResponse({
             'count': summary['count'],
-            'total_amount': str(summary['total_amount']),
+            'total_amount': summary['total_amount'],
             'date_range': summary['date_range'],
             'period_name': period_name,
             'success': True

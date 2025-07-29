@@ -22,7 +22,7 @@ class BulkPDFService:
         ]
     
     @staticmethod
-    def get_period_invoices(period_type, year=None, month=None, quarter=None):
+    def get_period_invoices(period_type, year=None, month=None, quarter=None, status=None):
         today = timezone.now().date()
         
         if period_type == 'monthly':
@@ -58,10 +58,14 @@ class BulkPDFService:
         else:
             raise ValueError(f"Tipo de período no válido: {period_type}")
         
-        return Invoice.objects.filter(
-            issue_date__range=[start, end],
-            status__in=['SENT', 'PAID']
-        ).order_by('issue_date', 'reference')
+        queryset = Invoice.objects.filter(issue_date__range=[start, end])
+        
+        if status:
+            queryset = queryset.filter(status=status)
+        else:
+            queryset = queryset.filter(status__in=['SENT', 'PAID'])
+        
+        return queryset.order_by('issue_date', 'reference')
     
     @staticmethod
     def generate_bulk_pdfs_zip(invoices, filename_prefix):
@@ -102,7 +106,7 @@ class BulkPDFService:
         if not invoices:
             return {
                 'count': 0,
-                'total_amount': Decimal('0.00'),
+                'total_amount': '0.00',
                 'date_range': 'Sin facturas'
             }
         
@@ -112,7 +116,7 @@ class BulkPDFService:
         
         return {
             'count': invoices.count(),
-            'total_amount': total_amount,
+            'total_amount': f"{total_amount:.2f}",
             'date_range': f"{start_date.strftime('%d/%m/%Y')} - {end_date.strftime('%d/%m/%Y')}"
         }
     
