@@ -17,6 +17,7 @@ urlpatterns = [
     path('accounting/', include('apps.accounting.urls')),
     path('expenses/', include('apps.expenses.urls')),
     path('invoicing/', include('apps.invoicing.urls')),
+    path('core/', include('apps.core.urls')),  # Export functionality
 ]
 
 # Configuración de archivos estáticos y media
