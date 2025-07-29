@@ -2,7 +2,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.views.generic import CreateView, ListView, DetailView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.db.models import Q
 from django.db import transaction
 from datetime import datetime, date, timedelta
@@ -12,6 +12,8 @@ import logging
 from .models import Company, Invoice, InvoiceItem
 from .forms import CompanyForm, InvoiceForm, InvoiceItemFormSet
 from .utils import generate_invoice_pdf
+from .services import BulkPDFService
+from apps.core.services.temporal_service import get_available_years
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +142,8 @@ class InvoiceListView(ListView):
         context['status'] = self.request.GET.get('status', '')
         context['period'] = self.request.GET.get('period', 'current_month')
         context['has_company'] = Company.objects.exists()
+        context['current_year'] = timezone.now().year
+        context['available_years'] = get_available_years()
         
         context['available_periods'] = [
             ('current_month', 'Mes actual'),
@@ -274,3 +278,126 @@ def generate_pdf_view(request, pk):
         logger.error(f"Error generating PDF for invoice {invoice.reference or 'DRAFT'}: {str(e)}")
         messages.error(request, f'Error al generar el PDF: {str(e)}')
         return redirect('invoicing:invoice_detail', pk=pk)
+
+
+def bulk_download_monthly_view(request):
+    year = int(request.GET.get('year', timezone.now().year))
+    month = int(request.GET.get('month', timezone.now().month))
+    
+    try:
+        invoices = BulkPDFService.get_period_invoices('monthly', year=year, month=month)
+        
+        if not invoices.exists():
+            messages.warning(request, f'No se encontraron facturas enviadas o pagadas para {month:02d}/{year}')
+            return redirect('invoicing:invoice_list')
+        
+        zip_content, success_count, error_count = BulkPDFService.generate_bulk_pdfs_zip(
+            invoices, 
+            f"facturas_{year}_{month:02d}"
+        )
+        
+        if not zip_content:
+            messages.error(request, 'Error al generar el archivo ZIP')
+            return redirect('invoicing:invoice_list')
+        
+        month_names = {
+            1: 'enero', 2: 'febrero', 3: 'marzo', 4: 'abril',
+            5: 'mayo', 6: 'junio', 7: 'julio', 8: 'agosto',
+            9: 'septiembre', 10: 'octubre', 11: 'noviembre', 12: 'diciembre'
+        }
+        
+        filename = f"facturas_{month_names[month]}_{year}.zip"
+        
+        if error_count > 0:
+            messages.warning(
+                request, 
+                f'Descarga completada: {success_count} facturas generadas, {error_count} errores'
+            )
+        else:
+            messages.success(
+                request, 
+                f'Descarga completada: {success_count} facturas de {month_names[month]} {year}'
+            )
+        
+        logger.info(f"Bulk monthly download: {success_count} invoices for {month:02d}/{year}")
+        
+        return BulkPDFService.create_zip_response(zip_content, filename)
+        
+    except Exception as e:
+        logger.error(f"Error in bulk monthly download: {str(e)}")
+        messages.error(request, f'Error al generar la descarga masiva: {str(e)}')
+        return redirect('invoicing:invoice_list')
+
+
+def bulk_download_quarterly_view(request):
+    year = int(request.GET.get('year', timezone.now().year))
+    quarter = int(request.GET.get('quarter', (timezone.now().month - 1) // 3 + 1))
+    
+    try:
+        invoices = BulkPDFService.get_period_invoices('quarterly', year=year, quarter=quarter)
+        
+        if not invoices.exists():
+            messages.warning(request, f'No se encontraron facturas enviadas o pagadas para Q{quarter}/{year}')
+            return redirect('invoicing:invoice_list')
+        
+        zip_content, success_count, error_count = BulkPDFService.generate_bulk_pdfs_zip(
+            invoices, 
+            f"facturas_{year}_Q{quarter}"
+        )
+        
+        if not zip_content:
+            messages.error(request, 'Error al generar el archivo ZIP')
+            return redirect('invoicing:invoice_list')
+        
+        filename = f"facturas_Q{quarter}_{year}.zip"
+        
+        if error_count > 0:
+            messages.warning(
+                request, 
+                f'Descarga completada: {success_count} facturas generadas, {error_count} errores'
+            )
+        else:
+            messages.success(
+                request, 
+                f'Descarga completada: {success_count} facturas del Q{quarter} {year}'
+            )
+        
+        logger.info(f"Bulk quarterly download: {success_count} invoices for Q{quarter}/{year}")
+        
+        return BulkPDFService.create_zip_response(zip_content, filename)
+        
+    except Exception as e:
+        logger.error(f"Error in bulk quarterly download: {str(e)}")
+        messages.error(request, f'Error al generar la descarga masiva: {str(e)}')
+        return redirect('invoicing:invoice_list')
+
+
+def bulk_preview_view(request):
+    period_type = request.GET.get('type')
+    year = int(request.GET.get('year', timezone.now().year))
+    
+    try:
+        if period_type == 'monthly':
+            month = int(request.GET.get('month', timezone.now().month))
+            invoices = BulkPDFService.get_period_invoices('monthly', year=year, month=month)
+            period_name = f"{BulkPDFService.get_months_name()[month-1][1]} {year}"
+        elif period_type == 'quarterly':
+            quarter = int(request.GET.get('quarter', (timezone.now().month - 1) // 3 + 1))
+            invoices = BulkPDFService.get_period_invoices('quarterly', year=year, quarter=quarter)
+            period_name = f"Q{quarter} {year}"
+        else:
+            return JsonResponse({'error': 'Tipo de período no válido'}, status=400)
+        
+        summary = BulkPDFService.get_period_summary(invoices)
+        
+        return JsonResponse({
+            'count': summary['count'],
+            'total_amount': str(summary['total_amount']),
+            'date_range': summary['date_range'],
+            'period_name': period_name,
+            'success': True
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in bulk preview: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)

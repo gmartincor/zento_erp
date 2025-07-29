@@ -82,6 +82,28 @@
                 </a>
             </div>
         </form>
+        
+        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-4">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Descarga masiva:</h3>
+                <div class="flex gap-2">
+                    <button onclick="showBulkDownloadModal('monthly')" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Mensual
+                    </button>
+                    <button onclick="showBulkDownloadModal('quarterly')" 
+                            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Trimestral
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
     {% endif %}
     {% if not has_company %}
@@ -240,4 +262,218 @@
     </div>
     {% endif %}
 </div>
+
+<div id="bulkDownloadModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-900 dark:text-white">
+                Descarga Masiva
+            </h3>
+            <button onclick="closeBulkDownloadModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="bulkDownloadForm" method="get">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Año
+                    </label>
+                    <select name="year" id="yearSelect" onchange="updatePreview()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        {% for year_option in available_years reversed %}
+                            <option value="{{ year_option }}" {% if year_option == current_year %}selected{% endif %}>{{ year_option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div id="monthSelect" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Mes
+                    </label>
+                    <select name="month" onchange="updatePreview()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </div>
+                
+                <div id="quarterSelect" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Trimestre
+                    </label>
+                    <select name="quarter" onchange="updatePreview()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+                        <option value="1">Q1 (Enero - Marzo)</option>
+                        <option value="2">Q2 (Abril - Junio)</option>
+                        <option value="3">Q3 (Julio - Septiembre)</option>
+                        <option value="4">Q4 (Octubre - Diciembre)</option>
+                    </select>
+                </div>
+                
+                <div id="previewInfo" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div id="previewLoader" class="hidden text-center text-gray-500">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Cargando...
+                    </div>
+                    <div id="previewContent" class="space-y-2">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Selecciona un período para ver las facturas disponibles</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="closeBulkDownloadModal()" 
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="submit" id="downloadButton" disabled
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    Descargar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const currentYear = new Date().getFullYear();
+const currentMonth = new Date().getMonth() + 1;
+const currentQuarter = Math.ceil(currentMonth / 3);
+let currentModalType = '';
+
+function showBulkDownloadModal(type) {
+    const modal = document.getElementById('bulkDownloadModal');
+    const form = document.getElementById('bulkDownloadForm');
+    const title = document.getElementById('modalTitle');
+    const monthSelect = document.getElementById('monthSelect');
+    const quarterSelect = document.getElementById('quarterSelect');
+    const yearSelect = document.getElementById('yearSelect');
+    
+    currentModalType = type;
+    
+    if (type === 'monthly') {
+        title.textContent = 'Descarga Mensual';
+        form.action = "{% url 'invoicing:bulk_download_monthly' %}";
+        monthSelect.classList.remove('hidden');
+        quarterSelect.classList.add('hidden');
+        
+        const monthSelector = monthSelect.querySelector('select');
+        monthSelector.value = currentMonth;
+    } else if (type === 'quarterly') {
+        title.textContent = 'Descarga Trimestral';
+        form.action = "{% url 'invoicing:bulk_download_quarterly' %}";
+        monthSelect.classList.add('hidden');
+        quarterSelect.classList.remove('hidden');
+        
+        const quarterSelector = quarterSelect.querySelector('select');
+        quarterSelector.value = currentQuarter;
+    }
+    
+    yearSelect.value = currentYear;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    updatePreview();
+}
+
+function closeBulkDownloadModal() {
+    const modal = document.getElementById('bulkDownloadModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function updatePreview() {
+    const loader = document.getElementById('previewLoader');
+    const content = document.getElementById('previewContent');
+    const downloadButton = document.getElementById('downloadButton');
+    
+    loader.classList.remove('hidden');
+    content.innerHTML = '';
+    downloadButton.disabled = true;
+    
+    const formData = new FormData(document.getElementById('bulkDownloadForm'));
+    formData.append('type', currentModalType);
+    
+    const params = new URLSearchParams(formData);
+    
+    fetch("{% url 'invoicing:bulk_preview' %}?" + params.toString())
+        .then(response => response.json())
+        .then(data => {
+            loader.classList.add('hidden');
+            
+            if (data.success) {
+                if (data.count > 0) {
+                    content.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Período:</span>
+                                <span class="text-sm text-gray-900 dark:text-white">${data.period_name}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Facturas:</span>
+                                <span class="text-sm text-gray-900 dark:text-white">${data.count}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Total:</span>
+                                <span class="text-sm text-gray-900 dark:text-white">${data.total_amount} €</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Fechas:</span>
+                                <span class="text-sm text-gray-900 dark:text-white">${data.date_range}</span>
+                            </div>
+                        </div>
+                    `;
+                    downloadButton.disabled = false;
+                } else {
+                    content.innerHTML = `
+                        <div class="text-center py-4">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No hay facturas enviadas o pagadas para ${data.period_name}</p>
+                        </div>
+                    `;
+                    downloadButton.disabled = true;
+                }
+            } else {
+                content.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-sm text-red-500">Error: ${data.error}</p>
+                    </div>
+                `;
+                downloadButton.disabled = true;
+            }
+        })
+        .catch(error => {
+            loader.classList.add('hidden');
+            content.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-sm text-red-500">Error al cargar la información</p>
+                </div>
+            `;
+            downloadButton.disabled = true;
+            console.error('Error:', error);
+        });
+}
+
+document.getElementById('bulkDownloadModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBulkDownloadModal();
+    }
+});
+</script>
 {% endblock %}
