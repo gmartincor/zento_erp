@@ -54,6 +54,8 @@ class TenantDataExporter:
         
         if self.format == 'zip':
             extension = 'zip'
+        elif self.format == 'excel':
+            extension = 'xlsx'
         else:
             extension = self.format
             
