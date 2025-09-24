@@ -1,14 +1,15 @@
 # =============================================================================
-# render.yaml.template - Configuración de servicios para Render (TEMPLATE)
+# ZentoERP Deployment Template
 # =============================================================================
-# INSTRUCCIONES:
-# 1. Copia este archivo a render.yaml
-# 2. Reemplaza todas las variables [VARIABLE] con valores reales
-# 3. NO versionas render.yaml en Git (está en .gitignore)
+# INSTRUCTIONS:
+# 1. Copy this file to render.yaml
+# 2. Replace [DB_SERVICE_NAME] with your PostgreSQL service name
+# 3. DO NOT commit render.yaml to Git (it's in .gitignore)
+# 4. USE SECURE REFERENCES - Don't hardcode credentials
 
 services:
   # ---------------------------------------------------------------------------
-  # Web Service Principal - Django Multi-tenant
+  # Django Multi-tenant Web Service
   # ---------------------------------------------------------------------------
   - type: web
     name: zentoerp-web
@@ -19,19 +20,19 @@ services:
     region: oregon
     branch: production
     
-    # Comandos Docker
+    # Docker commands
     buildCommand: ./scripts/render-deploy.sh
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 3 --worker-class sync --max-requests 1000 --max-requests-jitter 100 --timeout 30 --keep-alive 2 --log-level info --access-logfile - --error-logfile - config.wsgi:application
     preDeployCommand: python manage.py migrate && python manage.py collectstatic --noinput && python manage.py createcachetable
     healthCheckPath: /health/
     autoDeploy: true
     
-    # Configuración de dominio y subdominios
+    # Domain configuration
     domains:
       - zentoerp.com
       - "*.zentoerp.com"
     
-    # Variables de entorno para producción
+    # Production environment variables
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.production
@@ -42,13 +43,14 @@ services:
       - key: LOAD_TEST_DATA
         value: "False"
       
-      # Dominio principal
+      # Allowed hosts configuration
       - key: ALLOWED_HOSTS
         value: "zentoerp.com,*.zentoerp.com,zentoerp-web.onrender.com"
       
-      # Security - GENERAR NUEVA CLAVE SEGURA
+      # Security - Auto-generate secure key (RECOMMENDED)
       - key: SECRET_KEY
-        value: "[GENERAR_SECRET_KEY_NUEVA]"
+        generateValue: true
+      # Manual alternative: value: "[GENERATE_LONG_SECURE_KEY]"
       
       # Database - USAR CREDENCIALES REALES
       - key: DATABASE_URL
