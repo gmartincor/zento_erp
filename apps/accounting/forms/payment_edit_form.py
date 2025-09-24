@@ -23,7 +23,7 @@ class PaymentEditForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin)
         self._configure_field_requirements()
     
     def _populate_initial_data(self):
-        self.fields['amount'].initial = self.payment.amount
+        self.fields['amount'].initial = self.payment.net_amount
         self.fields['payment_date'].initial = self.payment.payment_date
         self.fields['payment_method'].initial = self.payment.payment_method
         self.fields['reference_number'].initial = self.payment.reference_number
@@ -89,7 +89,10 @@ class PaymentEditForm(BaseServiceForm, PaymentFieldsMixin, RemanenteFieldsMixin)
         if not self.payment:
             raise ValidationError('No se puede guardar sin una instancia de pago.')
         
-        self.payment.amount = self.cleaned_data['amount']
+        new_net_amount = self.cleaned_data['amount']
+        current_refunded = self.payment.refunded_amount or 0
+        
+        self.payment.amount = new_net_amount + current_refunded
         self.payment.payment_date = self.cleaned_data['payment_date']
         self.payment.payment_method = self.cleaned_data['payment_method']
         self.payment.reference_number = self.cleaned_data.get('reference_number', '')

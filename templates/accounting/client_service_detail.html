@@ -210,8 +210,13 @@
                                 {% endif %}
                             {% endif %}
                         </div>
-                        <div class="flex items-center">
+                        <div class="flex items-center space-x-2">
                             {% if payment.status == 'PAID' and payment.net_amount > 0 %}
+                            <a href="{% tenant_url 'accounting:payment-edit' payment.id %}"
+                               class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                                Editar
+                            </a>
+                            <span class="text-gray-300">|</span>
                             <a href="{% tenant_url 'accounting:payment-refund' payment_id=payment.id %}"
                                class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium">
                                 Reembolsar

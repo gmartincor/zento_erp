@@ -43,19 +43,11 @@ class PaymentEditView(LoginRequiredMixin, BusinessLinePermissionMixin, View):
         
         if form.is_valid():
             try:
-                updated_payment = PaymentService.update_payment(
-                    payment=payment,
-                    amount=form.cleaned_data['amount'],
-                    payment_date=form.cleaned_data['payment_date'],
-                    payment_method=form.cleaned_data['payment_method'],
-                    reference_number=form.cleaned_data.get('reference_number', ''),
-                    notes=form.cleaned_data.get('notes', ''),
-                    remanente=form.cleaned_data.get('remanente')
-                )
+                updated_payment = form.save()
                 
                 messages.success(
                     request, 
-                    f"Pago actualizado exitosamente. Nuevo importe: €{updated_payment.amount}"
+                    f"Pago actualizado exitosamente. Importe neto: €{updated_payment.net_amount}"
                 )
                 
                 return redirect('accounting:payments')
