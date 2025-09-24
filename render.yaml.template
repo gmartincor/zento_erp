@@ -3,8 +3,9 @@
 # =============================================================================
 # INSTRUCCIONES:
 # 1. Copia este archivo a render.yaml
-# 2. Reemplaza todas las variables [VARIABLE] con valores reales
+# 2. Reemplaza [NOMBRE_SERVICIO_DB] con el nombre real de tu servicio PostgreSQL
 # 3. NO versionas render.yaml en Git (está en .gitignore)
+# 4. USA REFERENCIAS SEGURAS - No hardcodees credenciales
 
 services:
   # ---------------------------------------------------------------------------
@@ -46,21 +47,33 @@ services:
       - key: ALLOWED_HOSTS
         value: "zentoerp.com,*.zentoerp.com,zentoerp-web.onrender.com"
       
-      # Security - GENERAR NUEVA CLAVE SEGURA
+      # Security - Auto-generate secure key (RECOMENDADO)
       - key: SECRET_KEY
-        value: "[GENERAR_SECRET_KEY_NUEVA]"
+        generateValue: true
+      # Alternativa manual: value: "[GENERAR_SECRET_KEY_NUEVA_MUY_LARGA]"
       
-      # Database - USAR CREDENCIALES REALES
+      # Database - MÉTODO SEGURO: Referencias al servicio PostgreSQL
+      # REEMPLAZA [NOMBRE_SERVICIO_DB] con el nombre de tu servicio PostgreSQL en Render
       - key: DATABASE_URL
-        value: "postgresql://[DB_USER]:[DB_PASSWORD]@[DB_HOST]/[DB_NAME]"
+        fromDatabase:
+          name: [NOMBRE_SERVICIO_DB]
+          property: connectionString
       - key: DB_NAME
-        value: "[DB_NAME]"
+        fromDatabase:
+          name: [NOMBRE_SERVICIO_DB]
+          property: database
       - key: DB_USER
-        value: "[DB_USER]"
+        fromDatabase:
+          name: [NOMBRE_SERVICIO_DB]
+          property: user
       - key: DB_PASSWORD
-        value: "[DB_PASSWORD]"
+        fromDatabase:
+          name: [NOMBRE_SERVICIO_DB]
+          property: password
       - key: DB_HOST
-        value: "[DB_HOST]"
+        fromDatabase:
+          name: [NOMBRE_SERVICIO_DB]
+          property: host
       - key: DB_PORT
         value: "5432"
       
