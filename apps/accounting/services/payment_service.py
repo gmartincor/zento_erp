@@ -222,7 +222,6 @@ class PaymentService:
         from django.db.models import Sum, Count, F, Q
         from decimal import Decimal
         
-        # Filtrar pagos que tienen monto
         valid_payments = payments_queryset.filter(amount__isnull=False)
         
         summary = valid_payments.aggregate(
@@ -238,3 +237,35 @@ class PaymentService:
             'total_payments': total_payments,
             'average_amount': total_amount / total_payments if total_payments > 0 else Decimal('0'),
         }
+    
+    @staticmethod
+    def update_payment(
+        payment: ServicePayment,
+        amount: Decimal,
+        payment_date: date,
+        payment_method: str,
+        reference_number: str = "",
+        notes: str = "",
+        remanente: Optional[Decimal] = None
+    ) -> ServicePayment:
+        if payment.status != ServicePayment.StatusChoices.PAID:
+            raise ValidationError("Solo se pueden editar pagos con estado PAGADO.")
+        
+        PaymentService._validate_payment_data(amount, payment_date, payment_method)
+        
+        original_amount = payment.amount
+        
+        payment.amount = amount
+        payment.payment_date = payment_date
+        payment.payment_method = payment_method
+        payment.reference_number = reference_number
+        payment.notes = notes
+        
+        if remanente is not None:
+            if payment.client_service.category != ClientService.CategoryChoices.BUSINESS:
+                raise ValidationError("Los remanentes solo pueden aplicarse a servicios BUSINESS.")
+            payment.remanente = remanente
+        
+        payment.save()
+        
+        return payment

@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load accounting_tags %}
+{% load tenant_tags %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ page_title }}</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Cliente: {{ client.full_name }} | Servicio: {{ client_service.business_line.name }}
+            </p>
+        </div>
+        <a href="{% tenant_url 'accounting:payments' %}" 
+           class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+            Volver a Pagos
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                            {% for error in form.non_field_errors %}
+                                <p class="text-red-600 dark:text-red-400 text-sm">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Importe *
+                            </label>
+                            {{ form.amount }}
+                            {% if form.amount.errors %}
+                                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    {% for error in form.amount.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.payment_date.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Fecha de Pago *
+                            </label>
+                            {{ form.payment_date }}
+                            {% if form.payment_date.errors %}
+                                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    {% for error in form.payment_date.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.payment_method.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Método de Pago *
+                            </label>
+                            {{ form.payment_method }}
+                            {% if form.payment_method.errors %}
+                                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    {% for error in form.payment_method.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.reference_number.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Número de Referencia
+                            </label>
+                            {{ form.reference_number }}
+                            {% if form.reference_number.errors %}
+                                <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    {% for error in form.reference_number.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if client_service.category == "business" and form.remanente %}
+                    <div>
+                        <label for="{{ form.remanente.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Remanente
+                        </label>
+                        {{ form.remanente }}
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Valor positivo o negativo a aplicar al período
+                        </p>
+                        {% if form.remanente.errors %}
+                            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                                {% for error in form.remanente.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div>
+                        <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Notas
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="mt-1 text-sm text-red-600 dark:text-red-400">
+                                {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button type="submit" 
+                                class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition-colors">
+                            Actualizar Pago
+                        </button>
+                        <a href="{% tenant_url 'accounting:payments' %}" 
+                           class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Información del Pago
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Período:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ payment.period_start|date:"d/m/Y" }} - {{ payment.period_end|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Duración:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ payment.duration_days }} días
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Estado:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ payment.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Creado:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ payment.created|date:"d/m/Y H:i" }}
+                        </span>
+                    </div>
+                    {% if payment.modified != payment.created %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Modificado:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ payment.modified|date:"d/m/Y H:i" }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Información del Cliente
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Cliente:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ client.full_name }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">DNI:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ client.dni }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Servicio:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ client_service.business_line.name }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Categoría:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ client_service.get_category_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -28,6 +28,7 @@ from .views.service_payment import (
     service_payment_history_view,
 )
 from .views.payment_detail import payment_detail_view
+from .views.payment_edit import PaymentEditView
 from .views.remanentes_summary import remanentes_summary_view
 from .views.revenue_summary import revenue_summary_view
 
@@ -99,6 +100,7 @@ urlpatterns = [
     path('services/<int:service_id>/payment/ajax/suggested-amount/<int:period_id>/', ajax_get_suggested_amount, name='ajax-suggested-amount'),
     
     path('payments/<int:payment_id>/', payment_detail_view, name='payment-detail'),
+    path('payments/<int:payment_id>/edit/', PaymentEditView.as_view(), name='payment-edit'),
     path('payments/<int:payment_id>/refund/', PaymentRefundView.as_view(), name='payment-refund'),
     
     path('remanentes/', remanentes_summary_view, name='remanentes-summary'),
